@@ -2,6 +2,8 @@
 
 Uma plataforma **100% frontal** (sem backend, sem login, sem servidor) para estudar com evidência: 9 trilhas, 71 módulos, 385 aulas, 3.850 questões, 56 laboratórios, 110 recursos verificados e 34 termos de glossário. Funciona offline depois do primeiro carregamento.
 
+**🌐 Acessar online:** https://jdocorte69-dev.github.io/forge-plataforma-estudos/
+
 > **Princípio central:** XP mede atividade; domínio exige evidência. Uma aula só é marcada como concluída com nota ≥ 8/10 **e** uma síntese Feynman de ≥ 30 caracteres. Sem isso, o progresso fica registrado como "Declarada · falta evidência".
 
 ## Começar agora
@@ -53,7 +55,7 @@ Tudo fica no `localStorage` deste navegador, na chave `forge.study.v2` (schema v
 
 1. No repositório do GitHub: **Settings → Pages → Build and deployment**.
 2. Em **Source**, escolha **GitHub Actions**.
-3. O workflow `.github/workflows/deploy-pages.yml` publica o site em `https://<seu-usuario>.github.io/<nome-do-repo>/`.
+3. O workflow `.github/workflows/deploy-pages.yml` publica o site em `https://<seu-usuario>.github.io/<nome-do-repo>/`. Para um fork, troque o caminho da URL pelo seu usuário e repositório; o workflow continua válido.
 
 Não é preciso build: o site é HTML/CSS/JS puro.
 
