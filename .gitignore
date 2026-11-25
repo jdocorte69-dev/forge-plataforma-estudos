@@ -1,0 +1,11 @@
+# Memória/sessão do agente — nunca publicar
+.curion/
+
+# Arquivos de sistema e editores
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.tmp
+.vscode/
+.idea/

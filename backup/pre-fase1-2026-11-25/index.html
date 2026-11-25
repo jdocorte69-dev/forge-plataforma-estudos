@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Forge: plataforma gratuita de estudos de Matemática, C, Linux, Sistemas, Redes, Banco de Dados e Engenharia de Software, com modo foco, laboratórios, avaliações e revisão espaçada.">
+<title>Forge — Plataforma de Estudos</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+</head>
+<body>
+<div class="app">
+<aside class="side" id="sidebar">
+<div class="brand">forge<span>.</span></div><p class="tag">Sua oficina de conhecimento</p>
+<nav class="nav" id="nav" aria-label="Navegação principal">
+<div class="navlabel">Aprender</div>
+<button class="active" data-page="dashboard">▦ Painel geral</button>
+<button data-page="tracks">▤ Trilhas e aulas</button>
+<button data-page="focus">◉ Modo foco</button>
+<button data-page="plan">◇ Meu plano</button>
+<button data-page="lab">⌘ Laboratórios</button>
+<button data-page="review">◷ Revisão espaçada</button>
+<button data-page="mistakes">✎ Caderno de erros</button>
+<button data-page="feynman">◎ Técnica Feynman</button>
+<div class="navlabel">Referência</div>
+<button data-page="library">▣ Biblioteca</button>
+<button data-page="projects">⚒ Projetos integradores</button>
+<div class="navlabel">Dados</div>
+<button data-page="settings">⚙ Progresso e backup</button>
+</nav>
+</aside>
+<main class="main">
+<header class="top"><div class="row"><button class="secondary mobilemenu" id="menuBtn" aria-label="Abrir menu de navegação" aria-expanded="false">☰</button><strong id="pageTitle">Painel geral</strong></div><div class="topright"><span class="pill hide-sm" id="today"></span><button class="secondary" id="themeBtn" aria-label="Alternar tema claro e escuro" title="Alternar tema">☾</button></div></header>
+<div class="content" id="view" role="region" aria-label="Conteúdo da página" aria-live="polite"></div>
+</main>
+</div>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<script defer src="js/data.js"></script>
+<script defer src="js/data-linux.js"></script>
+<script defer src="js/data-c.js"></script>
+<script defer src="js/data-math.js"></script>
+<script defer src="js/data-math2.js"></script>
+<script defer src="js/data-math-a.js"></script>
+<script defer src="js/data-math-discrete.js"></script>
+<script defer src="js/data-software.js"></script>
+<script defer src="js/data-software-extra.js"></script>
+<script defer src="js/data-algorithms.js"></script>
+<script defer src="js/data-systems.js"></script>
+<script defer src="js/data-networks.js"></script>
+<script defer src="js/data-db.js"></script>
+<script defer src="js/storage.js"></script>
+<script defer src="js/exercises.js"></script>
+<script defer src="js/app.js"></script>
+<script defer src="js/gamification.js"></script>
+<script defer src="js/features.js"></script>
+<script defer src="js/focus.js"></script>
+<script defer src="js/plan.js"></script>
+<script defer src="js/labs-extra.js"></script>
+</body>
+</html>
