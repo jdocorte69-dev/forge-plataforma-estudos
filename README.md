@@ -54,8 +54,9 @@ Tudo fica no `localStorage` deste navegador, na chave `forge.study.v2` (schema v
 ## Publicar na internet (GitHub Pages)
 
 1. No repositório do GitHub: **Settings → Pages → Build and deployment**.
-2. Em **Source**, escolha **GitHub Actions**.
-3. O workflow `.github/workflows/deploy-pages.yml` publica o site em `https://<seu-usuario>.github.io/<nome-do-repo>/`. Para um fork, troque o caminho da URL pelo seu usuário e repositório; o workflow continua válido.
+2. Em **Source**, escolha **Deploy from a branch** e selecione `main` / `/ (root)`.
+3. O site fica em `https://<seu-usuario>.github.io/<nome-do-repo>/`. Para um fork, troque o caminho da URL pelo seu usuário e repositório.
+4. Opcional: `.github/workflows/deploy-pages.yml` permite alternar para **GitHub Actions** e disparar o deploy manualmente (não é necessário no modo clássico).
 
 Não é preciso build: o site é HTML/CSS/JS puro.
 

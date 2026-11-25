@@ -1,8 +1,8 @@
 name: Deploy FORGE to GitHub Pages
 
+# O site é servido pelo GitHub Pages diretamente da branch main (modo clássico).
+# Este workflow existe apenas como alternativa manual, caso o modo Actions seja desejado.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
