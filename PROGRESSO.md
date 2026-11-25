@@ -148,6 +148,15 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluído
 - [x] Lighthouse 100/100/100 (acessibilidade, boas práticas, SEO)
 - [x] `AUDITORIA.md` atualizado com a tabela de conformidade e a ressalva dos 3 itens sem equivalente executável (grafo de commits, curva de perda, similaridade de cosseno)
 
+### Etapa 18 — Publicação no GitHub e GitHub Pages (25/11/2026)
+- [x] Repositório local `main` criado com 74 arquivos; `.curion/` (memória do agente) excluído por `.gitignore`
+- [x] Repositório público: https://github.com/jdocorte69-dev/forge-plataforma-estudos
+- [x] Site publicado: https://jdocorte69-dev.github.io/forge-plataforma-estudos/
+- [x] `README.md` com início rápido, mapa de funcionalidades, privacidade e instruções de publicação
+- [x] `GUIA_DE_ESTUDO.md` com regra de ouro, rotina de 45 min, plano de 12 semanas, variantes de 3/7/14 h e critérios de promoção
+- [x] GitHub Pages configurado em modo clássico (`main` / raiz); workflow de Actions mantido apenas como alternativa manual
+- [x] Smoke test na URL pública: 385 aulas, 9 trilhas, 0 erros no console, Lighthouse 100/100/100
+
 ### Etapa 12 — "Meu plano de formação"
 - [x] Metas, ritmo, prazo, marcos, aulas personalizadas e painel de domínio
 
@@ -165,7 +174,7 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluído
 
 **71 módulos · 385 aulas · 9 trilhas · 3.850 questões (alternativas embaralhadas) · 56 labs · 110 recursos (8 filtros) · 34 termos de glossário · 5 rotas de leitura · 15 projetos · 80 flashcards · 10 indicadores de domínio · conclusão com evidência + Treino Intercalado · conforto de leitura (fonte e alto contraste) · gamificação e erros E1–E4 (Seção 11) · schema v3 com 4 espaços novos · 0 violações axe em 30 auditorias · Lighthouse 100/100/100 · 0 erros no console · 32 arquivos JS · PWA offline `forge-v4`.**
 
-Etapas 0–17 concluídas, incluindo a verificação dos 31 links da seção 19 do documento-fonte (Etapa 14) e as correções críticas do Plano Mestre v3.0 (Etapa 17); nenhuma pendência registrada. Três itens do plano não têm equivalente executável e não foram reivindicados: grafo de commits Git, curva de perda animada e lab de similaridade de cosseno.
+Etapas 0–18 concluídas, incluindo a verificação dos 31 links da seção 19 do documento-fonte (Etapa 14), as correções críticas do Plano Mestre v3.0 (Etapa 17) e a publicação no GitHub/GitHub Pages (Etapa 18); nenhuma pendência registrada. Três itens do plano não têm equivalente executável e não foram reivindicados: grafo de commits Git, curva de perda animada e lab de similaridade de cosseno.
 
 ## Regras de qualidade (não negociáveis)
 
