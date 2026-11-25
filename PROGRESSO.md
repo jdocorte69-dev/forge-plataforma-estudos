@@ -157,6 +157,14 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluído
 - [x] GitHub Pages configurado em modo clássico (`main` / raiz); workflow de Actions mantido apenas como alternativa manual
 - [x] Smoke test na URL pública: 385 aulas, 9 trilhas, 0 erros no console, Lighthouse 100/100/100
 
+### Etapa 19 — Livros em PDF de fonte aberta (25/11/2026)
+- [x] `js/data-books.js` com 24 PDFs verificados na fonte oficial: OpenStax (CC BY 4.0), TLDP (domínio público/livre), IETF (RFCs) e documentação do PostgreSQL/Pro Git
+- [x] Página "Livros em PDF" com busca por título/autor/área/licença, filtro por área, contagem de resultados e link direto para o PDF (`target="_blank"`, `rel="noopener noreferrer"`)
+- [x] Links HTTP validados individualmente (206/200); nenhum espelho ou PDF comercial incluído
+- [x] Service worker `forge-v5`: novos arquivos no APP_SHELL e cache validado no navegador
+- [x] `node --check` 57/57; 24 cards renderizados; busca e filtro funcionais; 0 erros no console
+- [x] axe-core WCAG 2.2 AA: 0 violações; Lighthouse 100/100/100 na página nova
+
 ### Etapa 12 — "Meu plano de formação"
 - [x] Metas, ritmo, prazo, marcos, aulas personalizadas e painel de domínio
 
@@ -172,9 +180,9 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluído
 
 ## Números finais
 
-**71 módulos · 385 aulas · 9 trilhas · 3.850 questões (alternativas embaralhadas) · 56 labs · 110 recursos (8 filtros) · 34 termos de glossário · 5 rotas de leitura · 15 projetos · 80 flashcards · 10 indicadores de domínio · conclusão com evidência + Treino Intercalado · conforto de leitura (fonte e alto contraste) · gamificação e erros E1–E4 (Seção 11) · schema v3 com 4 espaços novos · 0 violações axe em 30 auditorias · Lighthouse 100/100/100 · 0 erros no console · 32 arquivos JS · PWA offline `forge-v4`.**
+**71 módulos · 385 aulas · 9 trilhas · 3.850 questões (alternativas embaralhadas) · 56 labs · 110 recursos (8 filtros) · 34 termos de glossário · 5 rotas de leitura · 15 projetos · 80 flashcards · 10 indicadores de domínio · conclusão com evidência + Treino Intercalado · conforto de leitura (fonte e alto contraste) · gamificação e erros E1–E4 (Seção 11) · 24 PDFs de fonte aberta · schema v3 com 4 espaços novos · 0 violações axe em 30 auditorias · Lighthouse 100/100/100 · 0 erros no console · PWA offline `forge-v5`.**
 
-Etapas 0–18 concluídas, incluindo a verificação dos 31 links da seção 19 do documento-fonte (Etapa 14), as correções críticas do Plano Mestre v3.0 (Etapa 17) e a publicação no GitHub/GitHub Pages (Etapa 18); nenhuma pendência registrada. Três itens do plano não têm equivalente executável e não foram reivindicados: grafo de commits Git, curva de perda animada e lab de similaridade de cosseno.
+Etapas 0–19 concluídas, incluindo a verificação dos 31 links da seção 19 do documento-fonte (Etapa 14), as correções críticas do Plano Mestre v3.0 (Etapa 17), a publicação no GitHub/GitHub Pages (Etapa 18) e o catálogo de livros em PDF (Etapa 19); nenhuma pendência registrada. Três itens do plano não têm equivalente executável e não foram reivindicados: grafo de commits Git, curva de perda animada e lab de similaridade de cosseno.
 
 ## Regras de qualidade (não negociáveis)
 

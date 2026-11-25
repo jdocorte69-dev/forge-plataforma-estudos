@@ -1,6 +1,6 @@
 # FORGE — Plataforma de Estudos
 
-Uma plataforma **100% frontal** (sem backend, sem login, sem servidor) para estudar com evidência: 9 trilhas, 71 módulos, 385 aulas, 3.850 questões, 56 laboratórios, 110 recursos verificados e 34 termos de glossário. Funciona offline depois do primeiro carregamento.
+Uma plataforma **100% frontal** (sem backend, sem login, sem servidor) para estudar com evidência: 9 trilhas, 71 módulos, 385 aulas, 3.850 questões, 56 laboratórios, 110 recursos verificados, 24 PDFs de fonte aberta e 34 termos de glossário. Funciona offline depois do primeiro carregamento.
 
 **🌐 Acessar online:** https://jdocorte69-dev.github.io/forge-plataforma-estudos/
 
@@ -17,7 +17,7 @@ python -m http.server 8765
 # abra http://localhost:8765/index.html
 ```
 
-O service worker `sw.js` (cache `forge-v4`) guarda o shell da aplicação para uso sem internet. Em `file://` o navegador bloqueia service workers, mas a aplicação continua funcional.
+O service worker `sw.js` (cache `forge-v5`) guarda o shell da aplicação para uso sem internet. Em `file://` o navegador bloqueia service workers, mas a aplicação continua funcional.
 
 ## O que há dentro
 
@@ -32,6 +32,7 @@ O service worker `sw.js` (cache `forge-v4`) guarda o shell da aplicação para u
 | Caderno de erros | Erros com revisão espaçada em +7 dias | Página "Erros"/revisão |
 | Laboratórios | 56 labs com 15 campos, regras de segurança e evidência | Página "Labs" → Catálogo |
 | Biblioteca | 110 recursos com 8 filtros e links verificados | Página "Biblioteca" |
+| Livros em PDF | 24 PDFs legais (OpenStax, TLDP, IETF, docs oficiais) com busca e filtro por área | Página "Livros em PDF" |
 | Glossário e busca | 34 termos; busca global com `Ctrl+K` / `Esc` | Página "Glossário" |
 | Meu plano | Metas, ritmo, prazo, marcos e aulas personalizadas | Página "Meu plano" |
 | Gamificação | XP, sequência, conquistas e erros E1–E4 | Painel |

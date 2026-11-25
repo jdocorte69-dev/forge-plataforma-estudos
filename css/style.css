@@ -1937,3 +1937,56 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
     columns: 1;
   }
 }
+
+/* ============================================================
+   Livros em PDF — catálogo de fontes abertas
+   ============================================================ */
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.book-card .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.book-card h3 {
+  margin: 0;
+}
+
+.book-card p {
+  margin: 0;
+}
+
+.book-card .pdf-link {
+  margin-top: auto;
+}
+
+.pdf-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--panel2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.pdf-link:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.pdf-link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
