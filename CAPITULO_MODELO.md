@@ -145,6 +145,25 @@ Ola, mundo!
 
 > ⚠️ **Cuidado:** se você usar `gcc ola.c` sem `-o`, o executável recebe um nome padrão (`a.out` em sistemas Unix, `a.exe` em vários ambientes Windows). Especificar o nome evita confusão.
 
+| Erro comum ao compilar | Por que acontece | Como corrigir |
+|---|---|---|
+| Rodar `gcc -E ola.c` esperando um executável | `-E` para depois do pré-processamento | Use o comando completo com `-o ola` |
+| Esperar que `ola.c` rode sozinho | O fonte é texto; quem roda é o executável | Compile e execute `.\ola.exe` |
+| Escrever `gcc -std=c11 -o ola.c ola` | A ordem dos argumentos foi trocada | O `-o` vem antes do nome do executável; o fonte vem depois das opções |
+
+**Pausa antes de continuar.** Você já viu que `printf("Ola, mundo!\n");` termina com quebra de linha. Antes de ler o próximo parágrafo, preveja o que aparece na tela se você escrever `printf("Ola");` sem o `\n` e sem o `;`. Anote a sua previsão; a resposta vem na seção C1.8.
+
+> 🔁 **Revisão rápida:** lembra do capítulo M1? Lá, contar era associar objetos a números. Aqui a contagem aparece de novo: cada caractere de `Ola, mundo!` vira um número, e cada número ocupa um lugar na memória. A matemática continua presente mesmo quando o assunto parece só escrever texto.
+
+### Onde isso aparece no mundo real
+
+| Área | O mesmo conceito visto de outro ângulo |
+|---|---|
+| Matemática | Cada caractere é representado por um número; contar posições é contar bytes. |
+| Linguagem C | O fonte é texto, o compilador traduz, o executável é binário. |
+| Redes | O mesmo executável pode ser enviado como bytes por uma conexão local. |
+| Engenharia de Software | Guardar o fonte em Git permite voltar a uma versão anterior quando a compilação quebra. |
+
 ## C1.6 Exemplos resolvidos passo a passo
 
 ### Exemplo 1 — Trivial: uma linha na tela

@@ -1,4 +1,4 @@
-name: Check Prompt Mestre sync
+name: Check Prompt Mestre and chapter models
 
 on:
   push:
@@ -7,12 +7,16 @@ on:
       - 'PROMPT_MESTRE_NUCLEO.md'
       - 'PROMPT_MESTRE_REFERENCIA.md'
       - 'scripts/sync_prompt.py'
+      - 'CAPITULO_MODELO*.md'
+      - 'scripts/check_chapters.py'
   pull_request:
     paths:
       - 'PROMPT_MESTRE.md'
       - 'PROMPT_MESTRE_NUCLEO.md'
       - 'PROMPT_MESTRE_REFERENCIA.md'
       - 'scripts/sync_prompt.py'
+      - 'CAPITULO_MODELO*.md'
+      - 'scripts/check_chapters.py'
 
 jobs:
   check:
@@ -26,3 +30,5 @@ jobs:
           python-version: '3.12'
       - name: Verify derived files
         run: python scripts/sync_prompt.py --check
+      - name: Verify chapter structure
+        run: python scripts/check_chapters.py

@@ -903,6 +903,7 @@ Os projetos `MP1` a `MP10` da seção 15 são sugestões didáticas. O portfóli
 | 1.2 | 2026-11-25 | Plano integrado, rubrica de entrega, biblioteca de analogias, catálogo de projetos, convenções e protocolo de atendimento (seções 12 a 17) |
 | 1.3 | 2026-11-25 | Nível por área, acessibilidade WCAG 2.2 AA, correção da colisão de IDs de projetos, integração com a plataforma FORGE, conversão de códigos, capítulo modelo e separação núcleo/referência |
 | 1.4 | 2026-11-25 | Errata na rubrica (pré-requisitos introdutórios e contagem de exercícios) e sincronizador `scripts/sync_prompt.py` com modo `--check` |
+| 1.5 | 2026-11-25 | Capítulos modelo para as quatro áreas (C1, M1, R1, S1), reforço de espiral, conexão entre áreas e aprendizagem ativa, e validador `scripts/check_chapters.py` |
 
 Toda alteração futura deve acrescentar uma linha a esta tabela e revisar a seção afetada. Se a mudança alterar uma regra pedagógica, atualize também o capítulo modelo para que ele continue sendo o padrão ouro.
 

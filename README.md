@@ -50,7 +50,7 @@ Abra [`GUIA_DE_ESTUDO.md`](GUIA_DE_ESTUDO.md): rotina de sessão, plano de 12 se
 
 ## Gerar material didático
 
-[`PROMPT_MESTRE.md`](PROMPT_MESTRE.md) define como escrever capítulos de Matemática, Linguagem C, Redes e Engenharia de Software com pedagogia, exercícios, gabarito comentado e campos para a plataforma. Para contextos menores, use [`PROMPT_MESTRE_NUCLEO.md`](PROMPT_MESTRE_NUCLEO.md) (seções 1 a 11) e carregue [`PROMPT_MESTRE_REFERENCIA.md`](PROMPT_MESTRE_REFERENCIA.md) (seções 12 a 19) quando precisar da rubrica, das analogias, dos projetos ou da integração com o FORGE. [`CAPITULO_MODELO.md`](CAPITULO_MODELO.md) é o capítulo completo usado como padrão ouro.
+[`PROMPT_MESTRE.md`](PROMPT_MESTRE.md) define como escrever capítulos de Matemática, Linguagem C, Redes e Engenharia de Software com pedagogia, exercícios, gabarito comentado e campos para a plataforma. Para contextos menores, use [`PROMPT_MESTRE_NUCLEO.md`](PROMPT_MESTRE_NUCLEO.md) (seções 1 a 11) e carregue [`PROMPT_MESTRE_REFERENCIA.md`](PROMPT_MESTRE_REFERENCIA.md) (seções 12 a 19) quando precisar da rubrica, das analogias, dos projetos ou da integração com o FORGE. Os capítulos completos usados como padrão ouro são [`CAPITULO_MODELO.md`](CAPITULO_MODELO.md) (C1), [`CAPITULO_MODELO_M.md`](CAPITULO_MODELO_M.md) (M1), [`CAPITULO_MODELO_R.md`](CAPITULO_MODELO_R.md) (R1) e [`CAPITULO_MODELO_S.md`](CAPITULO_MODELO_S.md) (S1).
 
 > Atenção aos códigos: `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` são etiquetas didáticas do Prompt Mestre, não IDs da aplicação. A conversão está na seção 18.3. Os mini-projetos didáticos são `MP1`–`MP10`; o portfólio canônico da aplicação é `P0`–`P10`.
 
@@ -61,7 +61,7 @@ python scripts/sync_prompt.py
 python scripts/sync_prompt.py --check
 ```
 
-O ponto de divisão é o título `## 12.`, não um número de linha fixo.
+O ponto de divisão é o título `## 12.`, não um número de linha fixo. Para conferir a estrutura dos quatro capítulos modelo, rode `python scripts/check_chapters.py`.
 
 ## Seus dados
 
