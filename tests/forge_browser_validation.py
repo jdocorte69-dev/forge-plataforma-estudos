@@ -1,0 +1,498 @@
+# -*- coding: utf-8 -*-
+"""Validação real em browser da Fase 1 da FORGE (somente servidor local)."""
+import datetime
+import json
+import os
+import sys
+import tempfile
+
+from playwright.sync_api import sync_playwright
+
+BASE = "http://127.0.0.1:8765/index.html"
+SAMPLE = (
+    "Cache HTTP reduz latência. Por exemplo, uma resposta pode ser reutilizada. "
+    "Segundo a especificação, Cache-Control define a validação. "
+    "A latência cai quando há revalidação."
+)
+SHOT_DIR = os.path.join(tempfile.gettempdir(), "opencode")
+SHOT_DESKTOP = os.path.join(SHOT_DIR, "forge_study_desktop.png")
+SHOT_MOBILE = os.path.join(SHOT_DIR, "forge_study_mobile.png")
+os.makedirs(SHOT_DIR, exist_ok=True)
+
+results = []
+
+
+def check(name, fn):
+    try:
+        detail = fn() or ""
+        results.append(("PASS", name, str(detail)[:300]))
+    except Exception as exc:
+        msg = " ".join(str(exc).split())[:400]
+        results.append(("FAIL", name, msg))
+
+
+def session_of(page):
+    key = page.evaluate("Storage.get().study.lastSessionKey")
+    return page.evaluate("k => Storage.get().study.sessions[k]", key)
+
+
+with sync_playwright() as pw:
+    browser = pw.chromium.launch(headless=True)
+    context = browser.new_context(viewport={"width": 1440, "height": 900}, locale="pt-BR")
+    page = context.new_page()
+    console_errors = []
+    page_errors = []
+    page.on("console", lambda m: console_errors.append(m.text) if m.type == "error" else None)
+    page.on("pageerror", lambda e: page_errors.append(str(e)))
+
+    page.goto(BASE, wait_until="domcontentloaded")
+    page.wait_for_timeout(900)
+
+    def c_initial():
+        n = page.locator("#nav button[data-page]").count()
+        assert n == 17, f"nav={n}"
+        return f"nav={n}"
+
+    check("carregamento inicial e 17 páginas na navegação", c_initial)
+
+    def c_study():
+        page.evaluate("goToPage('study')")
+        assert page.locator("#pageTitle").inner_text() == "Aprenda a estudar"
+        assert page.locator(".study-tabs button").count() == 5
+        text = page.locator("#view").inner_text()
+        assert "Privacidade e limites" in text
+        assert "Nada é enviado a API externa" in text
+        return "5 abas, aviso de privacidade presente"
+
+    check("página 'Aprenda a estudar' e aviso de privacidade", c_study)
+
+    def c_tutorial_steps():
+        page.evaluate("Study.setTab('tutorial')")
+        for i in range(9):
+            page.evaluate(f"Study.tutorialGo({i})")
+            assert page.locator(".study-step.current").count() == 1, f"passo {i}"
+            assert page.locator(".study-step.current .study-step-body").count() == 1, f"corpo {i}"
+        page.evaluate("Study.tutorialGo(0)")
+        page.get_by_role("button", name="Próxima →").first.click()
+        assert "Defina o objetivo" in page.locator(".study-step.current").inner_text()
+        page.locator(".study-step-head").nth(2).click()
+        assert "Leia uma seção pequena" in page.locator(".study-step.current").inner_text()
+        return "9 etapas renderizadas; Próxima e cabeçalho clicáveis"
+
+    check("tutorial: 9 etapas, avanço e retorno", c_tutorial_steps)
+
+    def c_tutorial_persist():
+        page.evaluate("Study.tutorialGo(0)")
+        page.fill("#tut_topic", "3.2 Estruturas")
+        page.evaluate("Study.tutorialSave(0)")
+        st = session_of(page)
+        assert st.get("tutorialTopic") == "3.2 Estruturas", st.get("tutorialTopic")
+        assert st.get("tutorialDone", {}).get("0") is True
+        page.reload(wait_until="domcontentloaded")
+        page.evaluate("goToPage('study')")
+        page.evaluate("Study.setTab('tutorial')")
+        page.evaluate("Study.tutorialGo(0)")
+        assert page.input_value("#tut_topic") == "3.2 Estruturas"
+        return "sobreviveu a reload"
+
+    check("tutorial: persistência e retomada após reload", c_tutorial_persist)
+
+    def c_session_steps():
+        page.evaluate("Study.setTab('session')")
+        for i in range(7):
+            page.evaluate(f"Study.sessionGo({i})")
+            assert page.locator("#studyPanel .study-steps-tabs button[aria-pressed='true']").count() == 1, i
+        return "7 passos com estado de seleção consistente"
+
+    check("sessão guiada: 7 passos e navegação", c_session_steps)
+
+    def c_session_flow():
+        page.evaluate("Study.sessionGo(1)")
+        page.fill("#s_section", "Cap. 3")
+        page.fill("#s_text", SAMPLE)
+        page.evaluate("Study.sessionSave(1,'read')")
+        st = session_of(page)
+        assert "Cache HTTP reduz latência" in st.get("text", "")
+        assert st.get("steps", {}).get("read") is True
+        page.evaluate("Study.sessionGo(3)")
+        page.evaluate("Study.generateSessionQuestions()")
+        assert page.locator("#s_questions .study-question").count() >= 3
+        page.get_by_role("button", name="Mostrar conferência").click()
+        assert page.locator("#s_reveal .study-answer").count() >= 3
+        page.evaluate("Study.sessionGo(5)")
+        page.evaluate("Study.makeSummary()")
+        assert "[trecho]" in page.locator("#s_summary").inner_text()
+        return "leitura, perguntas, conferência e resumo OK"
+
+    check("sessão guiada: leitura, recuperação e resumo", c_session_flow)
+
+    def c_session_explain_review():
+        page.evaluate("Study.sessionGo(2)")
+        text = ("Explicação própria com mais de oitenta caracteres sobre o tema lido e sobre "
+                "como a reutilização de uma resposta reduz a latência sem consultar o texto original.")
+        page.fill("#s_explain", text)
+        page.evaluate("Study.saveExplanation()")
+        st = session_of(page)
+        assert st.get("explain") == text
+        assert "Livro ·" in page.evaluate("JSON.stringify(Storage.get().notes||{})")
+        page.evaluate("Study.sessionGo(6)")
+        page.evaluate("Study.scheduleReview('session')")
+        st = session_of(page)
+        due = (datetime.date.today() + datetime.timedelta(days=7)).isoformat()
+        assert st.get("reviewDue") == due, (st.get("reviewDue"), due)
+        return f"explicação no Feynman; revisão em {due}"
+
+    check("sessão guiada: explicação, Feynman e revisão agendada", c_session_explain_review)
+
+    MODES = [
+        ("explain", [("tutorTerm", "Cache", False)]),
+        ("confused", [("tutorIssue", "termo", True)]),
+        ("zero", [("tutorTrack", "c", True)]),
+        ("example", []),
+        ("test", []),
+        ("exercises", [("tutorTrack", "c", True)]),
+        ("reasoning", [("tutorReasoning", "Resolvi usando a definição de cache porque a resposta é reutilizável; primeiro identifiquei a latência e depois a revalidação.", False)]),
+        ("feynman", [("tutorTerm", "cache", False), ("tutorFeynman", "Explicação própria com mais de oitenta caracteres sobre porque o cache reduz latência ao reutilizar uma resposta.", False)]),
+        ("summary", []),
+        ("compare", [("tutorA", "Cache", False), ("tutorB", "latência", False)]),
+        ("application", [("tutorTrack", "c", True)]),
+        ("read", [("tutorChunkSize", "800", True)]),
+    ]
+
+    def c_tutor_modes():
+        page.evaluate("Study.setTab('tutor')")
+        assert page.locator("#studyPanel .study-steps-tabs button").count() == 12
+        for mode, fields in MODES:
+            page.evaluate(f"Study.setTutorMode('{mode}')")
+            page.fill("#tutorText", SAMPLE)
+            for fid, value, is_select in fields:
+                if is_select:
+                    page.select_option("#" + fid, value)
+                else:
+                    page.fill("#" + fid, value)
+            page.evaluate("Study.runTutor()")
+            out = page.locator("#tutorOutput").inner_text()
+            assert "Legenda da resposta" in out, f"{mode}: sem legenda"
+            assert "undefined" not in out, f"{mode}: undefined"
+            assert "NaN" not in out, f"{mode}: NaN"
+            assert any(tag in out for tag in ["[trecho]", "[inferência]", "[sugestão]", "[não encontrado]"]), f"{mode}: sem proveniência"
+        return "12/12 modos executados com proveniência"
+
+    check("tutor: 12 modos com entradas realistas", c_tutor_modes)
+
+    def c_tutor_edges():
+        page.evaluate("Study.setTutorMode('explain')")
+        page.fill("#tutorText", "")
+        page.fill("#tutorTerm", "Cache")
+        page.evaluate("Study.runTutor()")
+        out = page.locator("#tutorOutput").inner_text()
+        assert "Texto insuficiente" in out and "[não encontrado]" in out
+        page.fill("#tutorText", SAMPLE)
+        page.fill("#tutorTerm", "termoInexistenteXYZ")
+        page.evaluate("Study.runTutor()")
+        out = page.locator("#tutorOutput").inner_text()
+        assert "[não encontrado]" in out
+        assert "definição do termoInexistenteXYZ" not in out
+        return "vazio e termo ausente sem invenção"
+
+    check("tutor: entradas vazias e termo ausente", c_tutor_edges)
+
+    def c_article():
+        page.evaluate("Study.setTab('article')")
+        page.fill("#art_title", "Artigo validação")
+        page.fill("#art_doi", "10.0000/validacao")
+        page.fill("#art_evidence", "Tabela 1")
+        page.fill("#art_inference", "Minha inferência")
+        page.evaluate("Study.saveArticle()")
+        arts = page.evaluate("Storage.get().study.articles")
+        assert any(a.get("title") == "Artigo validação" for a in arts.values())
+        page.reload(wait_until="domcontentloaded")
+        page.evaluate("goToPage('study')")
+        page.evaluate("Study.setTab('article')")
+        page.evaluate("Study.loadArticle('artigo-validacao')")
+        assert page.input_value("#art_title") == "Artigo validação"
+        assert page.input_value("#art_evidence") == "Tabela 1"
+        return "salvamento e recuperação após reload OK"
+
+    check("ficha de artigo: criação, salvamento e recuperação", c_article)
+
+    def c_gaps():
+        page.evaluate("Study.setTab('gaps')")
+        before = page.evaluate("Storage.get().mistakes.length")
+        page.select_option("#gapTrack", "c")
+        page.fill("#gapText", "valor x endereço")
+        page.select_option("#gapCategory", "E2")
+        page.evaluate("Study.addManualGap()")
+        after = page.evaluate("Storage.get().mistakes.length")
+        assert after == before + 1, (before, after)
+        gaps = page.evaluate("Storage.get().study.gaps")
+        assert any(g.get("text") == "valor x endereço" for g in gaps)
+        assert "Recuperação sugerida" in page.locator("#recoveryBox").inner_text()
+        return f"erros {before}->{after}; recuperação sugerida"
+
+    check("lacunas: persistência e recomendação", c_gaps)
+
+    def c_books():
+        page.evaluate("goToPage('books')")
+        assert page.locator("#booksGrid .study-book-btn").count() == 24
+        page.locator("#booksGrid .study-book-btn").first.click()
+        assert page.locator("#pageTitle").inner_text() == "Aprenda a estudar"
+        assert "Cálculo" in page.locator("#studyPanel").inner_text()
+        return "24 botões; clique abre sessão do livro"
+
+    check("catálogo: 24 livros e botão de estudo", c_books)
+
+    def c_router():
+        keys = page.evaluate("Array.from(document.querySelectorAll('#nav button[data-page]')).map(b=>b.dataset.page)")
+        assert len(keys) == 17, keys
+        for key in keys:
+            page.evaluate("k => goToPage(k)", key)
+            title = page.locator("#pageTitle").inner_text().strip()
+            assert title, f"página sem título: {key}"
+        return "17/17 páginas renderizaram"
+
+    check("roteador: todas as páginas existentes", c_router)
+
+    def c_responsive():
+        page.evaluate("goToPage('study')")
+        bad = []
+        for width in [1440, 1024, 900, 768, 640, 560, 390]:
+            page.set_viewport_size({"width": width, "height": 900})
+            page.wait_for_timeout(120)
+            dims = page.evaluate("({sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth})")
+            if dims["sw"] > dims["cw"] + 2:
+                bad.append((width, dims))
+        assert not bad, bad
+        page.set_viewport_size({"width": 1440, "height": 900})
+        page.screenshot(path=SHOT_DESKTOP, full_page=False)
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.screenshot(path=SHOT_MOBILE, full_page=False)
+        page.set_viewport_size({"width": 1440, "height": 900})
+        return "7 larguras sem overflow horizontal"
+
+    check("responsividade: 1440/1024/900/768/640/560/390 px", c_responsive)
+
+    def c_a11y():
+        page.evaluate("goToPage('study')")
+        assert page.locator("[role=tablist]").count() >= 1
+        page.locator("#study-tab-tutor").click()
+        selected = page.evaluate("Array.from(document.querySelectorAll('[role=tab]')).filter(b=>b.getAttribute('aria-selected')==='true').map(b=>b.id)")
+        assert selected == ["study-tab-tutor"], selected
+        assert page.locator("#studyPanel").get_attribute("aria-labelledby") == "study-tab-tutor"
+        assert page.locator("#skip-link, .skip-link").count() >= 1
+        return "tablist/aria-selected/aria-labelledby/skip-link OK"
+
+    check("acessibilidade estrutural da página nova", c_a11y)
+
+    def c_theme():
+        before = page.evaluate("document.documentElement.dataset.theme")
+        page.click("#themeBtn")
+        after = page.evaluate("document.documentElement.dataset.theme")
+        assert before != after, (before, after)
+        page.evaluate("goToPage('study')")
+        assert "Aprenda a estudar" in page.locator("#view").inner_text()
+        return f"{before} -> {after}"
+
+    check("tema claro/escuro não quebra a página nova", c_theme)
+
+    def c_offline():
+        page.evaluate("goToPage('study')")
+        page.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=20000)
+        context.set_offline(True)
+        try:
+            page.reload(wait_until="domcontentloaded")
+            page.evaluate("goToPage('study')")
+            text = page.locator("#view").inner_text()
+            assert "Tutorial em 9 etapas" in text, text[:200]
+            return "reload offline renderizou a página e o módulo"
+        finally:
+            context.set_offline(False)
+
+    check("PWA/offline: reload com rede desligada", c_offline)
+
+    def c_curriculum_real():
+        keys = page.evaluate("Object.keys(CURRICULUM)")
+        assert len(keys) >= 5, keys
+        page.evaluate("Study.setTab('tutor'); Study.setTutorMode('zero')")
+        opts = page.locator("#tutorTrack option").count()
+        assert opts >= 5, opts
+        return f"{len(keys)} trilhas; {opts} opções no tutor"
+
+    check("REGRESSÃO: tutor enxerga CURRICULUM real do navegador", c_curriculum_real)
+
+    def c_invalid_route():
+        page.evaluate("goToPage('studyy')")
+        assert page.locator("#pageTitle").inner_text() == "Painel geral"
+        assert page.locator("#nav button[data-page][aria-current='page']").get_attribute("data-page") == "dashboard"
+        page.evaluate("goToPage('study')")
+        return "rota inválida caiu no painel; rota válida restaurada"
+
+    check("REGRESSÃO: goToPage rejeita página inexistente", c_invalid_route)
+
+    def c_alt_arrow_typing():
+        page.evaluate("Study.setTab('session'); Study.sessionGo(1)")
+        page.fill("#s_text", "TEXTO PRESERVADO")
+        page.locator("#s_text").dispatch_event("keydown", {"key": "ArrowRight", "altKey": True, "bubbles": True})
+        assert page.locator("#pageTitle").inner_text() == "Aprenda a estudar"
+        assert page.input_value("#s_text") == "TEXTO PRESERVADO"
+        return "Alt+seta não navegou durante digitação"
+
+    check("REGRESSÃO: atalho Alt+seta respeita campo de texto", c_alt_arrow_typing)
+
+    def c_theme_keeps_unsaved():
+        page.fill("#s_text", "TEXTO AINDA NAO SALVO")
+        page.click("#themeBtn")
+        page.evaluate("Study.setTab('session'); Study.sessionGo(1)")
+        assert page.input_value("#s_text") == "TEXTO AINDA NAO SALVO"
+        page.click("#themeBtn")
+        return "texto não salvo preservado após render global"
+
+    check("REGRESSÃO: re-render global preserva formulário", c_theme_keeps_unsaved)
+
+    def c_book_session_preserved():
+        page.evaluate("Study.startFromBook(0)")
+        page.evaluate("Study.sessionGo(1)")
+        page.fill("#s_text", "TEXTO DO LIVRO PRESERVADO")
+        page.evaluate("Study.sessionSave(1,'read')")
+        page.evaluate("Study.startFromBook(0)")
+        assert session_of(page).get("text") == "TEXTO DO LIVRO PRESERVADO"
+        return "segundo clique no mesmo livro não apagou a sessão"
+
+    check("REGRESSÃO: 'Estudar este livro' preserva sessão existente", c_book_session_preserved)
+
+    def c_no_key_leak():
+        page.evaluate("Study.newSession()")
+        assert "__key" not in session_of(page)
+        return "__key ausente no estado persistido"
+
+    check("REGRESSÃO: chave interna não vaza para Storage", c_no_key_leak)
+
+    def c_checklist_uncheck():
+        page.evaluate("Study.sessionGo(2)")
+        page.locator("#sc0").check()
+        page.evaluate("Study.sessionGo(1)")
+        assert session_of(page).get("checks", {}).get("c0") is True
+        page.evaluate("Study.sessionGo(2)")
+        page.locator("#sc0").uncheck()
+        page.evaluate("Study.sessionGo(1)")
+        assert session_of(page).get("checks", {}).get("c0") is False
+        return "marcação e desmarcação persistidas"
+
+    check("REGRESSÃO: checklist pode ser desmarcado", c_checklist_uncheck)
+
+    def c_tutor_clear():
+        page.evaluate("Study.setTab('tutor'); Study.setTutorMode('explain')")
+        page.fill("#tutorText", "TEXTO ANTIGO QUE DEVERIA DESAPARECER")
+        page.fill("#tutorText", "")
+        page.evaluate("Study.runTutor()")
+        out = page.locator("#tutorOutput").inner_text()
+        assert "Texto insuficiente" in out, out[:200]
+        return "campo vazio não resgata texto antigo"
+
+    check("REGRESSÃO: texto do tutor pode ser esvaziado", c_tutor_clear)
+
+    def c_question_context():
+        page.evaluate("Study.setTab('tutorial'); Study.tutorialGo(2)")
+        page.fill("#tut_text", "Cache é bom. UDP é rápido. TCP é estável.")
+        page.evaluate("Study.generateTutorialQuestions()")
+        page.evaluate("Study.tutorialGo(6)")
+        page.evaluate("Study.revealAnswers()")
+        out = page.locator("#tut_check").inner_text()
+        assert "[não encontrado]" in out, out[:300]
+        assert "[trecho] Termo identificado" not in out, out[:300]
+        return "fallback de pergunta não é rotulado como trecho"
+
+    check("REGRESSÃO: proveniência das perguntas é honesta", c_question_context)
+
+    def c_xss_gap_category():
+        page.evaluate("""() => {
+          const s = Storage.get();
+          s.study.gaps.push({ kind: 'manual', source: 'teste', text: 'injeção', category: 'x" onmouseover="alert(1)' });
+          Storage.save();
+        }""")
+        page.evaluate("goToPage('study'); Study.setTab('gaps')")
+        html = page.locator("#view").inner_html()
+        assert 'onmouseover="alert(1)"' not in html, html[:300]
+        return "categoria maliciosa não virou atributo HTML"
+
+    check("REGRESSÃO: categoria de lacuna escapada/whitelist", c_xss_gap_category)
+
+    def c_xss_history():
+        page.evaluate("""() => {
+          const s = Storage.get();
+          s.study.tutor['evil-test'] = { mode: 'explain', at: new Date().toISOString(), text: '<img src=x onerror=alert(1)>' };
+          Storage.save();
+        }""")
+        page.evaluate("Study.setTab('tutor'); Study.showHistory('evil-test')")
+        html = page.locator("#tutorOutput").inner_html()
+        assert "<img" not in html and "&lt;img" in html, html[:300]
+        return "histórico malicioso renderizado como texto escapado"
+
+    check("REGRESSÃO: histórico do tutor sem XSS persistido", c_xss_history)
+
+    def c_corrupt_backup():
+        p2 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
+        p2.goto(BASE, wait_until="domcontentloaded")
+        p2.evaluate("localStorage.setItem('forge.study.v2', '{broken')")
+        p2.reload(wait_until="domcontentloaded")
+        backup = p2.evaluate("localStorage.getItem('forge.study.v2.lastBackup')")
+        assert backup and '"corrupted":true' in backup and "{broken" in backup, (backup or "")[:300]
+        p2.context.close()
+        return "JSON corrompido preservado em forge.study.v2.lastBackup"
+
+    check("REGRESSÃO: estado corrompido gera backup antes de resetar", c_corrupt_backup)
+
+    def c_import_future_rejected():
+        r = page.evaluate("""async () => {
+          const antes = JSON.stringify(Storage.get());
+          const backup = localStorage.getItem('forge.study.v2.lastBackup');
+          const file = new File([JSON.stringify({version: 9, state: {version: 9, done: ['futuro'], xp: 9999}})],
+                                'futuro.json', {type: 'application/json'});
+          let code = null;
+          try { await Storage.import(file); } catch (err) { code = err.code || 'SEM_CODIGO'; }
+          return {
+            code: code,
+            toast: document.getElementById('toast').textContent,
+            estadoIgual: JSON.stringify(Storage.get()) === antes,
+            backupIgual: localStorage.getItem('forge.study.v2.lastBackup') === backup
+          };
+        }""")
+        assert r["code"] == "FUTURE_VERSION", r
+        assert r["estadoIgual"] is True, r
+        assert r["backupIgual"] is True, r
+        assert "v9" in r["toast"] and "preservados" in r["toast"], r
+        return "v9 recusada; estado e backup intactos; aviso claro"
+
+    check("IMPORTAÇÃO: versão futura recusada sem perda de dados", c_import_future_rejected)
+
+    def c_import_valid_migration():
+        r = page.evaluate("""async () => {
+          const file = new File([JSON.stringify({version: 2, state: {version: 2, done: ['importado'], xp: 555, plan: {goal: 'meta'}}})],
+                                'v2.json', {type: 'application/json'});
+          await Storage.import(file);
+          const s = Storage.get();
+          return {
+            version: s.version, done: s.done, xp: s.xp, goal: s.plan.goal,
+            toast: document.getElementById('toast').textContent,
+            backup: !!localStorage.getItem('forge.study.v2.lastBackup')
+          };
+        }""")
+        assert r["version"] == 3 and r["done"] == ["importado"] and r["xp"] == 555, r
+        assert r["goal"] == "meta" and r["backup"] is True, r
+        assert "v2 → v3" in r["toast"], r
+        return "v2 migrada para v3 com backup e aviso"
+
+    check("IMPORTAÇÃO: versão compatível ainda migra com backup", c_import_valid_migration)
+
+    browser.close()
+
+print("\n".join(f"{s} | {n} | {d}" for s, n, d in results))
+passed = sum(1 for s, _, _ in results if s == "PASS")
+print(f"\n{passed}/{len(results)} verificações de browser passaram.")
+print(f"console.error (online): {len(console_errors)}")
+for e in console_errors[:8]:
+    print("  CONSOLE:", " ".join(e.split())[:220])
+print(f"pageerror: {len(page_errors)}")
+for e in page_errors[:8]:
+    print("  PAGEERROR:", " ".join(str(e).split())[:220])
+sys.exit(0 if passed == len(results) else 1)

@@ -49,7 +49,7 @@
     return haystack.some(x => norm(x).includes(query));
   }
 
-  function cardHTML(book) {
+  function cardHTML(book, index) {
     const label = TRACK_LABELS[book.track] || book.track || "Geral";
     return `
 <article class="card book-card">
@@ -64,6 +64,7 @@
   <p class="muted small">${esc(book.author)} · ${esc(book.level)}</p>
   <a class="pdf-link" href="${esc(book.url)}" target="_blank" rel="noopener noreferrer"
      aria-label="Abrir PDF ${esc(book.title)} em nova aba">Abrir PDF ↗</a>
+   <button type="button" class="pdf-link study-book-btn" onclick="Study.startFromBook(${Number(index) || 0})" aria-label="Iniciar sessão de estudo guiado de ${esc(book.title)}">Estudar este livro →</button>
 </article>`;
   }
 
@@ -77,7 +78,7 @@
     const found = catalog.filter(matches);
     count.textContent = `${found.length} de ${catalog.length} PDF${catalog.length === 1 ? "" : "s"}`;
     grid.innerHTML = found.length
-      ? found.map(cardHTML).join("")
+      ? found.map(b => cardHTML(b, catalog.indexOf(b))).join("")
       : `<p class="muted">Nenhum PDF encontrado. Tente outro termo ou selecione “Todas”.</p>`;
 
     filters.innerHTML = ["Todas"].concat(areas()).map(area => {
@@ -93,6 +94,7 @@
 <div class="eyebrow">Fontes legais e gratuitas</div>
 <h1 class="h1">Livros em PDF</h1>
 <p class="sub">Obras de domínio público ou com licença aberta, linkadas diretamente à fonte oficial: OpenStax, TLDP, IETF e documentação dos projetos. Regra anti-paralisia: escolha <b>um</b> livro principal por trilha e estude com as aulas e laboratórios do Forge.</p>
+<p class="callout small">Cada PDF abre na fonte oficial. Para estudar com recuperação ativa, explicação própria e revisão agendada, use <button class="linklike" onclick="goToPage('study')">Aprenda a estudar →</button> ou o botão “Estudar este livro” no card.</p>
 <label class="field" style="display:block;margin-bottom:12px">
   <span class="small">Buscar por título, autor, área ou licença</span>
   <input id="booksSearch" class="field" type="search" placeholder="Ex.: cálculo, HTTP, PostgreSQL..." autocomplete="off"

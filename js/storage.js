@@ -50,6 +50,15 @@ function defaultState() {
     labEvidence: {},
     resourceMeta: {},
     assessmentLog: [],
+    // Evolução — estudo guiado, tutor local, fichas de artigo e diagnóstico de lacunas.
+    // Espaço aditivo dentro do schema v3: nenhum dado antigo é sobrescrito.
+    study: {
+      sessions: {},
+      tutor: {},
+      articles: {},
+      gaps: [],
+      lastSessionKey: ""
+    },
     // Seção 11 — TDAH e gamificação.
     xp: 0,
     level: 1,
@@ -131,6 +140,15 @@ function normalizeState(raw) {
   for (const key of ["mastery", "labEvidence", "resourceMeta"]) {
     out[key] = out[key] && typeof out[key] === "object" && !Array.isArray(out[key]) ? out[key] : {};
   }
+  // Evolução: normaliza apenas o espaço novo, preservando o que já existir.
+  const studyRaw = out.study && typeof out.study === "object" && !Array.isArray(out.study) ? out.study : {};
+  out.study = { ...fresh.study, ...studyRaw };
+  for (const key of ["sessions", "tutor", "articles"]) {
+    const bucket = out.study[key];
+    out.study[key] = bucket && typeof bucket === "object" && !Array.isArray(bucket) ? bucket : {};
+  }
+  out.study.gaps = Array.isArray(out.study.gaps) ? out.study.gaps.slice(-200) : [];
+  out.study.lastSessionKey = typeof out.study.lastSessionKey === "string" ? out.study.lastSessionKey : "";
   out.assessmentLog = Array.isArray(out.assessmentLog) ? out.assessmentLog.slice(-300) : [];
   for (const key of ["done", "declared", "labDone", "timerSessions", "mentalMathHistory"]) {
     if (!Array.isArray(out[key])) out[key] = [];
@@ -158,8 +176,9 @@ function normalizeState(raw) {
 }
 
 function loadState() {
+  let stored = null;
   try {
-    const stored = localStorage.getItem(STORE_KEY);
+    stored = localStorage.getItem(STORE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Number(parsed.version) > CURRENT_VERSION) {
@@ -175,6 +194,8 @@ function loadState() {
     }
   } catch (e) {
     console.error("Erro ao carregar estado:", e);
+    // Preserva a string corrompida antes de qualquer substituição em memória.
+    backupState(stored);
     state = defaultState();
   }
   updateStreak();
@@ -185,11 +206,13 @@ function loadState() {
 // se a gravação falhar, e não tenta salvar novamente durante a importação.
 function backupState(raw) {
   if (!raw) return false;
+  const isRawText = typeof raw === "string";
   try {
     localStorage.setItem(BACKUP_KEY, JSON.stringify({
       savedAt: new Date().toISOString(),
-      version: Number(raw.version) || 1,
-      state: raw
+      version: isRawText ? CURRENT_VERSION : (Number(raw.version) || 1),
+      state: raw,
+      ...(isRawText ? { corrupted: true } : {})
     }));
     return true;
   } catch (e) {
@@ -289,8 +312,17 @@ function importData(file) {
           throw new Error("Formato inválido");
         }
         const importedVersion = Number(importedState.version || parsed.version || 1);
-        if (!Number.isFinite(importedVersion) || importedVersion < 1 || importedVersion > CURRENT_VERSION) {
-          throw new Error(`Versão ${importedVersion} incompatível (esperado 1 a ${CURRENT_VERSION})`);
+        if (!Number.isFinite(importedVersion) || importedVersion < 1) {
+          throw new Error(`Versão ${importedVersion} inválida (esperado 1 a ${CURRENT_VERSION})`);
+        }
+        if (importedVersion > CURRENT_VERSION) {
+          // Leitura (loadState) preserva versões futuras sem rebaixá-las. Importação,
+          // porém, não pode rebaixar campos desconhecidos: aborta ANTES de qualquer
+          // backup/mutação, mantendo o estado atual intacto e informando o usuário.
+          const err = new Error(`Versão ${importedVersion} incompatível (esperado 1 a ${CURRENT_VERSION})`);
+          err.code = "FUTURE_VERSION";
+          err.version = importedVersion;
+          throw err;
         }
         // Backup do estado atual antes de substituí-lo; logs de erro sem dados sensíveis.
         backupState({ ...(state || {}), version: (state && state.version) || CURRENT_VERSION });
@@ -300,8 +332,14 @@ function importData(file) {
         toast(`Progresso importado com sucesso${importedVersion < CURRENT_VERSION ? ` (v${importedVersion} → v${CURRENT_VERSION})` : ""}!`);
         resolve(true);
       } catch (err) {
-        console.error("Erro ao importar:", err);
-        toast("Arquivo inválido ou incompatível.");
+        if (err && err.code === "FUTURE_VERSION") {
+          // Incompatibilidade esperada: não é corrupção, não descarta dados locais.
+          console.warn("Importação cancelada:", err.message);
+          toast(`Importação cancelada: arquivo v${err.version} é mais novo que este aplicativo (v${CURRENT_VERSION}). Seus dados atuais foram preservados.`);
+        } else {
+          console.error("Erro ao importar:", err);
+          toast("Arquivo inválido ou incompatível.");
+        }
         reject(err);
       }
     };
@@ -490,6 +528,45 @@ function getPlacementResult() {
   return state.placementResult;
 }
 
+/* ---------- Espaço de estudo guiado (schema v3, aditivo) ---------- */
+
+function getStudyState() {
+  const s = getState();
+  if (!s.study || typeof s.study !== "object") s.study = defaultState().study;
+  return s.study;
+}
+
+function getStudySession(key) {
+  const k = String(key || "");
+  return getStudyState().sessions[k] || null;
+}
+
+function saveStudySession(key, patch) {
+  const study = getStudyState();
+  const k = String(key || "");
+  const previous = study.sessions[k] && typeof study.sessions[k] === "object" ? study.sessions[k] : {};
+  study.sessions[k] = { ...previous, ...(patch || {}), updatedAt: new Date().toISOString() };
+  if (!study.sessions[k].createdAt) study.sessions[k].createdAt = study.sessions[k].updatedAt;
+  study.lastSessionKey = k;
+  saveState();
+  return study.sessions[k];
+}
+
+function saveStudyArticle(key, article) {
+  const study = getStudyState();
+  study.articles[String(key)] = { ...(article || {}), savedAt: new Date().toISOString() };
+  saveState();
+  return study.articles[String(key)];
+}
+
+function addStudyGap(gap) {
+  const study = getStudyState();
+  study.gaps.push({ ...(gap || {}), date: new Date().toISOString() });
+  if (study.gaps.length > 200) study.gaps = study.gaps.slice(-200);
+  saveState();
+  return study.gaps[study.gaps.length - 1];
+}
+
 window.Storage = {
   load: loadState,
   save: saveState,
@@ -524,6 +601,11 @@ window.Storage = {
   getMentalMathStats,
   setPlacementResult,
   getPlacementResult,
+  getStudyState,
+  getStudySession,
+  saveStudySession,
+  saveStudyArticle,
+  addStudyGap,
   defaultState
 };
 

@@ -138,6 +138,7 @@ function render() {
     review: "Revisão espaçada",
     mistakes: "Caderno de erros",
     feynman: "Técnica Feynman",
+    study: "Aprenda a estudar",
     domain: "Mapa de domínio",
     library: "Biblioteca",
     richlib: "Biblioteca rica",
@@ -172,6 +173,7 @@ function render() {
     review: reviewPage,
     mistakes: mistakesPage,
     feynman: feynmanPage,
+    study: v => { if (typeof StudyPage !== "undefined") StudyPage.renderPage(v); else v.innerHTML = '<p class="muted">Módulo de estudo guiado indisponível.</p>'; },
     domain: v => { v.innerHTML = `<div class="eyebrow">Avaliação por evidência</div><h1 class="h1">Mapa de domínio</h1><p class="sub">Domínio não é XP: cada selo 8/10 exige explicação, exercícios, aplicação, laboratório e revisão posterior.</p>` + (typeof Mastery !== "undefined" ? Mastery.panelHTML() : '<p class="muted">Módulo de domínio indisponível.</p>'); },
     library: libraryPage,
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
@@ -624,6 +626,17 @@ function addStudyCards(k) {
   page = "review";
   render();
 }
+
+// Navegação programática usada pelos módulos de estudo (mesmo roteador da navbar).
+function goToPage(nextPage) {
+  const allowed = [...document.querySelectorAll("#nav button[data-page]")].map(b => b.dataset.page);
+  const requested = String(nextPage || "dashboard");
+  page = (!allowed.length || allowed.includes(requested)) ? requested : "dashboard";
+  document.getElementById("sidebar")?.classList.remove("open");
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+window.goToPage = goToPage;
 
 // Navigation handlers
 document.getElementById("nav").addEventListener("click", e => {
@@ -1193,7 +1206,7 @@ ${s.mistakes.length ? s.mistakes.map((m, i) => {
   </select>
   ${m.category ? `<p class="small muted">Ação: ${escHtml(ERROR_TAXONOMY[m.category])}</p>` : ""}
   <div class="actions">
-    <button class="secondary" onclick="openLesson('${m.lesson}')">Revisar aula</button>
+    ${m.lesson === "estudo-guiado" ? "" : `<button class="secondary" onclick="openLesson('${m.lesson}')">Revisar aula</button>`}
     <button class="secondary" onclick="Gamification.redoMistake(${i},true)">Refazer e acertei</button>
     <button class="ghost" onclick="Gamification.redoMistake(${i},false)">Errei de novo</button>
     <button class="ghost" onclick="removeMistake(${i})">Remover</button>
@@ -1480,6 +1493,9 @@ document.addEventListener("keydown", e => {
     return;
   }
 
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+  if (typing) return;
+
   if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
     const pages = [...document.querySelectorAll("#nav button")].map(b => b.dataset.page);
     const i = pages.indexOf(page);
@@ -1492,8 +1508,7 @@ document.addEventListener("keydown", e => {
     return;
   }
 
-  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
-  if (typing || e.ctrlKey || e.metaKey || document.querySelector(".modal-overlay")) return;
+  if (e.ctrlKey || e.metaKey || document.querySelector(".modal-overlay")) return;
 
   if ((e.key === "f" || e.key === "F") && page !== "focus" && typeof Focus !== "undefined") {
     e.preventDefault();

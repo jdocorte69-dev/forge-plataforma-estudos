@@ -1,5 +1,5 @@
 /* Forge — service worker para uso offline */
-const VERSION = "forge-v5";
+const VERSION = "forge-v6";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -38,6 +38,7 @@ const APP_SHELL = [
   "./js/labs-catalog.js",
   "./js/library-rich.js",
   "./js/books.js",
+  "./js/study.js",
   "./js/features.js",
   "./js/focus.js",
   "./js/plan.js",
@@ -81,8 +82,10 @@ self.addEventListener("fetch", event => {
     event.respondWith(
       fetch(req)
         .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put("./index.html", copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then(c => c.put("./index.html", copy));
+          }
           return res;
         })
         .catch(() => caches.match("./index.html"))
