@@ -48,6 +48,12 @@ O detalhamento por módulo/aula está em [`AUDITORIA.md`](AUDITORIA.md).
 
 Abra [`GUIA_DE_ESTUDO.md`](GUIA_DE_ESTUDO.md): rotina de sessão, plano de 12 semanas, variantes para 3 h / 7 h / 14 h por semana e critérios de promoção entre trilhas.
 
+## Gerar material didático
+
+[`PROMPT_MESTRE.md`](PROMPT_MESTRE.md) define como escrever capítulos de Matemática, Linguagem C, Redes e Engenharia de Software com pedagogia, exercícios, gabarito comentado e campos para a plataforma. Para contextos menores, use [`PROMPT_MESTRE_NUCLEO.md`](PROMPT_MESTRE_NUCLEO.md) (seções 1 a 11) e carregue [`PROMPT_MESTRE_REFERENCIA.md`](PROMPT_MESTRE_REFERENCIA.md) (seções 12 a 19) quando precisar da rubrica, das analogias, dos projetos ou da integração com o FORGE. [`CAPITULO_MODELO.md`](CAPITULO_MODELO.md) é o capítulo completo usado como padrão ouro.
+
+> Atenção aos códigos: `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` são etiquetas didáticas do Prompt Mestre, não IDs da aplicação. A conversão está na seção 18.3. Os mini-projetos didáticos são `MP1`–`MP10`; o portfólio canônico da aplicação é `P0`–`P10`.
+
 ## Seus dados
 
 Tudo fica no `localStorage` deste navegador, na chave `forge.study.v2` (schema v3). Antes de migrar ou importar, o estado anterior é copiado para `forge.study.v2.lastBackup`. Use **Progresso e backup → Exportar / importar JSON** para guardar uma cópia ou levar o progresso para outro dispositivo. Não há coleta de dados, analytics nem credenciais.
