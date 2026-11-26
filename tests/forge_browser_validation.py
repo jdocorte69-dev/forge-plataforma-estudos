@@ -8,7 +8,7 @@ import tempfile
 
 from playwright.sync_api import sync_playwright
 
-BASE = "http://127.0.0.1:8765/index.html"
+BASE = os.environ.get("FORGE_BASE", "http://127.0.0.1:8765/index.html")
 SAMPLE = (
     "Cache HTTP reduz latência. Por exemplo, uma resposta pode ser reutilizada. "
     "Segundo a especificação, Cache-Control define a validação. "
