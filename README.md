@@ -42,7 +42,7 @@ O service worker `sw.js` (cache `forge-v5`) guarda o shell da aplicação para u
 
 Linux · C e Algoritmos · Matemática · Matemática — Fundamentos · Engenharia de Software · Sistemas e Arquitetura · Redes · Banco de Dados · Segurança.
 
-O detalhamento por módulo/aula está em [`AUDITORIA.md`](AUDITORIA.md).
+O detalhamento por módulo/aula está em [`AUDITORIA.md`](AUDITORIA.md). O inventário completo do painel, das funcionalidades implementadas e do material didático está em [`RELATORIO_COMPLETO.md`](RELATORIO_COMPLETO.md).
 
 ## Plano de estudo
 
