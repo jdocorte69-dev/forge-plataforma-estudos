@@ -3,7 +3,7 @@
 **Data:** 26/11/2026  
 **Repositório:** https://github.com/jdocorte69-dev/forge-plataforma-estudos  
 **Site publicado:** https://jdocorte69-dev.github.io/forge-plataforma-estudos/  
-**Branch:** `main`, sincronizada com `origin/main` no commit `597f263`.
+**Branch:** `main`, sincronizada com `origin/main` no commit `f5c19ec`.
 
 Este relatório consolida dois conjuntos de fatos: (1) tudo o que a aplicação mostra e executa, com foco no painel, e (2) tudo o que foi implementado e publicado, incluindo o sistema de geração de capítulos. Números e comportamentos foram confirmados no código e na documentação do repositório; quando algo não tem equivalente executável, está dito explicitamente.
 
@@ -25,14 +25,14 @@ Este relatório consolida dois conjuntos de fatos: (1) tudo o que a aplicação 
 | Flashcards | 80 | `AUDITORIA.md:24` |
 | Indicadores de domínio no painel | 10 | `AUDITORIA.md:26` |
 | PDFs de fonte aberta | 24 | `README.md:35`, `PROGRESSO.md:160-166` |
-| Páginas na navegação | 15 | `index.html:20-40` |
+| Páginas na navegação | 16 (a documentação mais antiga diz 15) | `index.html:22-39` |
 | Scripts JavaScript locais | 32 | `AUDITORIA.md:114`, `index.html:49-82` |
 | Links externos verificados | 31/31 | `AUDITORIA.md:163-201` |
 | Auditorias axe WCAG 2.2 AA | 30, com 0 violações | `AUDITORIA.md:136-147` |
 | Lighthouse | 100 / 100 / 100 (acessibilidade, boas práticas, SEO) | `AUDITORIA.md:149-155` |
 | Erros no console | 0 | `AUDITORIA.md:134` |
 
-**Princípio central:** XP mede atividade; domínio exige evidência. Uma aula só é marcada como concluída com nota ≥ 8/10 **e** síntese Feynman de ≥ 30 caracteres (`README.md:7`, `GUIA_DE_ESTUDO.md:7-13`, `PROMPT_MESTRE.md:817-829`).
+**Princípio central:** XP mede atividade; domínio exige evidência. Uma aula só é marcada como concluída com nota ≥ 8/10 **e** síntese Feynman de ≥ 30 caracteres (`README.md:7`, `GUIA_DE_ESTUDO.md:7-13`, `PROMPT_MESTRE.md:817-829`, `js/app.js:572-596`). O **selo** de domínio da rubrica é mais rigoroso: exige ≥ 80 caracteres e mais quatro critérios (`js/mastery.js:12-48`).
 
 ---
 
@@ -48,13 +48,25 @@ Este relatório consolida dois conjuntos de fatos: (1) tudo o que a aplicação 
 - Funciona offline depois do primeiro carregamento; via `file://` o service worker é bloqueado pelo navegador, mas a aplicação continua funcional (`README.md:20`, `AUDITORIA.md:209`).
 - Deploy: GitHub Pages em modo clássico, branch `main`, raiz do repositório (`README.md:70-77`). Há também `.github/workflows/deploy-pages.yml` como alternativa manual (`README.md:75`).
 
+#### Campos do estado persistido (`js/storage.js:6-73`)
+
+| Grupo | Campos | Linha |
+|---|---|---|
+| Núcleo | `version`, `done`, `declared`, `mistakes`, `cards`, `hours`, `weeklyGoal`, `sessionDate`, `streak`, `dayLog`, `feynman`, `notes`, `theme`, `labDone`, `lastVisit`, `placementDone`, `placementResult`, `timerSessions`, `mentalMathHistory` | `js/storage.js:13-32` |
+| Modo foco e plano | `focus` (sessões, progresso, metas 25 min/dia e 150 min/semana, última sessão), `plan` (objetivo, horas semanais, prazo, inscrição, marcos, aulas personalizadas), `assessments` | `js/storage.js:33-47` |
+| Enciclopédia | `mastery`, `labEvidence`, `resourceMeta`, `assessmentLog` | `js/storage.js:48-52` |
+| Gamificação | `xp`, `level`, `xpLog`, `feynmanAwarded`, `shieldUsedWeek`, `tmvDoneToday`, `tmvDate`, `pomodoros`, `pomodoroLog`, `redoStreak`, `rewards` | `js/storage.js:53-64` |
+| Conforto | `settings`: animações, som, modo compacto, autosave, `fontScale` (padrão 15), alto contraste | `js/storage.js:65-72` |
+
+Ciclo de vida: `loadState()` (`js/storage.js:160-179`), `migrateState()` (`:201`), `saveState()` (`:217`), `exportData()` (`:265-279`) e `importData()` (`:281-300`). Não há backend, analytics nem credenciais (`README.md:68`).
+
 ---
 
 ## 3. O painel — tudo o que aparece na interface
 
-### 3.1 Navegação (15 páginas)
+### 3.1 Navegação (16 páginas)
 
-Extraído de `index.html:20-40`:
+Extraído de `index.html:20-40`; os 16 botões `data-page` estão em `index.html:22-39`:
 
 | Grupo | Páginas |
 |---|---|
@@ -62,7 +74,7 @@ Extraído de `index.html:20-40`:
 | Referência | Biblioteca (`library`), Biblioteca rica (`richlib`), Livros em PDF (`books`), Glossário (`glossary`), Projetos integradores (`projects`), Catálogo de labs (`catalog`) |
 | Dados | Progresso e backup (`settings`) |
 
-O cabeçalho traz botão de busca global (`Ctrl+K`), alternador de tema claro/escuro e a data do dia (`index.html:43`). Há skip link para o conteúdo principal (`index.html:16`) e `<main tabindex="-1">` (`index.html:44`).
+O cabeçalho traz botão de menu móvel (`☰`), data do dia, busca global (`Ctrl+K`) e alternador de tema claro/escuro (`index.html:43`). Há skip link para o conteúdo principal (`index.html:16`) e `<main tabindex="-1">` (`index.html:44`). A documentação mais antiga cita 15 páginas; a contagem direta do `<nav>` é 16 (9 em Aprender, 6 em Referência, 1 em Dados).
 
 ### 3.2 Indicadores e widgets do painel
 
@@ -136,14 +148,14 @@ Complementos do mesmo bloco:
 | Aula completa | Objetivo, pré-requisito, intuição, explicação, exemplos, erros comuns, mini-laboratório, referência verificável e 10 questões (`AUDITORIA.md:23`) |
 | Modo foco | 8 etapas curtas, blocos de 5/10/15/25 min, pausa/retomada, metas diária/semanal, XP, histórico e retomada da sessão (`AUDITORIA.md:33`) |
 | Meu plano | Metas, ritmo semanal, prazo, marcos, aulas personalizadas e domínio por disciplina, incluindo notas de provas (`AUDITORIA.md:34`) |
-| Laboratórios e catálogo | Terminal Linux simulado (30+ comandos), editor C com Godbolt, cálculo mental, lab de matemática, checklists de engenharia, calculadora IPv4, DNS/encapsulamento, SQL/modelagem; 56 labs com 15 campos, 3 modos de execução, evidência e regras de segurança (`AUDITORIA.md:36`, `AUDITORIA.md:43`) |
+| Laboratórios e catálogo | Terminal Linux simulado (30+ comandos), editor C com Godbolt, cálculo mental, lab de matemática, checklists de engenharia, calculadora IPv4, DNS/encapsulamento, SQL/modelagem; 56 labs com 17 chaves de registro (o documento diz 15), 3 modos de execução, evidência e regras de segurança (`AUDITORIA.md:36`, `AUDITORIA.md:43`, `js/labs-catalog.js:159-166`) |
 | Revisão espaçada e caderno de erros | SM-2 simplificado, revisão em +7 dias (+30 após 2 acertos; +1 no erro), taxonomia E1–E4, categoria e refazimento (`AUDITORIA.md:35`, `AUDITORIA.md:40`) |
-| Técnica Feynman | Síntese por aula; ≥ 30 caracteres é parte do gate de domínio (`GUIA_DE_ESTUDO.md:11-13`) |
+| Técnica Feynman | Síntese por aula; ≥ 30 caracteres conclui a aula, ≥ 80 caracteres entra na rubrica do selo (`GUIA_DE_ESTUDO.md:11-13`, `js/app.js:582`, `js/mastery.js:14`) |
 | Mapa de domínio | Rubrica de 8/10, selo por domínio, prática e revisão registradas em `mastery`/`assessmentLog` (`AUDITORIA.md:45`) |
 | Biblioteca e Biblioteca rica | 110 recursos, 8 filtros combináveis, notas/avaliações em `resourceMeta`, 5 rotas de leitura e busca global (`AUDITORIA.md:24`, `AUDITORIA.md:44`) |
 | Livros em PDF | 24 PDFs legais (OpenStax, TLDP, IETF, documentação oficial) com busca, filtro por área e link direto (`README.md:35`, `PROGRESSO.md:161-162`) |
 | Glossário | 34 termos e busca global com `Ctrl+K` / `Esc` (`AUDITORIA.md:44`) |
-| Projetos integradores | Portfólio canônico `P0`–`P10`, 10 projetos em três níveis mais 5 integradores, com entregáveis preservados (`AUDITORIA.md:24`, `AUDITORIA.md:127`) |
+| Projetos integradores | Portfólio canônico `P0`–`P10` (11 códigos), 10 projetos em três níveis mais 5 integradores, 6 evidências por projeto e entregáveis preservados (`AUDITORIA.md:24`, `js/app.js:1350-1377`; detalhes na seção 5.1) |
 | Progresso e backup | Exportar/importar JSON, reset, tema, tamanho de fonte A−/A/A+ (13–19 px), alto contraste e preferência por movimento reduzido (`README.md:39`, `AUDITORIA.md:38`, `AUDITORIA.md:48`) |
 | Testes e provas | Teste de nivelamento (12 questões), prova periódica cumulativa (10 questões), prova por disciplina com melhor nota registrada e Treino Intercalado (Mix, 6 questões) (`AUDITORIA.md:37`, `AUDITORIA.md:47`) |
 
@@ -155,24 +167,26 @@ Complementos do mesmo bloco:
 
 Tabela de `AUDITORIA.md:9-20`:
 
-| Trilha (`CURRICULUM`) | Módulos | Aulas |
-|---|---:|---:|
-| `linux` — Linux | 8 | 34 |
-| `c` — C (C9–C15 + Algoritmos) | 13 | 74 |
-| `math` — Matemática (M0–M19) | 14 | 83 |
-| `mathfund` — Matemática — Fundamentos | 3 | 25 |
-| `software` — Engenharia de Software | 6 | 29 |
-| `systems` — Sistemas e Arquitetura | 6 | 31 |
-| `networks` — Redes de Computadores (R0–R12) | 11 | 64 |
-| `databases` — Banco de Dados | 2 | 18 |
-| `security` — Segurança | 8 | 27 |
-| **Total** | **71** | **385** |
+| Trilha (`CURRICULUM`) | Módulos | Aulas | Questões |
+|---|---:|---:|---:|
+| `linux` — Linux | 8 | 34 | 340 |
+| `c` — C (C9–C15 + Algoritmos) | 13 | 74 | 740 |
+| `math` — Matemática (M0–M19) | 14 | 83 | 830 |
+| `mathfund` — Matemática — Fundamentos | 3 | 25 | 250 |
+| `software` — Engenharia de Software | 6 | 29 | 290 |
+| `systems` — Sistemas e Arquitetura | 6 | 31 | 310 |
+| `networks` — Redes de Computadores (R0–R12) | 11 | 64 | 640 |
+| `databases` — Banco de Dados | 2 | 18 | 180 |
+| `security` — Segurança | 8 | 27 | 270 |
+| **Total** | **71** | **385** | **3.850** |
+
+As contagens de módulos e aulas vêm de `AUDITORIA.md:9-20`; as de questões são 10 por aula (`AUDITORIA.md:22`).
 
 ### 4.2 Questões, labs, biblioteca e projetos
 
 - Cada uma das 385 aulas tem 10 questões: **3.850 no total**. As alternativas são embaralhadas deterministicamente por aula/questão (FNV-1a + LCG), com índice correto recalculado na renderização e na correção; nenhuma questão tem resposta fixa na letra A (`AUDITORIA.md:22`, `PROGRESSO.md:143`).
 - As aulas da Enciclopédia acrescentam derivação, exemplos trabalhados, perguntas de recuperação, critérios de domínio, tags e esforço estimado (`AUDITORIA.md:23`).
-- 56 laboratórios distribuídos por Matemática, C, Redes, Linux e Engenharia: 29 em `data-labs-a.js` e 27 em `data-labs-b.js` (`AUDITORIA.md:25`, `AUDITORIA.md:94-95`).
+- 56 laboratórios distribuídos por Matemática, C, Redes, Linux e Engenharia: 29 em `data-labs-a.js` e 27 em `data-labs-b.js` (`AUDITORIA.md:25`, `AUDITORIA.md:94-95`). Por tipo de execução: **25 simulados**, **29 comando real** e **2 análise de captura**. Por área: Matemática 15, C 14, Redes 9, Linux 10, Engenharia 8. Por nível: Base 15, Intermediário 29, Avançado 12. O registro usa 17 chaves (`js/labs-catalog.js:159-166`); o documento diz "15 campos" (`AUDITORIA.md:25`).
 - Diagnóstico de redes: simulador `net-diagnostico` com 4 cenários e 5 labs Wireshark (HTTP, DNS, TCP, IP, ARP) (`AUDITORIA.md:41`).
 - Biblioteca rica: 110 recursos, dos quais 43 vieram de `data-library-extra.js`; 29 recursos com URL têm `verifiedAt` preenchido (`AUDITORIA.md:24`, `PROGRESSO.md:125`, `AUDITORIA.md:165`).
 - 24 PDFs de fonte aberta em `js/data-books.js`, com links validados na fonte oficial (206/200) (`PROGRESSO.md:161-163`).
@@ -184,10 +198,12 @@ Tabela de `AUDITORIA.md:9-20`:
 
 | Mecanismo | Regra |
 |---|---|
-| Estados de uma aula | **Em estudo** (sem selo) · **Declarada** (clicou em "Concluir" sem evidência; XP de esforço preservado) · **Dominada** (nota ≥ 8/10 **e** Feynman ≥ 30 caracteres) (`GUIA_DE_ESTUDO.md:7-13`) |
+| Estados de uma aula | **Em estudo** (sem selo) · **Declarada** (clicou em "Concluir" sem evidência; XP de esforço preservado) · **Dominada** (nota ≥ 8/10 **e** Feynman ≥ 30 caracteres) (`GUIA_DE_ESTUDO.md:7-13`, `js/app.js:572-596`) |
+| Selo de domínio (rubrica) | É **mais rigoroso** que a conclusão: nota ≥ 8/10 sem consulta, Feynman ≥ 80 caracteres, aplicação prática, laboratório com evidência, erro corrigido e rubrica ≥ 8/10 — todos os critérios de uma vez (`js/mastery.js:12-15`, `:339-367`) |
+| Composição da rubrica | Explicação 2 + Exercícios 3 + Aplicação 2 + Laboratório 2 + Erros 1 = 10 pontos (`js/mastery.js:17-48`, `:273-337`) |
 | Síntese Feynman | Explicação com analogia e exemplo próprios, como se estivesse ensinando alguém que nunca viu o assunto (`GUIA_DE_ESTUDO.md:13`) |
-| Repetição espaçada | Cartões de erro com revisão em +7 dias, +30 dias após 2 acertos e +1 dia no erro (`AUDITORIA.md:40`) |
-| Taxonomia de erros | E1 lacuna de base, E2 conceito mal compreendido, E3 erro de execução, E4 paralisia/estrutura (`AUDITORIA.md:40`) |
+| Repetição espaçada | Cartões de erro com revisão em +7 dias, +30 dias após 2 acertos e +1 dia no erro (`AUDITORIA.md:40`); flashcards usam intervalos `[1, 3, 7, 14, 30]` dias, "Difícil" zera o nível e agenda +1 dia, "Bom" sobe 1 nível e "Fácil" sobe 2 (`js/exercises.js:100-125`) |
+| Taxonomia de erros | E1 lacuna de base, E2 conceito mal compreendido, E3 erro de execução, E4 paralisia/estrutura (`AUDITORIA.md:40`, `js/app.js:1137-1142`) |
 | Treino intercalado (Mix) | 6 questões misturadas de aulas concluídas, correção imediata e erros enviados ao caderno (`AUDITORIA.md:47`) |
 | XP e níveis | Limiares 0/300/700/1200/2000, +1000 por nível (`AUDITORIA.md:39`) |
 | Escudo semanal | Proteção anti-quebra de sequência (`AUDITORIA.md:39`) |
@@ -197,6 +213,26 @@ Tabela de `AUDITORIA.md:9-20`:
 | Promoção entre módulos | ≥ 80% das aulas em `done[]`, prova por disciplina ≥ 80%, pelo menos 1 lab com evidência e explicação em 3 frases sem consultar (`GUIA_DE_ESTUDO.md:68-77`) |
 | Rotina de sessão | 45 min: 5 intenção, 20 modo foco, 10 prova prática, 5 Feynman, 5 caderno (`GUIA_DE_ESTUDO.md:15-23`) |
 | Planos alternativos | 3 h/semana (4 aulas dominadas), 7 h/semana (rotina completa), 14 h/semana (6 aulas novas) (`GUIA_DE_ESTUDO.md:53-57`) |
+
+### 5.1 Portfólio canônico `P0`–`P10` (`js/app.js:1350-1377`)
+
+São **11 códigos** (`P0` a `P9` mais `P10`) que preservam os índices dos 15 projetos de `PROJECTS`:
+
+| Código | Projeto | Índice | Equivalente |
+|---|---|---:|---|
+| P0 | Calculadora científica em C | 0 | — |
+| P1 | Monitor de processos Linux | 1 | Integrador 2 (índice 11) |
+| P2 | Interpretador de expressões | 2 | Integrador 1 (índice 10) |
+| P3 | Sistema de biblioteca | 3 | — |
+| P4 | Plano financeiro com frações | 4 | — |
+| P5 | Planejador de endereçamento IPv4 | 5 | — |
+| P6 | Modelo relacional e consultas SQL | 6 | — |
+| P7 | Monitor de sistema com observabilidade | 7 | — |
+| P8 | Pipeline de qualidade e entrega | 8 | — |
+| P9 | Serviço HTTP didático em C | 9 | Integrador 4 (índice 13) |
+| P10 | Sistema completo documentado no Git | 14 | Integrador 5 (índice 14) |
+
+As **6 evidências obrigatórias** (`js/app.js:1366-1373`) são: repositório com histórico e commits coerentes; README com instalação, execução e requisitos; testes automatizados com saída registrada; evidência de execução (saída, captura ou relatório); limitações documentadas; retrospectiva com decisões e próximos passos. Cada item é salvo na chave `portfolio-<codigo>-<j>` (`js/app.js:1375-1377`). Esses códigos não se confundem com `MP1`–`MP10`, que são rótulos didáticos do Prompt Mestre (`README.md:55`).
 
 ---
 
@@ -341,12 +377,13 @@ Os códigos didáticos `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` *
 
 ### 10.1 Commit mais recente
 
-`597f263` — `docs: adiciona capítulos modelo M1, R1 e S1 com validação estrutural` (9 arquivos, 2.164 inserções).
+`f5c19ec` — `docs: adiciona relatorio completo do painel e da plataforma` (2 arquivos, 411 inserções). O commit anterior foi `597f263` — capítulos modelo M1, R1 e S1 com validação estrutural (9 arquivos, 2.164 inserções).
 
 ### 10.2 Sequência de commits no repositório
 
 | Commit | Descrição |
 |---|---|
+| `f5c19ec` | Relatório completo do painel e da plataforma + link no README |
 | `597f263` | Capítulos modelo M1, R1 e S1 + validador estrutural |
 | `1c17275` | Correção da rubrica + sincronizador do Prompt Mestre + workflow de checagem |
 | `3e98d80` | Integração do Prompt Mestre à plataforma + capítulo modelo C1 + derivados |
@@ -363,6 +400,7 @@ Os códigos didáticos `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` *
 | Arquivo | Função |
 |---|---|
 | `README.md` | Visão geral, início rápido, mapa de funcionalidades, comandos de validação e publicação |
+| `RELATORIO_COMPLETO.md` | Inventário do painel, das funcionalidades implementadas e do material didático, com referências `arquivo:linha` (este documento) |
 | `GUIA_DE_ESTUDO.md` | Regra de ouro, rotina de 45 min, plano de 12 semanas, variantes de tempo e promoção |
 | `AUDITORIA.md` | Auditoria final: conteúdo, funcionalidades, verificação, acessibilidade, PWA, links e limitações |
 | `PROGRESSO.md` | Inventário, plano de execução (Etapas 0–19) e números finais |
@@ -383,6 +421,15 @@ Os códigos didáticos `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` *
 4. Responsividade validada por revisão das regras CSS em 1024, 900, 640 e 560 px (`AUDITORIA.md:210`).
 5. As 72 entradas legadas de `LIBRARY_BASE` não têm `verifiedAt` e aparecem como "Acesso não confirmado" (`AUDITORIA.md:203`).
 6. Três itens do plano não têm equivalente executável e não foram reivindicados: grafo de commits Git, curva de perda animada e lab de similaridade de cosseno (`AUDITORIA.md:63`).
+
+### 11.1 Divergências entre código e documentação (conferidas em 26/11/2026)
+
+| Divergência | Código | Documentação |
+|---|---|---|
+| Concluir aula exige Feynman ≥ 30 caracteres; **selo de domínio** exige ≥ 80 e mais quatro critérios | `js/app.js:582`, `js/mastery.js:14`, `:22`, `:344` | Documentos citam só os 30 (`GUIA_DE_ESTUDO.md:11`, `AUDITORIA.md:46`). São camadas diferentes, não erro de implementação. |
+| Cache do service worker é `forge-v5` | `sw.js:2-3` | `AUDITORIA.md:5` ainda registra `forge-v4-cache`. |
+| Registro de lab tem 17 chaves | `js/labs-catalog.js:159-166` | `AUDITORIA.md:25` e `AUDITORIA.md:43` dizem "15 campos". |
+| Navegação tem 16 botões de página | `index.html:22-39` | Documentação mais antiga fala em 15 páginas. |
 
 ---
 
