@@ -22,6 +22,42 @@ os.makedirs(SHOT_DIR, exist_ok=True)
 results = []
 
 
+def make_pdf(text):
+    """PDF mínimo válido, com uma página e texto selecionável, para teste local."""
+    import textwrap
+    lines = textwrap.wrap(text, width=58) or [text]
+    commands = ["BT", "/F1 12 Tf"]
+    for index, line in enumerate(lines):
+        safe = line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        commands.append(f"1 0 0 1 72 {740 - index * 22} Tm ({safe}) Tj")
+    commands.append("ET")
+    stream = ("\n".join(commands) + "\n").encode("latin-1")
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+        b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"endstream",
+    ]
+    out = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = []
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(out))
+        out += str(number).encode() + b" 0 obj\n" + body + b"\nendobj\n"
+    startxref = len(out)
+    out += b"xref\n0 " + str(len(objects) + 1).encode() + b"\n"
+    out += b"0000000000 65535 f \n"
+    for offset in offsets:
+        out += ("%010d 00000 n \n" % offset).encode()
+    out += b"trailer\n<< /Size " + str(len(objects) + 1).encode() + b" /Root 1 0 R >>\n"
+    out += b"startxref\n" + str(startxref).encode() + b"\n%%EOF\n"
+    path = os.path.join(SHOT_DIR, "forge_browser_sample.pdf")
+    with open(path, "wb") as handle:
+        handle.write(out)
+    return path
+
+
 def check(name, fn):
     try:
         detail = fn() or ""
@@ -234,13 +270,136 @@ with sync_playwright() as pw:
 
     def c_books():
         page.evaluate("goToPage('books')")
+        assert page.locator("#booksGrid button[onclick^='BookUI.open']").count() == 24
         assert page.locator("#booksGrid .study-book-btn").count() == 24
-        page.locator("#booksGrid .study-book-btn").first.click()
-        assert page.locator("#pageTitle").inner_text() == "Aprenda a estudar"
-        assert "Cálculo" in page.locator("#studyPanel").inner_text()
-        return "24 botões; clique abre sessão do livro"
+        assert page.locator("#booksGrid .book-card-status").count() == 24
+        page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
+        page.wait_for_function("document.getElementById('pageTitle').textContent.includes('Detalhe do livro')")
+        text = page.locator("#view").inner_text()
+        assert "Cálculo — Volume 1" in text
+        assert "CC BY 4.0" in text
+        assert "Abrir leitor interno" in text
+        assert "Importar PDF do dispositivo" in text
+        return "24 livros; detalhe interno com download/importação"
 
-    check("catálogo: 24 livros e botão de estudo", c_books)
+    check("biblioteca: 24 livros e detalhe integrado", c_books)
+
+    def c_import_pdf():
+        pdf_path = make_pdf("FORGE leitor integrado com questoes rastreaveis. Questoes extraidas da pagina 1 com referencia ao trecho original.")
+        page.locator("#bookImportInput").set_input_files(pdf_path)
+        page.wait_for_function("""() => {
+            const b = Array.from(document.querySelectorAll('button'))
+              .find(x => x.textContent.includes('Abrir leitor interno'));
+            return b && !b.disabled;
+        }""", timeout=15000)
+        info = page.evaluate("""async () => {
+            const id = BOOKS_META.idFor(BOOKS[0].title);
+            const pdf = await BookStore.getPdf(id);
+            return { size: pdf.size, valid: BookStore.validatePdfBytes(new Uint8Array(await pdf.blob.arrayBuffer())) };
+        }""")
+        assert info["valid"] and info["size"] > 500, info
+        assert "concluído" in page.locator("#bookStatus").inner_text()
+        return f"PDF validado e persistido ({info['size']} bytes)"
+
+    check("PDF: importação real, validação e armazenamento", c_import_pdf)
+
+    def c_extract_text():
+        page.evaluate("BookUI.extract()")
+        page.wait_for_function("""() => document.querySelector('#toast').textContent.includes('Texto extraído')""", timeout=30000)
+        page.wait_for_function("""() => {
+            const b = Array.from(document.querySelectorAll('button'))
+              .find(x => x.textContent.includes('Gerar e responder questões'));
+            return b && !b.disabled;
+        }""", timeout=10000)
+        data = page.evaluate("""async () => {
+            const t = await BookStore.getText(BOOKS_META.idFor(BOOKS[0].title));
+            return { pages: t.coverage, scanned: t.scanned, text: t.pages[0].text };
+        }""")
+        assert data["pages"] == 1 and not data["scanned"], data
+        assert "FORGE leitor integrado" in data["text"], data["text"]
+        return "1 página extraída com texto real"
+
+    check("extração: PDF.js extrai texto associado à página", c_extract_text)
+
+    def c_reader():
+        page.evaluate("BookUI.openReader()")
+        page.wait_for_selector("#readerCanvas", timeout=30000)
+        page.wait_for_function("document.querySelector('#readerPageCount').textContent.includes('1 / 1')")
+        width_before = page.evaluate("document.querySelector('#readerCanvas').style.width")
+        assert page.evaluate("document.querySelector('#readerCanvas').width") > 100
+        assert page.evaluate("BookReader.state.pdf.numPages") == 1
+        page.evaluate("BookUI.zoom(0.2)")
+        page.wait_for_function("w => document.querySelector('#readerCanvas').style.width !== w", arg=width_before)
+        page.evaluate("BookUI.bookmark()")
+        page.evaluate("""() => {
+            const layer = document.getElementById('readerTextLayer');
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            const range = document.createRange();
+            range.selectNodeContents(layer);
+            sel.addRange(range);
+        }""")
+        page.evaluate("document.querySelector('#readerNoteInput').value = 'Anotação de teste'")
+        page.evaluate("BookUI.saveAnnotation()")
+        page.wait_for_function("""async () => {
+            const p = await BookStore.getProgress(BOOKS_META.idFor(BOOKS[0].title));
+            return p.bookmarks.includes(1) && p.annotations.length > 0;
+        }""", timeout=10000)
+        page.fill("#readerSearchInput", "FORGE")
+        page.wait_for_function("document.querySelector('#readerSearchInfo').textContent.includes('1 ocorrência')")
+        assert page.locator("#readerSearchResults .linklike").count() >= 1
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.wait_for_timeout(200)
+        dims = page.evaluate("({sw:document.documentElement.scrollWidth,cw:document.documentElement.clientWidth})")
+        assert dims["sw"] <= dims["cw"] + 2, dims
+        page.set_viewport_size({"width": 1440, "height": 900})
+        return "canvas renderizado, zoom, marcador, anotação, busca e mobile"
+
+    check("leitor: renderização, zoom, marcador, anotação, busca e celular", c_reader)
+
+    def c_questions_flow():
+        page.evaluate("BookUI.openQuestions()")
+        page.wait_for_function("document.getElementById('qChapter') && document.getElementById('questionsList')")
+        page.evaluate("BookUI.generateQuestions()")
+        page.wait_for_function("document.querySelectorAll('#questionsList .book-question').length === 5")
+        sources = page.locator("#questionsList .book-question").all_inner_texts()
+        assert all("Origem:" in s and "página 1" in s for s in sources), sources[:1]
+        for i, qtype in enumerate(page.evaluate("BookReader.state.questions.map(q => q.type)")):
+            card = page.locator("#questionsList .book-question").nth(i)
+            if qtype in ("mc", "tf"):
+                card.locator("input[type=radio]").first.check()
+            else:
+                card.locator("textarea").fill(
+                    "Resposta escrita com base no trecho extraído da página 1 do livro."
+                )
+        page.evaluate("BookUI.gradeQuestions()")
+        page.wait_for_function("document.querySelectorAll('#questionsResults .book-result').length === 5")
+        perf = page.locator("#questionsPerformance").inner_text()
+        assert "Questões respondidas: 5" in perf, perf
+        assert "p. 1" in page.locator("#questionsResults").inner_text()
+        assert "Revisar erros" in page.locator("#view").inner_text()
+        return "5 questões com origem, correção e desempenho registrado"
+
+    check("questões: geração local, resposta, correção e desempenho", c_questions_flow)
+
+    def c_persistence():
+        page.reload(wait_until="domcontentloaded")
+        page.wait_for_timeout(800)
+        page.evaluate("goToPage('books')")
+        page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
+        page.wait_for_function("document.getElementById('bookStatus')?.textContent.includes('concluído')")
+        state = page.evaluate("""async () => {
+            const id = BOOKS_META.idFor(BOOKS[0].title);
+            const p = await BookStore.getProgress(id);
+            const q = await BookStore.getQuestions(id);
+            return { lastPage: p.lastPage, answers: p.answered, questions: q.questions.length };
+        }""")
+        assert state["lastPage"] == 1, state
+        assert state["answers"] >= 5, state
+        assert state["questions"] == 5, state
+        return "PDF, página, questões e desempenho sobreviveram ao reload"
+
+    check("persistência: biblioteca e questões após recarregar", c_persistence)
 
     def c_router():
         keys = page.evaluate("Array.from(document.querySelectorAll('#nav button[data-page]')).map(b=>b.dataset.page)")
@@ -310,7 +469,31 @@ with sync_playwright() as pw:
 
     check("PWA/offline: reload com rede desligada", c_offline)
 
+    def c_offline_books():
+        page.evaluate("goToPage('books')")
+        context.set_offline(True)
+        try:
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_function("typeof BookUI !== 'undefined' && typeof pdfjsLib !== 'undefined'")
+            page.evaluate("goToPage('books')")
+            page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
+            page.wait_for_function("""() => {
+                const b = Array.from(document.querySelectorAll('button'))
+                  .find(x => x.textContent.includes('Abrir leitor interno'));
+                return b && !b.disabled;
+            }""", timeout=15000)
+            page.evaluate("BookUI.openReader()")
+            page.wait_for_selector("#readerCanvas", timeout=30000)
+            assert page.evaluate("document.querySelector('#readerCanvas').width") > 100
+            assert page.locator("#readerPageCount").inner_text().endswith("/ 1")
+            return "PDF e PDF.js abriram sem rede"
+        finally:
+            context.set_offline(False)
+
+    check("PWA/offline: leitor do PDF baixado sem rede", c_offline_books)
+
     def c_curriculum_real():
+        page.evaluate("goToPage('study')")
         keys = page.evaluate("Object.keys(CURRICULUM)")
         assert len(keys) >= 5, keys
         page.evaluate("Study.setTab('tutor'); Study.setTutorMode('zero')")

@@ -51,6 +51,7 @@
 
   function cardHTML(book, index) {
     const label = TRACK_LABELS[book.track] || book.track || "Geral";
+    const id = typeof BOOKS_META !== "undefined" ? BOOKS_META.idFor(book.title) : String(index);
     return `
 <article class="card book-card">
   <div class="meta">
@@ -62,10 +63,29 @@
   ${book.original && book.original !== book.title ? `<p class="muted small">Original: ${esc(book.original)}</p>` : ""}
   <p class="small">${esc(book.note || "")}</p>
   <p class="muted small">${esc(book.author)} · ${esc(book.level)}</p>
-  <a class="pdf-link" href="${esc(book.url)}" target="_blank" rel="noopener noreferrer"
-     aria-label="Abrir PDF ${esc(book.title)} em nova aba">Abrir PDF ↗</a>
-   <button type="button" class="pdf-link study-book-btn" onclick="Study.startFromBook(${Number(index) || 0})" aria-label="Iniciar sessão de estudo guiado de ${esc(book.title)}">Estudar este livro →</button>
+  <p class="small book-card-status" data-book-id="${esc(id)}"><span class="muted">Situação: consultando biblioteca local…</span></p>
+  <div class="actions">
+    <button type="button" onclick="BookUI.open('${esc(id)}')" aria-label="Abrir detalhes e biblioteca interna de ${esc(book.title)}">Abrir na biblioteca FORGE →</button>
+    <button type="button" class="secondary study-book-btn" onclick="Study.startFromBook(${Number(index) || 0})" aria-label="Iniciar sessão de estudo guiado de ${esc(book.title)}">Estudar com o tutor</button>
+  </div>
 </article>`;
+  }
+
+  async function paintStatus() {
+    if (!view || typeof BookStore === "undefined") return;
+    try {
+      const rows = await BookStore.listBooks();
+      const map = new Map(rows.map(r => [r.id, r]));
+      view.querySelectorAll(".book-card-status").forEach(el => {
+        const info = map.get(el.dataset.bookId);
+        if (!info) { el.innerHTML = '<span class="muted">Situação: disponível na fonte · não baixado</span>'; return; }
+        const parts = [info.downloaded ? "<b>PDF no FORGE</b>" : '<span class="muted">PDF não baixado</span>'];
+        if (info.extracted) parts.push(info.scanned ? "sem texto selecionável" : `texto extraído (${info.pagesReady}/${info.totalPages} p.)`);
+        if (info.lastPage) parts.push(`p. ${info.lastPage}`);
+        if (info.answered) parts.push(`${info.correct}/${info.answered} acertos`);
+        el.innerHTML = `Situação: ${parts.join(" · ")}`;
+      });
+    } catch (_) { /* status é informativo; catálogo continua utilizável */ }
   }
 
   function paint() {
@@ -80,6 +100,7 @@
     grid.innerHTML = found.length
       ? found.map(b => cardHTML(b, catalog.indexOf(b))).join("")
       : `<p class="muted">Nenhum PDF encontrado. Tente outro termo ou selecione “Todas”.</p>`;
+    paintStatus();
 
     filters.innerHTML = ["Todas"].concat(areas()).map(area => {
       const selected = activeArea === area;
@@ -94,7 +115,7 @@
 <div class="eyebrow">Fontes legais e gratuitas</div>
 <h1 class="h1">Livros em PDF</h1>
 <p class="sub">Obras de domínio público ou com licença aberta, linkadas diretamente à fonte oficial: OpenStax, TLDP, IETF e documentação dos projetos. Regra anti-paralisia: escolha <b>um</b> livro principal por trilha e estude com as aulas e laboratórios do Forge.</p>
-<p class="callout small">Cada PDF abre na fonte oficial. Para estudar com recuperação ativa, explicação própria e revisão agendada, use <button class="linklike" onclick="goToPage('study')">Aprenda a estudar →</button> ou o botão “Estudar este livro” no card.</p>
+<p class="callout small">Abra um livro para baixar/importar o PDF, ler no leitor interno e gerar questões com origem rastreável. A fonte oficial aparece apenas como referência legítima; links externos não substituem o estudo dentro do FORGE.</p>
 <label class="field" style="display:block;margin-bottom:12px">
   <span class="small">Buscar por título, autor, área ou licença</span>
   <input id="booksSearch" class="field" type="search" placeholder="Ex.: cálculo, HTTP, PostgreSQL..." autocomplete="off"
@@ -105,6 +126,7 @@
 <h2 class="small muted" style="margin:12px 0 6px">Resultados</h2>
 <div class="grid3" id="booksGrid"></div>`;
     paint();
+    paintStatus();
   }
 
   function search(value) {

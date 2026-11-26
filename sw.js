@@ -1,5 +1,5 @@
 /* Forge — service worker para uso offline */
-const VERSION = "forge-v6";
+const VERSION = "forge-v7";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -30,6 +30,9 @@ const APP_SHELL = [
   "./js/data-labs-b.js",
   "./js/data-library-extra.js",
   "./js/data-books.js",
+  "./vendor/pdfjs/pdf.min.js",
+  "./vendor/pdfjs/pdf.worker.min.js",
+  "./js/data-books-meta.js",
   "./js/storage.js",
   "./js/exercises.js",
   "./js/app.js",
@@ -38,6 +41,9 @@ const APP_SHELL = [
   "./js/labs-catalog.js",
   "./js/library-rich.js",
   "./js/books.js",
+  "./js/books-store.js",
+  "./js/book-questions.js",
+  "./js/book-reader.js",
   "./js/study.js",
   "./js/features.js",
   "./js/focus.js",

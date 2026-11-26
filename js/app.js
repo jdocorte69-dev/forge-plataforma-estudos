@@ -143,6 +143,9 @@ function render() {
     library: "Biblioteca",
     richlib: "Biblioteca rica",
     books: "Livros em PDF",
+    book: "Biblioteca · Detalhe do livro",
+    reader: "Leitor PDF interno",
+    questions: "Questões do livro",
     glossary: "Glossário",
     catalog: "Catálogo de laboratórios",
     projects: "Projetos integradores",
@@ -178,6 +181,9 @@ function render() {
     library: libraryPage,
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
     books: v => { if (typeof BooksPage !== "undefined") BooksPage.renderPage(v); },
+    book: v => { if (typeof BookReader !== "undefined") BookReader.renderDetail(v); else v.innerHTML = '<p class="muted">Biblioteca indisponível.</p>'; },
+    reader: v => { if (typeof BookReader !== "undefined") BookReader.renderReader(v); else v.innerHTML = '<p class="muted">Leitor indisponível.</p>'; },
+    questions: v => { if (typeof BookReader !== "undefined") BookReader.renderQuestions(v); else v.innerHTML = '<p class="muted">Questões indisponíveis.</p>'; },
     glossary: v => { if (typeof Glossary !== "undefined") v.innerHTML = Glossary.pageHTML(); },
     catalog: v => { if (typeof LabCatalog !== "undefined") v.innerHTML = LabCatalog.pageHTML(); },
     projects: projectsPage,
@@ -195,6 +201,7 @@ function render() {
 }
 
 let page = "dashboard";
+const INTERNAL_PAGES = ["book", "reader", "questions"];
 let currentLesson = null;
 let labTab = "linux";
 let reviewIndex = 0;
@@ -629,9 +636,9 @@ function addStudyCards(k) {
 
 // Navegação programática usada pelos módulos de estudo (mesmo roteador da navbar).
 function goToPage(nextPage) {
-  const allowed = [...document.querySelectorAll("#nav button[data-page]")].map(b => b.dataset.page);
+  const navPages = [...document.querySelectorAll("#nav button[data-page]")].map(b => b.dataset.page);
   const requested = String(nextPage || "dashboard");
-  page = (!allowed.length || allowed.includes(requested)) ? requested : "dashboard";
+  page = (!navPages.length || navPages.includes(requested) || INTERNAL_PAGES.includes(requested)) ? requested : "dashboard";
   document.getElementById("sidebar")?.classList.remove("open");
   render();
   window.scrollTo({ top: 0, behavior: "smooth" });

@@ -75,7 +75,7 @@ function buildContext(seed) {
     document, localStorage, console,
     navigator: {}, location: { protocol: "https:" },
     setTimeout, clearTimeout, Date, Math, JSON, Object, Array, String, Number, Boolean,
-    Promise, Map, Set, Event: class {}, FileReader: class {},
+    Promise, Map, Set, TextEncoder, URL, Event: class {}, FileReader: class {},
     scrollTo() {}
   };
   const context = vm.createContext(sandbox);
@@ -218,12 +218,15 @@ check("estado de versão futura não é rebaixado", () => {
   assert.equal(state.study.sessions.a.text, "ok");
 });
 
-check("o catálogo de livros oferece a ação de estudo mantendo filtros e busca", () => {
+check("o catálogo abre a biblioteca interna e mantém filtros, busca e tutor", () => {
   const view = getElementById("view");
   window.BooksPage.renderPage(view);
-  assert.match(view.innerHTML, /Estudar este livro/);
+  assert.match(view.innerHTML, /Abra um livro para baixar\/importar/);
   const grid = view.querySelector("#booksGrid").innerHTML;
+  assert.equal((grid.match(/Abrir na biblioteca FORGE/g) || []).length, window.BOOKS.length);
+  assert.equal((grid.match(/BookUI\.open\(/g) || []).length, window.BOOKS.length);
   assert.equal((grid.match(/Study\.startFromBook\(/g) || []).length, window.BOOKS.length);
+  assert.match(grid, /book-card-status/);
   assert.match(view.innerHTML, /id="booksFilters"/);
   assert.match(view.innerHTML, /id="booksSearch"/);
 });
@@ -236,6 +239,7 @@ check("o roteador real abre a página de estudo sem quebrar as demais", () => {
   }
   vm.runInContext(`
     window.toast = function () {};
+    window.refreshCharts = function () {};
     window.Features = { timerWidget: function () { return ""; }, updateTimerUI: function () {} };
   `, c, { filename: "integration-stubs.js" });
   integration.window.goToPage("study");
@@ -247,13 +251,93 @@ check("o roteador real abre a página de estudo sem quebrar as demais", () => {
 
 /* ---------- integração estática ---------- */
 
-check("nav, script e service worker incluem o novo módulo", () => {
+check("nav, script e service worker incluem os módulos de livros", () => {
   const index = read("index.html");
   assert.match(index, /data-page="study"/);
   assert.match(index, /js\/study\.js/);
+  for (const file of ["vendor/pdfjs/pdf.min.js", "js/data-books-meta.js", "js/books-store.js",
+    "js/book-questions.js", "js/book-reader.js"]) {
+    assert.ok(index.includes(file), `script ausente no index: ${file}`);
+  }
+  assert.ok(index.indexOf("js/data-books-meta.js") < index.indexOf("js/books-store.js"));
+  assert.ok(index.indexOf("js/books-store.js") < index.indexOf("js/book-reader.js"));
   const sw = read("sw.js");
-  assert.match(sw, /forge-v6/);
+  assert.match(sw, /forge-v7/);
   assert.match(sw, /"\.\/js\/study\.js"/);
+  for (const file of ["vendor/pdfjs/pdf.min.js", "vendor/pdfjs/pdf.worker.min.js",
+    "js/data-books-meta.js", "js/books-store.js", "js/book-questions.js", "js/book-reader.js"]) {
+    assert.ok(sw.includes(`"./${file}"`), `asset ausente no service worker: ${file}`);
+  }
+});
+
+check("as rotas internas de livro, leitor e questões são aceitas pelo roteador", () => {
+  const app = read("js/app.js");
+  assert.match(app, /book: v =>/);
+  assert.match(app, /reader: v =>/);
+  assert.match(app, /questions: v =>/);
+  assert.match(app, /INTERNAL_PAGES = \["book", "reader", "questions"\]/);
+  assert.match(app, /INTERNAL_PAGES\.includes\(requested\)/);
+});
+
+check("metadados aditivos preservam o catálogo original", () => {
+  const q = buildContext();
+  for (const file of ["js/data-books.js", "js/data-books-meta.js"]) {
+    vm.runInContext(read(file), q.context, { filename: file });
+  }
+  const meta = q.window.BOOKS_META.metaFor(q.window.BOOKS[0]);
+  assert.equal(meta.id, q.window.BOOKS_META.idFor(q.window.BOOKS[0].title));
+  assert.equal(meta.format, "PDF");
+  assert.equal(meta.pages, null, "página não conhecida não deve ser inventada");
+  assert.match(meta.source, /^[\w.-]+$/);
+});
+
+check("validação de PDF rejeita HTML e aceita cabeçalho/rodapé reais", () => {
+  const q = buildContext();
+  vm.runInContext(read("js/books-store.js"), q.context, { filename: "js/books-store.js" });
+  const header = "%PDF-1.7\n";
+  const body = "x".repeat(2048);
+  const trailer = "\n%%EOF\n";
+  assert.equal(q.window.BookStore.validatePdfBytes(new TextEncoder().encode(header + body + trailer)), true);
+  assert.equal(q.window.BookStore.validatePdfBytes(new TextEncoder().encode("<html>nao é pdf</html>" + body)), false);
+  assert.equal(q.window.BookStore.validatePdfBytes(new TextEncoder().encode(header + body)), false);
+});
+
+check("questões locais citam página, capítulo e trecho real", () => {
+  const q = buildContext();
+  for (const file of ["js/book-questions.js"]) vm.runInContext(read(file), q.context, { filename: file });
+  const pages = [
+    { page: 1, text: "Cache HTTP reduz latência de resposta. A especificação define revalidação condicional." },
+    { page: 2, text: "Índice acelera consultas em banco de dados. O planejador escolhe a melhor estratégia." }
+  ];
+  const chapters = q.window.BookQuestions.detectChapters(pages);
+  const out = q.window.BookQuestions.generate({
+    pages, chapters, count: 6, difficulty: "medium", mode: "estudo",
+    types: ["mc", "tf", "interpretation", "concept", "application", "discursive"]
+  });
+  assert.equal(out.questions.length, 6);
+  for (const item of out.questions) {
+    assert.ok(item.source && item.source.page >= 1, "sem página de origem");
+    assert.ok(item.source.chapter, "sem capítulo de origem");
+    const normalized = q.window.BookQuestions.norm(item.source.quote);
+    assert.ok(pages.some(p => q.window.BookQuestions.norm(p.text).includes(normalized)), "trecho não está no PDF");
+  }
+  const mc = out.questions.find(x => x.type === "mc");
+  assert.equal(mc.options.length, 4);
+  assert.ok(mc.answerIndex >= 0 && mc.answerIndex < 4, "índice de resposta inválido");
+  const correctOption = q.window.BookQuestions.norm(mc.options[mc.answerIndex]);
+  assert.ok(pages.some(p => q.window.BookQuestions.norm(p.text).includes(correctOption)),
+    "a opção correta não veio do texto extraído");
+  const right = q.window.BookQuestions.grade(mc, mc.answerIndex);
+  assert.equal(right.correct, true);
+  assert.equal(right.status, "automatica");
+  const wrong = q.window.BookQuestions.grade(mc, (mc.answerIndex + 1) % 4);
+  assert.equal(wrong.correct, false);
+  const discursive = out.questions.find(x => x.type === "discursive");
+  const partial = q.window.BookQuestions.grade(discursive, "resposta curta");
+  assert.equal(partial.status, "incompleta");
+  const full = q.window.BookQuestions.grade(discursive, "Minha explicação retoma o trecho e aponta uma aplicação própria sem inventar dados.");
+  assert.equal(full.status, "autoavaliacao");
+  assert.match(full.rubric, /dúvida|limitação|distingue/);
 });
 
 check("catálogo de livros e roteador integram a sessão guiada", () => {
