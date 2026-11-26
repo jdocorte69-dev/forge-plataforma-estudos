@@ -4,6 +4,8 @@
 
 Este arquivo é o padrão ouro do Prompt Mestre. Ele mostra na prática como aplicar as seções 3, 4, 6 e 18 do `PROMPT_MESTRE.md`. Quando for gerar outro capítulo, use esta estrutura como referência de completude, mas escreva sempre com as suas próprias palavras.
 
+**Validação executada:** os cinco blocos de código C válidos compilam com `gcc -Wall -Wextra -Werror -pedantic -std=c11` sem avisos; o trecho de C1.8 falha de propósito e está identificado como erro.
+
 ---
 
 ## C1.1 Objetivos de aprendizagem

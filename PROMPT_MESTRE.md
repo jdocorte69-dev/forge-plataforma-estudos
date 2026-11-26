@@ -534,7 +534,7 @@ Todo item precisa estar marcado como **sim** antes da entrega. Se qualquer item 
 | # | Critério | Evidência exigida | Origem |
 |---|---|---|---|
 | 1 | Objetivos com 4 a 8 verbos observáveis | Lista no início do capítulo | 4.1 |
-| 2 | Pré-requisitos com código do módulo | Lista e miniteste de 3 perguntas respondido | 4.2 |
+| 2 | Pré-requisitos com código do módulo, ou "nenhum" em capítulo introdutório | Lista e miniteste de 3 perguntas respondido | 4.2 |
 | 3 | Motivação com problema real | Parágrafo "por que isso existe" | 4.3 |
 | 4 | Analogia antes da definição formal | Seção "Explicação para 5 anos" | 3.1 e 4.4 |
 | 5 | Limites da analogia declarados | Parágrafo "onde funciona e onde quebra" | 3.1 e 14 |
@@ -545,7 +545,7 @@ Todo item precisa estar marcado como **sim** antes da entrega. Se qualquer item 
 | 10 | Erros comuns com causa e correção | Quadro ao fim de cada seção importante | 3.6 e 4.8 |
 | 11 | Visualização presente | Diagrama ASCII, tabela ou esquema | 4.7 |
 | 12 | Resumo de 5 a 10 linhas com cola | Seção anterior aos exercícios | 4.9 |
-| 13 | Pelo menos 15 exercícios | Grupos de 5 fixação, 5 aplicação e 3 desafio | 4.10 |
+| 13 | Pelo menos 15 exercícios no total | Grupos de 5 ou mais fixação, 5 ou mais aplicação e 3 ou mais desafio; a soma precisa chegar a 15 | 4.10 |
 | 14 | Gabarito comentado em seção separada | Raciocínio completo e ponto onde a maioria erra | 4.10 |
 | 15 | Mini-projeto quando o tema permitir | Objetivo, requisitos, dicas e critério de correção | 4.11 |
 | 16 | Leituras recomendadas reais | Obra conhecida, sem referência inventada | 4.12 e 6.4 |
@@ -575,6 +575,8 @@ Se ele falhar em algum item, acrescente a explicação que falta e rode o teste 
 ### 13.3 Errata
 
 Ao corrigir um capítulo já entregue, publique um bloco `Errata` dizendo o que mudou e por quê. Nunca reescreva silenciosamente um texto que o aluno já leu.
+
+**Errata — 2026-11-25.** O item 2 passou a aceitar "nenhum" como pré-requisito em capítulos introdutórios. O item 13 passou a exigir 15 exercícios no total (5 ou mais de fixação, 5 ou mais de aplicação e 3 ou mais de desafio): a redação anterior dizia "5, 5 e 3", o que contradizia o mínimo de 15 da seção 4.10. Nenhuma outra regra de qualidade mudou.
 
 ---
 
@@ -900,6 +902,7 @@ Os projetos `MP1` a `MP10` da seção 15 são sugestões didáticas. O portfóli
 | 1.1 | 2026-11-25 | Trilhas de Linguagem C, Redes e Engenharia de Software e template de pedido do aluno (seções 8 a 11) |
 | 1.2 | 2026-11-25 | Plano integrado, rubrica de entrega, biblioteca de analogias, catálogo de projetos, convenções e protocolo de atendimento (seções 12 a 17) |
 | 1.3 | 2026-11-25 | Nível por área, acessibilidade WCAG 2.2 AA, correção da colisão de IDs de projetos, integração com a plataforma FORGE, conversão de códigos, capítulo modelo e separação núcleo/referência |
+| 1.4 | 2026-11-25 | Errata na rubrica (pré-requisitos introdutórios e contagem de exercícios) e sincronizador `scripts/sync_prompt.py` com modo `--check` |
 
 Toda alteração futura deve acrescentar uma linha a esta tabela e revisar a seção afetada. Se a mudança alterar uma regra pedagógica, atualize também o capítulo modelo para que ele continue sendo o padrão ouro.
 

@@ -54,6 +54,15 @@ Abra [`GUIA_DE_ESTUDO.md`](GUIA_DE_ESTUDO.md): rotina de sessão, plano de 12 se
 
 > Atenção aos códigos: `M1`–`M19`, `C1`–`C14`, `R1`–`R12` e `S1`–`S14` são etiquetas didáticas do Prompt Mestre, não IDs da aplicação. A conversão está na seção 18.3. Os mini-projetos didáticos são `MP1`–`MP10`; o portfólio canônico da aplicação é `P0`–`P10`.
 
+Depois de editar `PROMPT_MESTRE.md`, regenere os dois derivados e confirme que estão atualizados:
+
+```powershell
+python scripts/sync_prompt.py
+python scripts/sync_prompt.py --check
+```
+
+O ponto de divisão é o título `## 12.`, não um número de linha fixo.
+
 ## Seus dados
 
 Tudo fica no `localStorage` deste navegador, na chave `forge.study.v2` (schema v3). Antes de migrar ou importar, o estado anterior é copiado para `forge.study.v2.lastBackup`. Use **Progresso e backup → Exportar / importar JSON** para guardar uma cópia ou levar o progresso para outro dispositivo. Não há coleta de dados, analytics nem credenciais.

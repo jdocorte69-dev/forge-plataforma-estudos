@@ -1,0 +1,28 @@
+name: Check Prompt Mestre sync
+
+on:
+  push:
+    paths:
+      - 'PROMPT_MESTRE.md'
+      - 'PROMPT_MESTRE_NUCLEO.md'
+      - 'PROMPT_MESTRE_REFERENCIA.md'
+      - 'scripts/sync_prompt.py'
+  pull_request:
+    paths:
+      - 'PROMPT_MESTRE.md'
+      - 'PROMPT_MESTRE_NUCLEO.md'
+      - 'PROMPT_MESTRE_REFERENCIA.md'
+      - 'scripts/sync_prompt.py'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify derived files
+        run: python scripts/sync_prompt.py --check
