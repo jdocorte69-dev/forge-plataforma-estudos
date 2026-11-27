@@ -11,8 +11,10 @@
 #include <string.h>
 
 #ifdef _WIN32
-#include <windows.h>
+/* winsock2.h DEVE vir antes de windows.h: o cabecalho do Windows redefine
+ * estruturas de rede quando incluido primeiro (aviso do MinGW-W64). */
 #include <winsock2.h>
+#include <windows.h>
 #include <ws2tcpip.h>
 #include <process.h>
 #define PORTA_PADRAO 8080U

@@ -1,0 +1,877 @@
+{
+  "verificadoEm": "2026-11-27",
+  "metodo": "Python urllib.request GET (User-Agent FORGE-LinkAudit/1.0), timeout 20s, redirecionamentos seguidos",
+  "totalEntradasCatalogo": 73,
+  "urlsUnicas": 57,
+  "urlsHttp200": 55,
+  "entradasHttp200": 57,
+  "entradasHttp200Gratuitas": 55,
+  "porArea": {
+    "Algoritmos": {
+      "entradas": 3,
+      "http200": 1,
+      "http200Gratuitas": 1
+    },
+    "Algoritmos/C/Linguagens": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 5
+    },
+    "Aprendizagem": {
+      "entradas": 4,
+      "http200": 2,
+      "http200Gratuitas": 1
+    },
+    "Arquitetura/SO": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 5
+    },
+    "C": {
+      "entradas": 6,
+      "http200": 2,
+      "http200Gratuitas": 2
+    },
+    "Cálculo": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 5
+    },
+    "Engenharia": {
+      "entradas": 5,
+      "http200": 3,
+      "http200Gratuitas": 3
+    },
+    "IA/ML": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 5
+    },
+    "Linux": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 4
+    },
+    "Matemática": {
+      "entradas": 19,
+      "http200": 14,
+      "http200Gratuitas": 14
+    },
+    "Redes": {
+      "entradas": 6,
+      "http200": 5,
+      "http200Gratuitas": 5
+    },
+    "Redes/Cripto": {
+      "entradas": 5,
+      "http200": 5,
+      "http200Gratuitas": 5
+    }
+  },
+  "totalSeisCategoriasHttp200": 39,
+  "resultados": [
+    {
+      "titulo": "OpenStax Prealgebra / Elementary Algebra / College Algebra",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/subjects/math",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/subjects/math",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Algebra and Trigonometry 2e",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/details/books/algebra-and-trigonometry-2e",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/algebra-and-trigonometry-2e",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Precalculus 2e",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/details/books/precalculus-2e",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/precalculus-2e",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "A Matemática do Ensino Médio — SBM",
+      "area": "Matemática",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "OpenStax Calculus, Volumes 1–3",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/subjects/math",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/subjects/math",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 18.01SC Single Variable Calculus",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/18-01sc-single-variable-calculus-fall-2010/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 18.02SC Multivariable Calculus",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/18-02sc-multivariable-calculus-fall-2010/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/18-02sc-multivariable-calculus-fall-2010/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 18.03SC Differential Equations",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/18-03sc-differential-equations-fall-2011/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/18-03sc-differential-equations-fall-2011/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 18.06SC Linear Algebra",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/18-06sc-linear-algebra-fall-2011/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/18-06sc-linear-algebra-fall-2011/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Calculus",
+      "area": "Matemática",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Calculus",
+      "area": "Matemática",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Mathematics for Computer Science",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://courses.csail.mit.edu/6.042/spring18/mcs.pdf",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Concrete Mathematics",
+      "area": "Matemática",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "How to Prove It",
+      "area": "Matemática",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "C Programming: A Modern Approach",
+      "area": "C",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Beej's Guide to C Programming",
+      "area": "C",
+      "free": true,
+      "url": "https://beej.us/guide/bgc/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://beej.us/guide/bgc/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "GNU C Language Introduction and Reference Manual",
+      "area": "C",
+      "free": true,
+      "url": "https://www.gnu.org/software/c-intro-and-ref/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.gnu.org/software/c-intro-and-ref/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Effective C",
+      "area": "C",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Modern C",
+      "area": "C",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Computer Systems: A Programmer's Perspective (CS:APP)",
+      "area": "C",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Introduction to Algorithms",
+      "area": "Algoritmos",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "The Algorithm Design Manual",
+      "area": "Algoritmos",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Open Data Structures",
+      "area": "Algoritmos",
+      "free": true,
+      "url": "https://opendatastructures.org/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://opendatastructures.org/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Computer Networking: A Top-Down Approach",
+      "area": "Redes",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "An Introduction to Computer Networks",
+      "area": "Redes",
+      "free": true,
+      "url": "https://intronetworks.cs.luc.edu/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://intronetworks.cs.luc.edu/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Computer Networks: A Systems Approach",
+      "area": "Redes",
+      "free": true,
+      "url": "https://book.systemsapproach.org/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://book.systemsapproach.org/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Stanford CS144 — Introduction to Computer Networking",
+      "area": "Redes",
+      "free": true,
+      "url": "https://cs144.github.io/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://cs144.github.io/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Beej's Guide to Network Programming",
+      "area": "Redes",
+      "free": true,
+      "url": "https://beej.us/guide/bgnet/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://beej.us/guide/bgnet/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Wireshark Documentation",
+      "area": "Redes",
+      "free": true,
+      "url": "https://www.wireshark.org/docs/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.wireshark.org/docs/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "The Linux Command Line",
+      "area": "Linux",
+      "free": true,
+      "url": "https://linuxcommand.org/tlcl.php",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://linuxcommand.org/tlcl.php",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Operating Systems: Three Easy Pieces (OSTEP)",
+      "area": "Linux",
+      "free": true,
+      "url": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://pages.cs.wisc.edu/~remzi/OSTEP/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "The Linux Programming Interface",
+      "area": "Linux",
+      "free": false,
+      "url": "https://man7.org/linux/man-pages/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://man7.org/linux/man-pages/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Linux man-pages",
+      "area": "Linux",
+      "free": true,
+      "url": "https://man7.org/linux/man-pages/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://man7.org/linux/man-pages/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Linux Kernel Documentation",
+      "area": "Linux",
+      "free": true,
+      "url": "https://docs.kernel.org/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://docs.kernel.org/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Pro Git",
+      "area": "Engenharia",
+      "free": true,
+      "url": "https://git-scm.com/book/pt-br/v2",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://git-scm.com/book/pt-br/v2",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Software Engineering at Google",
+      "area": "Engenharia",
+      "free": true,
+      "url": "https://abseil.io/resources/swe-book",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://abseil.io/resources/swe-book",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "The Architecture of Open Source Applications",
+      "area": "Engenharia",
+      "free": true,
+      "url": "https://aosabook.org/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://aosabook.org/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Code Complete",
+      "area": "Engenharia",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Designing Data-Intensive Applications",
+      "area": "Engenharia",
+      "free": false,
+      "url": "",
+      "status": null,
+      "http200": false,
+      "finalUrl": "",
+      "erro": "URL ausente",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Improving Students' Learning With Effective Learning Techniques",
+      "area": "Aprendizagem",
+      "free": false,
+      "url": "https://doi.org/10.1177/1529100612453266",
+      "status": 403,
+      "http200": false,
+      "finalUrl": "https://doi.org/10.1177/1529100612453266",
+      "erro": "HTTPError Forbidden",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "Test-Enhanced Learning",
+      "area": "Aprendizagem",
+      "free": false,
+      "url": "https://doi.org/10.1111/j.1467-9280.2006.01693.x",
+      "status": 403,
+      "http200": false,
+      "finalUrl": "https://doi.org/10.1111/j.1467-9280.2006.01693.x",
+      "erro": "HTTPError Forbidden",
+      "verificadoEm": ""
+    },
+    {
+      "titulo": "The science of effective learning with spacing and retrieval practice",
+      "area": "Aprendizagem",
+      "free": false,
+      "url": "https://www.nature.com/articles/s44159-022-00089-1",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.nature.com/articles/s44159-022-00089-1",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Anki Manual e FSRS",
+      "area": "Aprendizagem",
+      "free": true,
+      "url": "https://docs.ankiweb.net/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://docs.ankiweb.net/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Khan Academy — Matemática",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://www.khanacademy.org/math",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.khanacademy.org/math",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "3Blue1Brown — Visões geométricas da matemática",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://www.3blue1brown.com/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.3blue1brown.com/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "NIST Digital Library of Mathematical Functions (DLMF)",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://dlmf.nist.gov/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://dlmf.nist.gov/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Elementary Algebra 2e",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/details/books/elementary-algebra-2e",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/elementary-algebra-2e",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Introductory Statistics 2e",
+      "area": "Matemática",
+      "free": true,
+      "url": "https://openstax.org/details/books/introductory-statistics",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/introductory-statistics-2e",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Calculus Volume 1",
+      "area": "Cálculo",
+      "free": true,
+      "url": "https://openstax.org/details/books/calculus-volume-1",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/calculus-volume-1",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Calculus Volume 2",
+      "area": "Cálculo",
+      "free": true,
+      "url": "https://openstax.org/details/books/calculus-volume-2",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/calculus-volume-2",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenStax Calculus Volume 3",
+      "area": "Cálculo",
+      "free": true,
+      "url": "https://openstax.org/details/books/calculus-volume-3",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://openstax.org/details/books/calculus-volume-3",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "3Blue1Brown — Essence of Calculus",
+      "area": "Cálculo",
+      "free": true,
+      "url": "https://www.3blue1brown.com/topics/calculus",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.3blue1brown.com/?topic=calculus",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Khan Academy — Differential Calculus",
+      "area": "Cálculo",
+      "free": true,
+      "url": "https://www.khanacademy.org/math/differential-calculus",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.khanacademy.org/math/differential-calculus",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Exercism — Trilha C",
+      "area": "Algoritmos/C/Linguagens",
+      "free": true,
+      "url": "https://exercism.org/tracks/c",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://exercism.org/tracks/c",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Compiler Explorer (Godbolt)",
+      "area": "Algoritmos/C/Linguagens",
+      "free": true,
+      "url": "https://godbolt.org/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://godbolt.org/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 6.006 Introduction to Algorithms",
+      "area": "Algoritmos/C/Linguagens",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/6-006-introduction-to-algorithms-fall-2011/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 6.046J Design and Analysis of Algorithms",
+      "area": "Algoritmos/C/Linguagens",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/6-046j-design-and-analysis-of-algorithms-spring-2015/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "SEI CERT C Coding Standard",
+      "area": "Algoritmos/C/Linguagens",
+      "free": true,
+      "url": "https://wiki.sei.cmu.edu/confluence/display/c/SEI+CERT+C+Coding+Standard",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://cmu-sei.github.io/secure-coding-standards/sei-cert-c-coding-standard/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 6.828 Operating System Engineering",
+      "area": "Arquitetura/SO",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/6-828-operating-system-engineering-fall-2012/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/6-828-operating-system-engineering-fall-2012/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "CS:APP — site oficial e materiais de apoio",
+      "area": "Arquitetura/SO",
+      "free": true,
+      "url": "https://csapp.cs.cmu.edu/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://csapp.cs.cmu.edu/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "MIT OpenCourseWare — 6.033 Computer Systems Engineering",
+      "area": "Arquitetura/SO",
+      "free": true,
+      "url": "https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://ocw.mit.edu/courses/6-033-computer-system-engineering-spring-2018/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Linux Kernel Documentation (latest)",
+      "area": "Arquitetura/SO",
+      "free": true,
+      "url": "https://www.kernel.org/doc/html/latest/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.kernel.org/doc/html/latest/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "TLDP — Linux Filesystem Hierarchy",
+      "area": "Arquitetura/SO",
+      "free": true,
+      "url": "https://tldp.org/LDP/Linux-Filesystem-Hierarchy/html/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://tldp.org/LDP/Linux-Filesystem-Hierarchy/html/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "IETF RFC 793 — Transmission Control Protocol",
+      "area": "Redes/Cripto",
+      "free": true,
+      "url": "https://www.rfc-editor.org/rfc/rfc793",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.rfc-editor.org/info/rfc793/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "IETF RFC 8259 — JSON",
+      "area": "Redes/Cripto",
+      "free": true,
+      "url": "https://www.rfc-editor.org/rfc/rfc8259",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.rfc-editor.org/info/rfc8259/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "NIST FIPS 180-4 — Secure Hash Standard",
+      "area": "Redes/Cripto",
+      "free": true,
+      "url": "https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "NIST SP 800-90Ar1 — Geradores de números aleatórios",
+      "area": "Redes/Cripto",
+      "free": true,
+      "url": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-90Ar1.pdf",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "OpenSSL Documentation",
+      "area": "Redes/Cripto",
+      "free": true,
+      "url": "https://docs.openssl.org/master/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://docs.openssl.org/master/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "fast.ai — Deep Learning prático",
+      "area": "IA/ML",
+      "free": true,
+      "url": "https://www.fast.ai/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.fast.ai/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "Dive into Deep Learning (D2L.ai)",
+      "area": "IA/ML",
+      "free": true,
+      "url": "https://d2l.ai/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://d2l.ai/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "PyTorch — documentação estável",
+      "area": "IA/ML",
+      "free": true,
+      "url": "https://docs.pytorch.org/docs/stable/index.html",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://docs.pytorch.org/docs/stable/index.html",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "TensorFlow — Learn",
+      "area": "IA/ML",
+      "free": true,
+      "url": "https://www.tensorflow.org/learn",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://www.tensorflow.org/learn",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    },
+    {
+      "titulo": "scikit-learn — documentação estável",
+      "area": "IA/ML",
+      "free": true,
+      "url": "https://scikit-learn.org/stable/",
+      "status": 200,
+      "http200": true,
+      "finalUrl": "https://scikit-learn.org/stable/",
+      "erro": "",
+      "verificadoEm": "2026-11-27"
+    }
+  ]
+}

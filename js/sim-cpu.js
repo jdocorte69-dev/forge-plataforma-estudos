@@ -1,7 +1,8 @@
 /* ============================================================
-   FORGE — sim-cpu.js
+   FORGE 7.0 — sim-cpu.js
    Simulador visual de CPU: registradores, flags, pilha, memória
-   e ciclo de execução para um subconjunto didático de x86-64 e ARM64.
+   e ciclo de execução para subconjuntos didáticos de x86-64,
+   ARM64 e RISC-V RV64I (sem registrador de flags).
    ============================================================ */
 
 (function () {
@@ -21,6 +22,13 @@
       registers: ["X0", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "X29", "X30", "SP", "PC"],
       sp: "SP", pc: "PC", flags: ["N", "Z", "C", "V"],
       program: "// Registradores X0-X30, pilha crescente para baixo\nMOV X0, #5\nMOV X1, #7\nADD X0, X0, X1\nCMP X0, #12\nPUSH X0\nPOP X2\nSUB X2, X2, #3"
+    },
+    riscv: {
+      label: "RISC-V RV64I",
+      registers: ["X0", "X1", "X2", "X3", "X4", "X5", "SP", "PC"],
+      sp: "SP", pc: "PC", flags: [],
+      note: "RV64I didático: x0 é fixo em zero; não há registrador de flags — BEQ compara registradores diretamente.",
+      program: "# Subconjunto RV64I didático (x0 = 0)\nLI X1, 5\nADDI X2, X1, 7\nADD X3, X2, X1\nSUB X4, X3, X1\nBEQ X4, X3, igual\nADDI X5, X0, 99\nigual:\nJAL X5, fim\nADDI X5, X0, 1\nfim:\nNOP"
     }
   };
 
@@ -89,6 +97,7 @@
   function writeDest(token, value) {
     const t = String(token || "").trim();
     const reg = t.toUpperCase();
+    if (state.arch === "riscv" && reg === "X0") return false; /* x0 é fixo em zero */
     if (Object.prototype.hasOwnProperty.call(state.regs, reg)) {
       state.regs[reg] = u64(value);
       state.changed = reg;
@@ -106,6 +115,7 @@
   }
 
   function setFlags(result, a, b, op) {
+    if (!current().flags.length) return; /* RISC-V: sem flags neste subconjunto */
     const f = state.flags;
     const z = result === 0 ? 1 : 0;
     const sign = (BigInt(result) >> 63n) & 1n ? 1 : 0;
@@ -136,24 +146,39 @@
     const arch = current();
     state.changed = "";
     let i = state.pc;
-    while (i < state.lines.length && (!state.lines[i] || state.lines[i].startsWith(";") || state.lines[i].startsWith("//") || state.lines[i].endsWith(":"))) i++;
+    while (i < state.lines.length && (!state.lines[i] || state.lines[i].startsWith(";") || state.lines[i].startsWith("//") || state.lines[i].startsWith("#") || state.lines[i].endsWith(":"))) i++;
     if (i >= state.lines.length) {
       state.halted = true;
       trace("Fim do programa.");
       refresh();
       return;
     }
-    const raw = state.lines[i].replace(/;.*$/, "").replace(/\/\/.*$/, "").trim();
+    const raw = state.lines[i].replace(/;.*$/, "").replace(/\/\/.*$/, "").replace(/#.*$/, "").trim();
     const parts = raw.split(/[\s,]+/).filter(Boolean);
     const op = (parts.shift() || "").toUpperCase();
     const args = parts;
     const description = `${String(i + 1).padStart(2, "0")}: ${raw}`;
 
     switch (op) {
+      case "LI": {
+        const value = parseValue(args[1]);
+        if (!Number.isNaN(value)) writeDest(args[0], value);
+        trace(`${description} → ${args[0]} = ${hex(value)}`);
+        break;
+      }
       case "MOV": {
         const value = parseValue(args[1]);
         if (!Number.isNaN(value)) writeDest(args[0], value);
         trace(`${description} → ${args[0]} = ${hex(value)}`);
+        break;
+      }
+      case "ADDI": {
+        const a = parseValue(args[1]);
+        const b = parseValue(args[2]);
+        const result = u64(BigInt(a) + BigInt(b));
+        setFlags(result, a, b, "ADD");
+        writeDest(args[0], result);
+        trace(`${description} → ${args[0]} = ${hex(result)}`);
         break;
       }
       case "ADD": case "SUB": case "AND": case "OR": case "XOR": case "SHL": case "CMP": {
@@ -212,6 +237,24 @@
         refresh();
         return;
       }
+      case "BEQ": {
+        const a = parseValue(args[0]);
+        const b = parseValue(args[1]);
+        const target = state.labels[String(args[2]).toUpperCase()];
+        state.pc = a === b && Number.isInteger(target) ? target : i + 1;
+        trace(`${description} → ${a === b ? "igual, desvia" : "diferente, continua"} para linha ${state.pc + 1}`);
+        refresh();
+        return;
+      }
+      case "JAL": {
+        const last = args[args.length - 1];
+        const target = state.labels[String(last).toUpperCase()];
+        if (args.length > 1) writeDest(args[0], u64(i + 1)); /* endereço de retorno didático = linha seguinte */
+        state.pc = Number.isInteger(target) ? target : i + 1;
+        trace(`${description} → liga ${args.length > 1 ? args[0] + "=" + (i + 1) : "sem destino"}; salta para linha ${state.pc + 1}`);
+        refresh();
+        return;
+      }
       case "NOP":
         trace(`${description} → sem efeito`);
         break;
@@ -239,7 +282,11 @@
   }
 
   function flagsHTML() {
-    return `<div class="sim-flags" role="group" aria-label="Flags da CPU">${current().flags.map(f => `
+    const arch = current();
+    if (!arch.flags.length) {
+      return `<p class="small muted" role="note">${esc(arch.note || "Esta arquitetura não usa registrador de flags neste simulador.")} Sem flags: as condições são avaliadas por comparação direta de registradores.</p>`;
+    }
+    return `<div class="sim-flags" role="group" aria-label="Flags da CPU">${arch.flags.map(f => `
       <span class="sim-flag ${state.flags[f] ? "is-set" : ""}">${f} = ${state.flags[f] ? 1 : 0}</span>`).join("")}</div>`;
   }
 
@@ -251,8 +298,11 @@
 
   function memoryHTML() {
     const addrs = Object.keys(state.memory).map(Number).sort((a, b) => a - b);
-    if (!addrs.length) return '<p class="small muted">Nenhuma posição de memória escrita até agora.</p>';
-    return `<div class="sim-table-wrap" tabindex="0"><table class="sim-table"><caption class="sr-only">Memória RAM simulada</caption>
+    if (!addrs.length) return '<p class="small muted">Nenhuma posição de memória escrita até agora. Use PUSH para gravar 8 bytes na pilha.</p>';
+    const grid = addrs.map(a => `<span class="small" style="padding:6px;border:1px solid var(--border-subtle);border-radius:6px;overflow-wrap:anywhere">
+      <b>${hex(a)}</b> <code>${hex(state.memory[a])}</code></span>`).join("");
+    return `<div role="group" aria-label="Grade hexagonal de memória" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:10px">${grid}</div>
+      <div class="sim-table-wrap" tabindex="0"><table class="sim-table"><caption class="sr-only">Memória RAM simulada</caption>
       <thead><tr><th scope="col">Endereço</th><th scope="col">Conteúdo</th></tr></thead>
       <tbody>${addrs.map(a => `<tr><th scope="row">${hex(a)}</th><td><code>${hex(state.memory[a])}</code></td></tr>`).join("")}</tbody>
     </table></div>`;
@@ -269,6 +319,15 @@
     if (!state.mounted) return;
     const archSel = document.getElementById("cpuArchSelect");
     if (archSel) archSel.value = state.arch;
+    state.regs[current().pc] = state.pc; /* PC/RIP acompanha a próxima instrução */
+    const archNote = document.getElementById("cpuArchNote");
+    if (archNote) archNote.textContent = current().note || "";
+    const instructionNote = document.getElementById("cpuInstructionNote");
+    if (instructionNote) {
+      instructionNote.textContent = state.arch === "riscv"
+        ? "RV64I: LI, ADDI, ADD, SUB, AND, OR, XOR, SHL, BEQ, JAL, PUSH, POP, JMP/B, NOP e rótulos."
+        : "Instruções aceitas: MOV, LI, ADD, SUB, AND, OR, XOR, SHL, CMP, INC, DEC, PUSH, POP, JMP/B, NOP e rótulos.";
+    }
     const program = document.getElementById("cpuProgram");
     if (program && program.value !== state.lines.join("\n")) program.value = state.lines.join("\n");
     const regs = document.getElementById("cpuRegisters");
@@ -311,18 +370,19 @@
         <div class="sim-toolbar">
           <label for="cpuArchSelect">Arquitetura</label>
           <select class="field" id="cpuArchSelect" onchange="CpuSim.setArch(this.value)">
-            <option value="x86">x86-64</option><option value="arm">ARM64 (AArch64)</option>
+            <option value="x86">x86-64</option><option value="arm">ARM64 (AArch64)</option><option value="riscv">RISC-V RV64I</option>
           </select>
           <button type="button" onclick="CpuSim.step()">▷ Próxima instrução</button>
           <button type="button" class="secondary" onclick="CpuSim.runAll()">⏩ Executar programa</button>
           <button type="button" class="ghost" onclick="CpuSim.reset()">↺ Reiniciar</button>
         </div>
         <div class="sim-grid">
+          <p class="small muted" id="cpuArchNote" role="note" style="grid-column:1/-1"></p>
           <section class="card sim-panel" aria-labelledby="cpuProgramTitle">
             <h3 id="cpuProgramTitle">1. Programa</h3>
             <label class="sr-only" for="cpuProgram">Código assembly simulado</label>
             <textarea class="field sim-code" id="cpuProgram" rows="9" spellcheck="false" onchange="CpuSim.updateProgram(this.value)"></textarea>
-            <p class="small muted">Instruções aceitas: MOV, ADD, SUB, AND, OR, XOR, SHL, CMP, INC, DEC, PUSH, POP, JMP/B, NOP e rótulos.</p>
+            <p class="small muted" id="cpuInstructionNote">Instruções aceitas: MOV, LI, ADD, SUB, AND, OR, XOR, SHL, CMP, INC, DEC, PUSH, POP, JMP/B, NOP e rótulos.</p>
             <div class="sim-program" tabindex="0" id="cpuProgramLines" aria-label="Programa com a linha atual destacada"></div>
           </section>
 

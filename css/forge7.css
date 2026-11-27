@@ -1,0 +1,841 @@
+/* ============================================================
+   FORGE 7.0 — Obsidian Studio & Neon Precision / Editorial Ivory
+   Folha ADITIVA: carregar depois de css/style.css. Nenhum seletor
+   legado é redefinido exceto o fundo do body por tema e a barra
+   inferior mobile (alvos de toque). Nunca usar `contain: layout style`
+   nem `content-visibility` aqui — o FORGE 4.0 já reserva altura nas
+   seções do dashboard e isso não pode ser sobrescrito.
+
+   Racional dos tokens:
+   - Escuro padrão OLED (#090D16) com superfície #111827 e brilho
+     direcional rgba(56,189,248,.18); claro "Editorial Ivory" com
+     papel #F8FAFC, cobalto #0284C7 e esmeralda #059669.
+   - Cobalto/esmeralda claros têm 4.10:1 e 3.77:1 sobre branco:
+     passam em UI não-textual (3:1), mas falham em texto (4.5:1).
+     Por isso existem --f7-accent-text (#0369A1), --f7-accent-strong
+     (#0369A1) e --f7-accent-2-text (#047857) para texto/botões.
+   - Orçamento de animação: somente transform/opacity, sem CLS.
+   ============================================================ */
+
+:root,
+html[data-theme="dark"] {
+  --f7-bg: #090D16;
+  --f7-surface: #111827;
+  --f7-surface-2: #172134;
+  --f7-text: #EAF2FF;
+  --f7-muted: #A9B8CC;
+  --f7-border: rgba(148, 163, 184, 0.18);
+  --f7-accent: #38BDF8;
+  --f7-accent-2: #34D399;
+  --f7-accent-text: #7DD3FC;
+  --f7-accent-2-text: #6EE7B7;
+  /* Nav inferior: o fundo ativo legado é índigo claro; exigimos 4.5:1. */
+  --f7-nav-active-text: #7DD3FC;
+  --f7-accent-strong: #38BDF8;
+  --f7-on-accent: #04121F;
+  --f7-glow: rgba(56, 189, 248, 0.18);
+  --f7-edge: rgba(56, 189, 248, 0.42);
+  --f7-radius: 16px;
+  --f7-shadow: 0 18px 48px rgba(0, 0, 0, 0.42);
+  --f7-ring-track: rgba(148, 163, 184, 0.22);
+  --f7-glass: rgba(17, 24, 39, 0.86);
+  --f7-glass-2: rgba(23, 33, 52, 0.82);
+  --f7-nav-bg: rgba(9, 13, 22, 0.94);
+  --f7-mesh-a: rgba(56, 189, 248, 0.14);
+  --f7-mesh-b: rgba(52, 211, 153, 0.09);
+  --f7-dot: rgba(148, 163, 184, 0.1);
+  --f7-inset: rgba(255, 255, 255, 0.06);
+  --f7-code-bg: #0B1220;
+  --f7-code-num: #7E90A8;
+  --f7-flame: #FB923C;
+  --f7-focus: #93C5FD;
+  --f7-tok-key: #7DD3FC;
+  --f7-tok-str: #86EFAC;
+  --f7-tok-com: #94A3B8;
+  --f7-tok-num: #FDBA74;
+  --f7-tok-fn: #C4B5FD;
+}
+
+html[data-theme="light"],
+.theme-light {
+  --f7-bg: #F8FAFC;
+  --f7-surface: #FFFFFF;
+  --f7-surface-2: #F1F5F9;
+  --f7-text: #0F172A;
+  --f7-muted: #475569;
+  --f7-border: rgba(15, 23, 42, 0.14);
+  --f7-accent: #0284C7;
+  --f7-accent-2: #059669;
+  --f7-accent-text: #0369A1;
+  --f7-accent-2-text: #047857;
+  /* #0369A1 tem 4.38:1 sobre o índigo claro da aba ativa — abaixo de AA. */
+  --f7-nav-active-text: #075985;
+  --f7-accent-strong: #0369A1;
+  --f7-on-accent: #FFFFFF;
+  --f7-glow: rgba(2, 132, 199, 0.16);
+  --f7-edge: rgba(2, 132, 199, 0.36);
+  --f7-radius: 16px;
+  --f7-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+  --f7-ring-track: rgba(15, 23, 42, 0.12);
+  --f7-glass: rgba(255, 255, 255, 0.9);
+  --f7-glass-2: rgba(248, 250, 252, 0.88);
+  --f7-nav-bg: rgba(255, 255, 255, 0.94);
+  --f7-mesh-a: rgba(2, 132, 199, 0.09);
+  --f7-mesh-b: rgba(5, 150, 105, 0.07);
+  --f7-dot: rgba(15, 23, 42, 0.07);
+  --f7-inset: rgba(255, 255, 255, 0.85);
+  --f7-code-bg: #F8FAFC;
+  --f7-code-num: #64748B;
+  --f7-flame: #B45309;
+  --f7-focus: #0369A1;
+  --f7-tok-key: #075985;
+  --f7-tok-str: #047857;
+  --f7-tok-com: #475569;
+  --f7-tok-num: #9A3412;
+  --f7-tok-fn: #6D28D9;
+}
+
+/* Modo de alto contraste legado continua soberano sobre os dois temas. */
+html.high-contrast,
+html.high-contrast[data-theme="light"] {
+  --f7-bg: #000000;
+  --f7-surface: #000000;
+  --f7-surface-2: #101010;
+  --f7-text: #FFFFFF;
+  --f7-muted: #E8E8E8;
+  --f7-border: #FFFFFF;
+  --f7-accent: #FFE600;
+  --f7-accent-2: #00FFFF;
+  --f7-accent-text: #FFE600;
+  --f7-accent-2-text: #00FFFF;
+  --f7-nav-active-text: #FFE600;
+  --f7-accent-strong: #FFE600;
+  --f7-on-accent: #000000;
+  --f7-glow: rgba(255, 230, 0, 0.3);
+  --f7-edge: #FFE600;
+  --f7-shadow: none;
+  --f7-ring-track: #FFFFFF;
+  --f7-glass: #000000;
+  --f7-glass-2: #101010;
+  --f7-nav-bg: #000000;
+  --f7-mesh-a: transparent;
+  --f7-mesh-b: transparent;
+  --f7-dot: transparent;
+  --f7-inset: transparent;
+  --f7-code-bg: #000000;
+  --f7-code-num: #E8E8E8;
+  --f7-flame: #FFE600;
+  --f7-focus: #FFE600;
+  --f7-tok-key: #FFE600;
+  --f7-tok-str: #66FF99;
+  --f7-tok-com: #E8E8E8;
+  --f7-tok-num: #FFD166;
+  --f7-tok-fn: #00FFFF;
+}
+
+/* Base OLED/papel: apenas a cor do fundo, sem tocar no restante do body. */
+html[data-theme="dark"] body,
+html[data-theme="light"] body {
+  background-color: var(--f7-bg);
+}
+
+.f7-sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:is(.f7-hero, .f7-hero-actions, .f7-map, .f7-node, .f7-node-popover, .f7-hub,
+    .f7-tool, .f7-code, .f7-code-head, .f7-lang, .f7-copy, .f7-flame,
+    .f7-badge, .f7-swipe, .f7-section-title) :focus-visible,
+.f7-node:focus-visible,
+.f7-tool:focus-visible,
+.f7-copy:focus-visible,
+.f7-node-popover :focus-visible {
+  outline: 3px solid var(--f7-focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Camada 1: hero ---------- */
+
+.f7-hero {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--f7-border);
+  border-top-color: var(--f7-edge);
+  border-radius: var(--f7-radius);
+  background:
+    radial-gradient(circle at 14% 10%, var(--f7-mesh-a), transparent 46%),
+    radial-gradient(circle at 88% 14%, var(--f7-mesh-b), transparent 42%),
+    radial-gradient(circle, var(--f7-dot) 0.6px, transparent 0.7px),
+    var(--f7-glass);
+  background-size: auto, auto, 16px 16px, auto;
+  box-shadow: var(--f7-shadow), inset 0 1px 0 var(--f7-inset);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  isolation: isolate;
+}
+
+.f7-hero :is(h1, h2, h3) {
+  margin: 0 0 8px;
+  color: var(--f7-text);
+  font-family: var(--font-heading, var(--font-sans, sans-serif));
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.f7-hero p {
+  max-width: 62ch;
+  margin: 0 0 16px;
+  color: var(--f7-muted);
+}
+
+.f7-hero-ring {
+  position: relative;
+  justify-self: start;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 92px;
+}
+
+.f7-hero-ring svg {
+  display: block;
+  width: 92px;
+  height: 92px;
+  transform: rotate(-90deg);
+}
+
+.f7-hero-ring circle {
+  fill: none;
+  stroke-width: 8;
+}
+
+.f7-ring-track {
+  stroke: var(--f7-ring-track);
+}
+
+.f7-ring-value {
+  stroke: var(--f7-accent);
+  stroke-linecap: round;
+  stroke-dasharray: 251.33;
+  stroke-dashoffset: calc(251.33 - (251.33 * var(--f7-progress, 0.68)));
+}
+
+.f7-hero-ring::after {
+  content: attr(data-value);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--f7-text);
+  font: 700 1.05rem/1 var(--font-heading, var(--font-sans, sans-serif));
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.f7-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.f7-hero-actions > :is(button, a, [role="button"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--f7-border);
+  border-radius: 12px;
+  background: var(--f7-glass-2);
+  color: var(--f7-text);
+  font: inherit;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+  transition: transform 0.18s var(--ease-forge, ease), opacity 0.18s var(--ease-forge, ease);
+}
+
+.f7-hero-actions > :is(button, a, [role="button"]):first-child {
+  border-color: transparent;
+  background: var(--f7-accent-strong);
+  color: var(--f7-on-accent);
+  box-shadow: 0 10px 26px var(--f7-glow);
+}
+
+.f7-hero-actions > :is(button, a, [role="button"]):hover {
+  transform: translateY(-2px);
+}
+
+.f7-flame {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--f7-border);
+  border-radius: 999px;
+  background: var(--f7-glass-2);
+  color: var(--f7-text);
+  font: inherit;
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+}
+
+.f7-flame::before {
+  content: "◆";
+  color: var(--f7-flame);
+  font-size: 1rem;
+}
+
+.f7-flame strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.f7-flame small {
+  color: var(--f7-muted);
+}
+
+/* ---------- Camada 2: mapa, nós e popovers ---------- */
+
+.f7-map,
+.f7-swipe {
+  display: flex;
+  gap: 14px;
+  padding: 6px 4px 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--f7-border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.f7-map > *,
+.f7-swipe > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.f7-swipe {
+  min-height: 48px;
+}
+
+.f7-node {
+  position: relative;
+  display: flex;
+  flex: 0 0 min(78vw, 248px);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 176px;
+  padding: 16px;
+  border: 1px solid var(--f7-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0%, var(--f7-mesh-a), transparent 55%),
+    var(--f7-glass-2);
+  color: var(--f7-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+  transition: transform 0.2s var(--ease-forge, ease), opacity 0.2s var(--ease-forge, ease);
+}
+
+.f7-node::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14px;
+  width: 32px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--f7-border);
+}
+
+.f7-node:hover {
+  transform: translateY(-2px);
+}
+
+.f7-node :is(h3, h4, strong) {
+  margin: 0;
+  color: var(--f7-text);
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.f7-node :is(p, small) {
+  margin: 0;
+  color: var(--f7-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.f7-node > .f7-badge {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.f7-node[data-status="active"] {
+  border-color: var(--f7-accent);
+  box-shadow: 0 0 0 1px var(--f7-glow), 0 14px 34px rgba(0, 0, 0, 0.24);
+}
+
+.f7-node[data-status="active"]::before {
+  background: var(--f7-accent);
+}
+
+.f7-node[data-status="active"] :is(h3, h4, strong) {
+  color: var(--f7-accent-text);
+}
+
+.f7-node[data-status="mastered"] {
+  border-color: var(--f7-accent-2);
+}
+
+.f7-node[data-status="mastered"]::before {
+  background: var(--f7-accent-2);
+}
+
+.f7-node[data-status="mastered"] :is(h3, h4, strong) {
+  color: var(--f7-accent-2-text);
+}
+
+/* Nós bloqueados mantêm contraste AA: sem opacity no texto. */
+.f7-node[data-status="locked"] {
+  border-style: dashed;
+  background: var(--f7-glass-2);
+}
+
+.f7-node[data-status="locked"]::after {
+  content: "◇";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  color: var(--f7-muted);
+}
+
+.f7-node-popover {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  z-index: 3;
+  max-height: calc(100% - 16px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--f7-border);
+  border-top-color: var(--f7-edge);
+  border-radius: 10px;
+  background: var(--f7-glass);
+  color: var(--f7-text);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(6px);
+  transition: opacity 0.18s var(--ease-forge, ease), transform 0.18s var(--ease-forge, ease);
+}
+
+.f7-node:is(:hover, :focus-within) .f7-node-popover,
+.f7-node.is-open .f7-node-popover,
+.f7-node-popover.is-open,
+.f7-node-popover:focus-within {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.f7-node.is-open .f7-node-popover,
+.f7-node-popover.is-open {
+  animation: f7-reveal 0.18s var(--ease-forge, ease-out);
+}
+
+.f7-node-popover :is(a, button) {
+  min-width: 48px;
+  min-height: 48px;
+  color: var(--f7-accent-text);
+}
+
+@keyframes f7-reveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Camada 3: hub de ferramentas e tipografia ---------- */
+
+.f7-hub {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.f7-tool {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  min-height: 104px;
+  padding: 14px;
+  border: 1px solid var(--f7-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 0% 0%, var(--f7-mesh-b), transparent 60%),
+    var(--f7-glass-2);
+  color: var(--f7-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+  transition: transform 0.18s var(--ease-forge, ease), opacity 0.18s var(--ease-forge, ease);
+}
+
+.f7-tool::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--f7-accent);
+  box-shadow: 0 0 0 4px var(--f7-glow);
+}
+
+.f7-tool:hover {
+  transform: translateY(-2px);
+  border-color: var(--f7-accent);
+}
+
+.f7-tool[aria-pressed="true"],
+.f7-tool.is-active {
+  border-color: var(--f7-accent-2);
+  box-shadow: 0 0 0 1px var(--f7-glow);
+}
+
+.f7-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid var(--f7-border);
+  border-radius: 999px;
+  background: var(--f7-glow);
+  color: var(--f7-accent-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.f7-badge[data-tone="success"] {
+  color: var(--f7-accent-2-text);
+}
+
+.f7-section-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: var(--f7-text);
+  font-family: var(--font-heading, var(--font-sans, sans-serif));
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.f7-section-title::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: linear-gradient(90deg, var(--f7-border), transparent);
+}
+
+/* ---------- Código com numeração e cópia ---------- */
+
+.f7-code {
+  overflow: hidden;
+  border: 1px solid var(--f7-border);
+  border-radius: 14px;
+  background: var(--f7-code-bg);
+  color: var(--f7-text);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  /* Glassmorphism concentrado no hero e na nav: borrar cada nó/tool criava
+     17 camadas de composição e derrubava o TBT. As superfícies abaixo mantêm
+     o gradiente/vidro, mas sem o filtro caro. */
+}
+
+.f7-code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--f7-border);
+  background: var(--f7-glass-2);
+}
+
+.f7-lang {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--f7-glow);
+  color: var(--f7-accent-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.f7-copy {
+  min-width: 48px;
+  min-height: 48px;
+  border: 1px solid var(--f7-border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--f7-text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.18s var(--ease-forge, ease), opacity 0.18s var(--ease-forge, ease);
+}
+
+.f7-copy:hover {
+  transform: translateY(-1px);
+}
+
+.f7-copy[data-copied="true"] {
+  border-color: var(--f7-accent-2);
+  color: var(--f7-accent-2-text);
+}
+
+.f7-code-body {
+  overflow-x: auto;
+  padding: 12px 14px;
+}
+
+.f7-code-line {
+  display: grid;
+  grid-template-columns: 2.6em minmax(0, 1fr);
+  column-gap: 12px;
+  min-height: 1.55em;
+  white-space: pre;
+}
+
+.f7-code-num {
+  padding-right: 8px;
+  border-right: 1px solid var(--f7-border);
+  color: var(--f7-code-num);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  user-select: none;
+}
+
+.tok-key { color: var(--f7-tok-key); }
+.tok-str { color: var(--f7-tok-str); }
+.tok-com { color: var(--f7-tok-com); }
+.tok-num { color: var(--f7-tok-num); }
+.tok-fn  { color: var(--f7-tok-fn); }
+
+/* ---------- Ajustes progressivos e navegação inferior ---------- */
+
+@media (min-width: 720px) {
+  .f7-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .f7-hero-ring {
+    justify-self: end;
+  }
+
+  .f7-hero-actions {
+    grid-column: 1 / -1;
+  }
+
+  .f7-map,
+  .f7-swipe {
+    padding: 10px 6px 16px;
+  }
+
+  .f7-node {
+    flex-basis: 240px;
+  }
+}
+
+@media (min-width: 1080px) {
+  .f7-node {
+    flex-basis: 268px;
+  }
+}
+
+@media (max-width: 768px) {
+  html[data-theme="dark"] .bottom-nav,
+  html[data-theme="light"] .bottom-nav {
+    border-top-color: var(--f7-border);
+    background: var(--f7-nav-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .bottom-nav button {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .bottom-nav button[aria-current="page"],
+  .bottom-nav button.active {
+    color: var(--f7-nav-active-text);
+  }
+}
+
+
+/* ---------- Composição das páginas 7.0 (aditiva) ---------- */
+
+.f7-eyebrow {
+  color: var(--f7-accent-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.f7-node-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.f7-node-toggle .bar {
+  width: 100%;
+}
+
+.f7-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.f7-steps > li {
+  padding: 14px 16px;
+  border: 1px solid var(--f7-border);
+  border-left-color: var(--f7-edge);
+  border-radius: 12px;
+  background: var(--f7-glass-2);
+  color: var(--f7-text);
+}
+
+.f7-steps > li > strong {
+  color: var(--f7-text);
+}
+
+.f7-steps p {
+  margin: 6px 0 0;
+  color: var(--f7-muted);
+}
+
+.f7-autopsies {
+  display: grid;
+  gap: 10px;
+}
+
+.f7-autopsy {
+  padding: 12px 16px;
+  border: 1px solid var(--f7-border);
+  border-radius: 12px;
+  background: var(--f7-glass-2);
+  color: var(--f7-text);
+}
+
+.f7-autopsy > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  cursor: pointer;
+}
+
+.f7-autopsy p {
+  color: var(--f7-muted);
+}
+
+.f7-formula {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--f7-glow);
+  color: var(--f7-accent-text) !important;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  overflow-wrap: anywhere;
+}
+
+.plan-schedule {
+  min-width: 640px;
+}
+
+.plan-schedule input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :is([class^="f7-"], [class*=" f7-"]),
+  :is([class^="f7-"], [class*=" f7-"])::before,
+  :is([class^="f7-"], [class*=" f7-"])::after,
+  .f7-hero-actions > :is(button, a, [role="button"]) {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .f7-map,
+  .f7-swipe {
+    scroll-behavior: auto !important;
+  }
+}

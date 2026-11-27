@@ -146,7 +146,9 @@ function renderMath() {
   if (!el) return;
   if (typeof renderMathInElement !== "function") {
     if (/\$|\\\(|\\\[/.test(el.textContent || "")) {
-      ForgeMath.ensure().then(() => renderMath()).catch(() => {});
+      /* O KaTeX é carregado sob demanda; a formatação real vai para o tempo
+         ocioso para não virar uma tarefa longa no carregamento. */
+      ForgeMath.ensure().then(() => scheduleRenderMath()).catch(() => {});
     }
     return;
   }
@@ -163,6 +165,15 @@ function renderMath() {
   } catch (e) {
     console.warn("KaTeX render skipped:", e);
   }
+}
+
+/* Mantém o KaTeX local e primário, mas tira a formatação do caminho crítico. */
+function scheduleRenderMath() {
+  const run = () => {
+    try { renderMath(); } catch (e) { console.warn("KaTeX render skipped:", e); }
+  };
+  if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 3000 });
+  else setTimeout(run, 600);
 }
 
 function applyComfortSettings() {
@@ -208,6 +219,10 @@ function render() {
     richlib: "Biblioteca rica",
     books: "Livros em PDF",
     summaries: "Livros & Resumos",
+    porque: "O Porquê de Tudo",
+    protocol: "Protocolo de estudo",
+    stellar: "Mapa estelar",
+    tools: "Ferramentas vivas",
     oral: "Prova oral",
     bugs: "Caça-bugs",
     crypto: "Laboratório crypto",
@@ -253,6 +268,10 @@ function render() {
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
     books: v => { if (typeof BooksPage !== "undefined") BooksPage.renderPage(v); },
     summaries: v => { if (typeof SummariesPage !== "undefined") SummariesPage.renderPage(v); else v.innerHTML = '<p class="muted">Resumos indisponíveis.</p>'; },
+    porque: v => { if (typeof Forge7UI !== "undefined") Forge7UI.porquePage(v); else v.innerHTML = '<p class="muted">Conteúdo didático indisponível.</p>'; },
+    protocol: v => { if (typeof Forge7UI !== "undefined") Forge7UI.protocolPage(v); else v.innerHTML = '<p class="muted">Protocolo indisponível.</p>'; },
+    stellar: v => { if (typeof Forge7UI !== "undefined") Forge7UI.stellarPage(v); else v.innerHTML = '<p class="muted">Mapa estelar indisponível.</p>'; },
+    tools: v => { if (typeof Forge7UI !== "undefined") Forge7UI.toolsPage(v); else v.innerHTML = '<p class="muted">Hub de ferramentas indisponível.</p>'; },
     oral: v => { if (typeof OralSim !== "undefined") OralSim.renderPage(v); else v.innerHTML = '<p class="muted">Módulo de prova oral indisponível.</p>'; },
     bugs: v => {
       v.innerHTML = `<div class="eyebrow">Depuração deliberada</div><h1 class="h1">Caça-bugs diário</h1>
@@ -280,7 +299,9 @@ function render() {
     if (typeof CpuSim !== "undefined") CpuSim.mount();
     if (typeof AiSim !== "undefined") AiSim.mount();
   }
-  renderMath();
+  /* O painel é textual: não carregar/formatar KaTeX nele mantém o TBT limpo.
+     Nas páginas de conteúdo matemático a formatação continua local e primária. */
+  if (page !== "dashboard") renderMath();
   if (typeof Gamification !== "undefined") Gamification.afterRender();
   if (typeof Focus !== "undefined") Focus.afterRender();
   if (page === "lab" && labTab === "math" && typeof Features !== "undefined" && typeof mentalGame !== "undefined" && !mentalGame.running) {
@@ -290,7 +311,7 @@ function render() {
 }
 
 let page = "dashboard";
-const INTERNAL_PAGES = ["book", "reader", "questions"];
+const INTERNAL_PAGES = ["book", "reader", "questions", "stellar", "tools"];
 let currentLesson = null;
 let labTab = "linux";
 let reviewIndex = 0;
@@ -303,6 +324,14 @@ function dashboardPage(v) {
   const wk = Object.entries(s.dayLog || {})
     .filter(([d]) => d >= startStr)
     .reduce((acc, [, h]) => acc + h, 0);
+
+  /* FORGE 7.0 — as três camadas vêm antes do painel legado. O herói já está
+     no HTML inicial (LCP no primeiro paint); mapa e hub são preenchidos
+     somente se o módulo aditivo estiver disponível, sem CLS. */
+  if (!v.querySelector("#f7HeroRoot")) {
+    v.insertAdjacentHTML("afterbegin", `<div id="f7HeroRoot"></div><div id="f7MapRoot"></div><div id="f7HubRoot"></div>`);
+  }
+  if (typeof Forge7UI !== "undefined") Forge7UI.mountDashboard(v);
 
   /* O cartão herói já vem no HTML inicial, o que permite pintá-lo antes de
      qualquer módulo JavaScript (LCP no primeiro paint). Em navegações
@@ -782,6 +811,12 @@ function goToPage(nextPage) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 window.goToPage = goToPage;
+
+/* Permite que o hub 7.0 abra um laboratório específico antes de navegar. */
+window.ForgeLabTab = function ForgeLabTab(tab) {
+  const allowed = ["linux", "c", "math", "eng", "net", "db", "logic", "cpu", "ai", "crypto"];
+  if (allowed.includes(String(tab))) labTab = String(tab);
+};
 
 /* Navegação inferior mobile-first (Fase 1). Usa o mesmo roteador da sidebar. */
 const ForgeNav = {
@@ -1776,20 +1811,34 @@ const DEFERRED_SCRIPTS = [
 
 function loadDeferredScripts(list, index = 0) {
   if (index >= list.length) {
-    /* O currículo principal já foi carregado antes do app.js. Apenas os
-       módulos avançados chegaram agora, atualizamos os contadores sem
-       reconstruir a página (isso geraria outra tarefa longa). */
-    lessons = buildAllLessons();
-    refreshDashboardCounts();
-    if (page === "dashboard" && typeof ForgeWidgets4 !== "undefined") {
-      ForgeWidgets4.mount(document.getElementById("view"));
-    }
-    if (typeof Gamification !== "undefined") Gamification.afterRender();
-    if (typeof Features !== "undefined") Features.updateTimerUI();
-    renderMath();
-    window.__forgeReady = true;
-    resolveForgeReady();
-    return Promise.resolve();
+    /* FORGE 7.0: o fechamento do carregamento é repartido em etapas curtas.
+       Uma única tarefa de ~150ms (buildAllLessons + widgets + Math) derrubava
+       o TBT do Lighthouse de 100 para 99 mesmo com FCP/LCP/CLS perfeitos. */
+    const steps = [
+      () => { lessons = buildAllLessons(); },
+      () => { refreshDashboardCounts(); },
+      () => {
+        if (page === "dashboard" && typeof ForgeWidgets4 !== "undefined") {
+          ForgeWidgets4.mount(document.getElementById("view"));
+        }
+      },
+      () => {
+        if (typeof Gamification !== "undefined") Gamification.afterRender();
+        if (typeof Features !== "undefined") Features.updateTimerUI();
+      },
+      () => {
+        window.__forgeReady = true;
+        resolveForgeReady();
+      }
+    ];
+    return new Promise(resolve => {
+      const next = i => {
+        if (i >= steps.length) { resolve(); return; }
+        try { steps[i](); } catch (err) { console.error("Etapa final de inicialização:", err); }
+        setTimeout(() => next(i + 1), 0);
+      };
+      next(0);
+    });
   }
   return new Promise(resolve => {
     const script = document.createElement("script");

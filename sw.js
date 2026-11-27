@@ -1,8 +1,8 @@
 /* Forge — service worker para uso offline */
-/* FORGE 4.0: cache-first + stale-while-revalidate, manifesto completo. */
+/* FORGE 7.0: cache-first + stale-while-revalidate, manifesto completo. */
 importScripts("./sw-summaries.js");
 
-const VERSION = "forge-v7";
+const VERSION = "forge-v8";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -16,6 +16,10 @@ const APP_SHELL = [
   "./icon-maskable-192.png",
   "./icon-maskable-512.png",
   "./css/style.css",
+  /* FORGE 7.0 — tema cinematográfico, conteúdo didático e UI aditiva. */
+  "./css/forge7.css",
+  "./js/data-porque.js",
+  "./js/forge7-ui.js",
   "./js/data.js",
   "./js/data-linux.js",
   "./js/data-c.js",

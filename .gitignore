@@ -7,11 +7,11 @@
 /.sqlite
 /localStorage_dump.json
 
-# Processamento de livros binários e acervo bruto
-/livros/*.pdf
-/livros/*.epub
-/livros/_ocr/
-!/livros/README.md
+# Acervo bruto e binários — nunca versionar (FORGE 7.0)
+/livros/
+*.pdf
+*.epub
+*.iso
 
 # Processamento intermediário de extração OCR/Text
 /temp_processing/
@@ -31,3 +31,6 @@ desktop.ini
 # Cache de bytecode Python gerado pelos scripts do ecossistema
 __pycache__/
 *.pyc
+
+# Dependências locais
+node_modules/

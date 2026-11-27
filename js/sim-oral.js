@@ -1,8 +1,9 @@
 /* ============================================================
-   FORGE 4.0 — sim-oral.js
-   Prova oral local: 3–5 tópicos, cronômetro de 3–5 minutos e
-   rubrica em três painéis. Sem áudio, rede ou serviços externos.
-   Expõe window.OralSim.
+   FORGE 7.0 — sim-oral.js
+   Prova oral local (3–5 tópicos, cronômetro e rubrica em três
+   painéis) e Modo Professor (Aula Invertida) com checagem
+   transparente dos 7 Degraus Didáticos. Sem rede ou serviços
+   externos. Expõe window.OralSim (API preservada).
    ============================================================ */
 
 (function () {
@@ -38,6 +39,26 @@
     }
   ];
 
+  /* 7 Degraus Didáticos da Aula Invertida. A checagem é transparente:
+     cada degrau lista as pistas de texto que disparam sua cobertura. */
+  const STEPS = [
+    { key: "analogia", title: "Analogia do Mundo Real",
+      any: ["analogia", "parece com", "como se fosse", "pense em", "dia a dia", "cotidiano", "mundo real"] },
+    { key: "geneses", title: "Gênese Histórica",
+      any: ["historia", "surge em", "surgiu", "criado por", "originou", "primeira vez", "evoluiu", "contexto historico"] },
+    { key: "construcao", title: "Construção Passo a Passo",
+      any: ["passo 1", "primeiro", "em seguida", "depois", "por fim", "sequencia", "algoritmo", "fluxo"],
+      structure: "steps" },
+    { key: "diagrama", title: "Diagrama Visual",
+      any: ["diagrama", "esquema", "figura", "grafo", "tabela", "desenho", "seta", "visualmente", "→", "↓"] },
+    { key: "exemplo", title: "Exemplo Guiado + Contraexemplo",
+      groups: [["exemplo", "por exemplo"], ["contraexemplo", "nao funciona", "falha", "caso contrario", "por outro lado"]] },
+    { key: "profundidade", title: "Aprofundamento Faculdade/Mestre",
+      any: ["formal", "definicao formal", "teorema", "prova", "faculdade", "mestrado", "avancado", "matematicamente", "limite", "demonst"] },
+    { key: "feynman", title: "Teste de Feynman",
+      any: ["feynman", "palavras simples", "como se ensinasse", "crianca", "sem jargao", "consegui explicar", "verifiquei", "testei a explicacao"] }
+  ];
+
   const FALLBACK_TOPICS = [
     { id: "t1", title: "Complexidade assintótica" },
     { id: "t2", title: "Cache e localidade" },
@@ -58,7 +79,13 @@
     answer: "",
     checks: {},
     startedAt: null,
-    lastResult: null
+    lastResult: null,
+    /* Modo Professor (Aula Invertida) — estado separado do examinador. */
+    mode: "examinador",
+    profTopic: "",
+    profFree: "",
+    profAnswer: "",
+    profResult: null
   };
 
   function esc(value) {
@@ -117,6 +144,52 @@
     return `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
   }
 
+  /* ---------- Modo Professor: heurísticas transparentes ---------- */
+
+  function normalizeText(value) {
+    return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  function evaluateExplanation(text) {
+    const source = String(text || "");
+    const normalized = normalizeText(source);
+    const steps = STEPS.map(step => {
+      const found = [];
+      (step.any || []).forEach(word => { if (normalized.includes(word)) found.push(word); });
+      (step.groups || []).forEach(group => {
+        const hit = group.find(word => normalized.includes(word));
+        if (hit) found.push(hit);
+      });
+      let covered = found.length > 0 && (!step.groups || step.groups.every(g => g.some(w => found.includes(w))));
+      if (step.structure === "steps" && !covered) {
+        const markers = (normalized.match(/(\n|;|→|passo|\d+\))/g) || []).length;
+        covered = markers >= 3;
+        if (covered) found.push("sequência com 3+ marcadores");
+      }
+      return { key: step.key, title: step.title, covered, evidence: found.slice(0, 4) };
+    });
+    const coveredCount = steps.filter(s => s.covered).length;
+    const missing = steps.filter(s => !s.covered).map(s => s.title);
+    const score = Math.round(coveredCount / STEPS.length * 100) / 10;
+    return { steps, coveredCount, missing, score, passed: score >= 8 && source.trim().length >= 120, chars: source.trim().length };
+  }
+
+  function coverageHTML(result) {
+    const rows = (result.steps || []).map(step => `
+      <li><span aria-hidden="true">${step.covered ? "✓" : "○"}</span>
+        <b>${esc(step.title)}</b>: ${step.covered ? "coberto" : "ausente"}
+        ${step.evidence.length ? `<small class="muted"> (pistas: ${esc(step.evidence.join(", "))})</small>` : ""}
+      </li>`).join("");
+    return `<ul class="small">${rows}</ul>`;
+  }
+
+  function professorTopic() {
+    const free = state.profFree.trim();
+    if (free) return free.slice(0, 120);
+    const found = state.topics.find(t => t.id === state.profTopic);
+    return found ? found.title : "Tema livre";
+  }
+
   function root() {
     return (typeof document !== "undefined") ? document.getElementById("oralRoot") : null;
   }
@@ -124,28 +197,48 @@
   function setupHTML() {
     state.topics = topicPool();
     state.selected = state.topics.slice(0, 3).map(t => t.id);
+    if (!state.profTopic && state.topics.length) state.profTopic = state.topics[0].id;
     const boxes = state.topics.map(t => `
       <label class="check oral-topic"><input type="checkbox" value="${esc(t.id)}" checked onchange="OralSim.toggleTopic('${esc(t.id)}',this.checked)">
       <span>${esc(t.title)}</span></label>`).join("");
+    const examiner = state.mode !== "professor";
+    const professorControls = examiner ? "" : `
+  <fieldset style="border:0;padding:0;margin:12px 0">
+    <legend class="small muted">Tema da aula invertida</legend>
+    <label for="oralProfTopic">Escolha um tema</label>
+    <select class="field" id="oralProfTopic" style="min-height:48px" onchange="OralSim.setProfessorTopic(this.value)">
+      ${state.topics.map(t => `<option value="${esc(t.id)}" ${t.id === state.profTopic ? "selected" : ""}>${esc(t.title)}</option>`).join("")}
+    </select>
+    <label for="oralProfFree">Ou escreva um tema livre</label>
+    <input class="field" id="oralProfFree" type="text" style="min-height:48px" value="${esc(state.profFree)}"
+      placeholder="Ex.: por que o céu é azul" onchange="OralSim.setProfessorFree(this.value)">
+    <p class="small muted">Você será o professor: escreva uma explicação que cubra os 7 Degraus Didáticos. A checagem usa pistas de texto explícitas.</p>
+  </fieldset>`;
     return `
 <section class="card forge4-panel" aria-labelledby="oralSetupTitle">
   <p class="forge4-kicker">Recuperação ativa · 7 degraus</p>
-  <h2 id="oralSetupTitle" style="margin-top:0">Prova oral em 5 minutes</h2>
+  <h2 id="oralSetupTitle" style="margin-top:0">Prova oral e aula invertida</h2>
+  <fieldset style="border:0;padding:0;margin:12px 0">
+    <legend class="small muted">Modo</legend>
+    <label class="check"><input type="radio" name="oralMode" value="examinador" ${examiner ? "checked" : ""} onchange="OralSim.setMode(this.value)"> Examinador (cronômetro e rubrica 0–10)</label>
+    <label class="check"><input type="radio" name="oralMode" value="professor" ${examiner ? "" : "checked"} onchange="OralSim.setMode(this.value)"> Professor (aula invertida, 7 degraus)</label>
+  </fieldset>
+  ${examiner ? `
   <p class="muted">Escolha de 3 a 5 tópicos. Explique em voz alta sem consultar o texto; a rubrica abaixo guia a autoavaliação.</p>
   <fieldset style="border:0;padding:0;margin:12px 0">
     <legend class="small muted">Tópicos da sessão</legend>
     <div class="grid2">${boxes}</div>
   </fieldset>
   <label for="oralMinutes">Duração</label>
-  <select id="oralMinutes" onchange="OralSim.setMinutes(Number(this.value))">
+  <select id="oralMinutes" style="min-height:48px" onchange="OralSim.setMinutes(Number(this.value))">
     <option value="3">3 minutos</option>
     <option value="4">4 minutos</option>
     <option value="5" selected>5 minutos</option>
-  </select>
+  </select>` : professorControls}
   <div class="actions" style="margin-top:14px">
-    <button type="button" onclick="OralSim.start()">▶ Iniciar prova</button>
+    <button type="button" style="min-height:48px" onclick="OralSim.start()">${examiner ? "▶ Iniciar prova" : "▶ Abrir modo professor"}</button>
   </div>
-  <p class="small muted">Nada é enviado: o cronômetro e a rubrica rodam neste navegador.</p>
+  <p class="small muted">Nada é enviado: cronômetro, texto e rubrica rodam neste navegador. Áudio e texto continuam disponíveis como evidência.</p>
 </section>`;
   }
 
@@ -183,6 +276,44 @@
 </section>`;
   }
 
+  function professorHTML() {
+    const preview = evaluateExplanation(state.profAnswer);
+    return `
+<section class="card forge4-panel oral-shell" aria-labelledby="oralProfTitle">
+  <p class="forge4-kicker">Modo Professor · Aula Invertida</p>
+  <h2 id="oralProfTitle" style="margin-top:0">Ensine: ${esc(professorTopic())}</h2>
+  <p class="muted">Escreva sua explicação como se fosse dar aula. A checagem é transparente: cada degrau procura pistas explícitas no texto — não é um julgamento de qualidade.</p>
+  <label for="oralProfAnswer">Sua explicação (mínimo 120 caracteres para aprovação)</label>
+  <textarea id="oralProfAnswer" class="oral-answer" style="min-height:180px" oninput="OralSim.setProfessorAnswer(this.value)"
+    placeholder="Comece com uma analogia, conte a origem histórica, construa passo a passo…">${esc(state.profAnswer)}</textarea>
+  <h3 style="margin-top:14px">Cobertura dos 7 Degraus Didáticos</h3>
+  <div id="oralProfCoverage">${coverageHTML(preview)}</div>
+  <p class="small muted">Pistas: analogia, história, sequência, diagrama, exemplo + contraexemplo, aprofundamento e teste de Feynman. A nota é 10 × (degraus cobertos / 7).</p>
+  <div class="actions" style="margin-top:14px">
+    <button type="button" style="min-height:48px" onclick="OralSim.evaluateProfessor()">✓ Avaliar explicação</button>
+    <button type="button" class="secondary" onclick="OralSim.restart()">Voltar</button>
+  </div>
+</section>`;
+  }
+
+  function profResultHTML() {
+    const r = state.profResult || evaluateExplanation("");
+    return `
+<section class="card forge4-panel" aria-labelledby="oralProfResultTitle">
+  <p class="forge4-kicker">Modo Professor · resultado</p>
+  <h2 id="oralProfResultTitle" style="margin-top:0">${r.passed ? "Aula invertida consolidada" : "Refine a explicação"}</h2>
+  <p class="forge4-metric">${esc(r.score)} / 10</p>
+  <p class="muted">Tema: ${esc(professorTopic())} · ${r.coveredCount} de ${STEPS.length} degraus cobertos · ${esc(r.chars)} caracteres.</p>
+  ${coverageHTML(r)}
+  <p class="small"><b>Degraus ausentes:</b> ${r.missing.length ? esc(r.missing.join("; ")) : "nenhum — cobertura completa"}</p>
+  <p class="small muted">Critério de aprovação: nota ≥ 8 e explicação com pelo menos 120 caracteres. Heurística baseada em pistas de texto, sem avaliação semântica automática.</p>
+  <div class="actions">
+    <button type="button" style="min-height:48px" onclick="OralSim.restart()">↺ Nova explicação</button>
+    <button type="button" class="secondary" onclick="goToPage('dashboard')">Voltar ao painel</button>
+  </div>
+</section>`;
+  }
+
   function resultHTML() {
     const r = state.lastResult || {};
     const topics = (r.topics || []).map(t => `<li>${esc(t)}</li>`).join("");
@@ -212,6 +343,8 @@
     if (!el) return;
     if (state.stage === "setup") el.innerHTML = setupHTML();
     else if (state.stage === "exam") el.innerHTML = examHTML();
+    else if (state.stage === "professor") el.innerHTML = professorHTML();
+    else if (state.stage === "profResult") el.innerHTML = profResultHTML();
     else el.innerHTML = resultHTML();
   }
 
@@ -219,10 +352,12 @@
     if (!v || typeof v.innerHTML === "undefined") return;
     stop();
     state.lastResult = null;
+    state.profResult = null;
+    state.mode = "examinador";
     state.stage = "setup";
     v.innerHTML = `<div class="eyebrow">Avaliação por evidência</div>
       <h1 class="h1">Prova oral</h1>
-      <p class="sub">Recupere sem consulta, meça o tempo e avalie com critério explícito.</p>
+      <p class="sub">Recupere sem consulta, meça o tempo e avalie com critério explícito — ou ensine no Modo Professor (Aula Invertida).</p>
       <div id="oralRoot" class="oral-shell"></div>`;
     refresh();
   }
@@ -263,7 +398,48 @@
     state.checks[key] = [...set];
   }
 
+  function setMode(mode) {
+    state.mode = mode === "professor" ? "professor" : "examinador";
+    stop();
+    refresh();
+    return state.mode;
+  }
+
+  function setProfessorTopic(id) {
+    state.profTopic = String(id || "");
+  }
+
+  function setProfessorFree(value) {
+    state.profFree = String(value || "").slice(0, 120);
+  }
+
+  function setProfessorAnswer(value) {
+    state.profAnswer = String(value || "").slice(0, 8000);
+  }
+
+  function openProfessor() {
+    stop();
+    state.stage = "professor";
+    state.profResult = null;
+    refresh();
+    return true;
+  }
+
+  function evaluateProfessor() {
+    if (state.stage !== "professor") return null;
+    const result = evaluateExplanation(state.profAnswer);
+    state.profResult = result;
+    if (typeof Storage !== "undefined" && typeof Storage.logSimulator === "function") {
+      Storage.logSimulator("oral", `Aula invertida: ${result.coveredCount}/${STEPS.length} degraus, nota ${result.score}`);
+    }
+    state.stage = "profResult";
+    refresh();
+    if (typeof toast === "function") toast(result.passed ? "Aula avaliada: cobertura dos 7 degraus." : "Revise os degraus ausentes.");
+    return result;
+  }
+
   function start() {
+    if (state.mode === "professor") return openProfessor();
     if (state.selected.length < 3) {
       if (typeof toast === "function") toast("Escolha de 3 a 5 tópicos.");
       return false;
@@ -323,15 +499,19 @@
     stop();
     state.stage = "setup";
     state.lastResult = null;
+    state.profResult = null;
     state.answer = "";
+    state.profAnswer = "";
     state.checks = {};
     refresh();
   }
 
   if (typeof window !== "undefined") {
     window.OralSim = {
-      RUBRIC, state, renderPage, refresh, toggleTopic, setMinutes, setAnswer,
-      setCheck, start, stop, finish, restart, mmss
+      RUBRIC, STEPS, state, renderPage, refresh, toggleTopic, setMinutes, setAnswer,
+      setCheck, start, stop, finish, restart, mmss,
+      setMode, setProfessorTopic, setProfessorFree, setProfessorAnswer,
+      openProfessor, evaluateProfessor, evaluateExplanation
     };
   }
 })();

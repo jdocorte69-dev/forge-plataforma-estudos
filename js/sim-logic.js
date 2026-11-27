@@ -1,6 +1,7 @@
 /* ============================================================
-   FORGE — sim-logic.js
-   Simulador didático de portas lógicas, transistores e mapas de
+   FORGE 7.0 — sim-logic.js
+   Simulador didático de portas lógicas, circuitos montados
+   (half/full adder, MUX 2:1 e trava D), transistores e mapas de
    Karnaugh. Funciona 100% no navegador, sem rede ou dependências.
    ============================================================ */
 
@@ -17,7 +18,35 @@
     XNOR: { label: "XNOR", symbol: "⊙", inverted: true,  hint: "Saída 1 quando as entradas são iguais.", eval: (a, b) => 1 - (a ^ b) }
   };
 
-  const state = { gate: "NAND", a: 0, b: 1, vars: 3, kmap: [], mounted: false };
+  /* Circuitos montados: cada presets reusa as mesmas portas do seletor.
+     As entradas lógicas continuam em state.a/state.b/state.c (0 ou 1). */
+  const CIRCUITS = {
+    gate: {
+      label: "Porta isolada", inputs: ["A", "B"],
+      hint: "Escolha uma porta e alterne A e B para observar a saída em tempo real."
+    },
+    half: {
+      label: "Somador meio (half-adder)", inputs: ["A", "B"],
+      hint: "S = A ⊕ B (bit de soma); C = A · B (vai-um). Duas entradas, duas saídas."
+    },
+    full: {
+      label: "Somador completo (full-adder)", inputs: ["A", "B", "Cin"],
+      hint: "S = A ⊕ B ⊕ Cin; Cout = (A·B) + (Cin·(A⊕B)). O terceiro fio é o vai-um de entrada."
+    },
+    mux: {
+      label: "Multiplexador 2:1", inputs: ["A", "B", "SEL"],
+      hint: "SEL=0 escolhe A; SEL=1 escolhe B. A seção é feita com AND das entradas pelo seletor e seu complemento."
+    },
+    latch: {
+      label: "Trava D (D latch)", inputs: ["D", "EN"],
+      hint: "EN=1: Q copia D. EN=0: Q retém o valor anterior — é memória de 1 bit, por isso o estado persiste."
+    }
+  };
+
+  const state = {
+    gate: "NAND", a: 0, b: 1, c: 0, q: 0, circuit: "gate",
+    vars: 3, kmap: [], mounted: false
+  };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -46,7 +75,140 @@
     return state.gate === "NOT" ? g.eval(state.a) : g.eval(state.a, state.b);
   }
 
+  /* ---------- Circuitos montados (FORGE 7.0) ---------- */
+
+  function evalPreset(id, a, b, c) {
+    if (id === "half") return { S: a ^ b, C: a & b };
+    if (id === "full") {
+      const t = a ^ b;
+      return { S: t ^ c, Cout: (a & b) | (c & t) };
+    }
+    if (id === "mux") return { Y: c ? b : a };
+    if (id === "latch") return { Q: state.q };
+    return { Y: state.gate === "NOT" ? GATES.NOT.eval(a) : GATES[state.gate].eval(a, b) };
+  }
+
+  function circuitOutputs() {
+    return evalPreset(state.circuit, state.a, state.b, state.c);
+  }
+
+  function circuitHint() {
+    return (CIRCUITS[state.circuit] || CIRCUITS.gate).hint;
+  }
+
+  function inputName(index) {
+    const names = (CIRCUITS[state.circuit] || CIRCUITS.gate).inputs;
+    return names[index] || "—";
+  }
+
+  function applyCircuitInputs(quiet) {
+    if (state.circuit === "latch" && state.b === 1 && state.q !== state.a) {
+      state.q = state.a;
+      if (!quiet) log(`Trava D: EN=1 copiou D=${state.a} para Q=${state.q}`);
+    }
+  }
+
+  function presetTableHTML() {
+    const circuit = CIRCUITS[state.circuit] || CIRCUITS.gate;
+    const names = circuit.inputs;
+    if (state.circuit === "latch") {
+      const rows = [[0, 0], [1, 0], [0, 1], [1, 1]].map(([d, en]) => {
+        const active = d === state.a && en === state.b;
+        return `<tr class="${active ? "sim-active" : ""}"><th scope="row">${d} · ${en}</th><td>${en ? d : "Q anterior"}</td></tr>`;
+      }).join("");
+      return `<div class="sim-table-wrap" tabindex="0"><table class="sim-table">
+        <caption class="sr-only">Tabela característica da trava D</caption>
+        <thead><tr><th scope="col">D · EN</th><th scope="col">Próximo Q</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>
+        <p class="small">Estado atual de Q: <code>${state.q}</code>. ${state.b ? "EN=1: Q acompanha D." : "EN=0: Q retém o valor."}</p>`;
+    }
+    const n = names.length;
+    const outputNames = Object.keys(evalPreset(state.circuit, 0, 0, 0));
+    const head = `<tr><th scope="col" class="sim-kmap-corner">${names.map(esc).join(" · ")}</th>${outputNames.map(k => `<th scope="col">${esc(k)}</th>`).join("")}</tr>`;
+    const rows = [];
+    for (let mask = 0; mask < (1 << n); mask++) {
+      const a = (mask >> (n - 1)) & 1;
+      const b = n >= 2 ? (mask >> (n - 2)) & 1 : 0;
+      const c = n >= 3 ? mask & 1 : 0;
+      const out = evalPreset(state.circuit, a, b, c);
+      const active = a === state.a && b === state.b && c === state.c;
+      rows.push(`<tr class="${active ? "sim-active" : ""}"><th scope="row">${[a, b, c].slice(0, n).join(" · ")}</th>
+        ${outputNames.map(k => `<td>${out[k]}</td>`).join("")}</tr>`);
+    }
+    return `<div class="sim-table-wrap" tabindex="0"><table class="sim-table">
+      <caption class="sr-only">Tabela verdade de ${esc(circuit.label)}</caption>
+      <thead>${head}</thead><tbody>${rows.join("")}</tbody></table></div>`;
+  }
+
+  function svgInput(x, y, label, value) {
+    return `<g><rect x="${x}" y="${y}" width="84" height="34" rx="6" class="sim-gate-body" />
+      <text x="${x + 10}" y="${y + 22}" class="sim-svg-label">${esc(label)}=${value}</text></g>`;
+  }
+
+  function svgGate(x, y, label, detail) {
+    return `<g><rect x="${x}" y="${y}" width="150" height="42" rx="6" class="sim-gate-body" />
+      <text x="${x + 10}" y="${y + 17}" class="sim-svg-label">${esc(label)}</text>
+      <text x="${x + 10}" y="${y + 34}" class="sim-svg-label">${esc(detail)}</text></g>`;
+  }
+
+  function svgOutput(x, y, label, value) {
+    return `<text x="${x}" y="${y + 22}" class="sim-svg-label">${esc(label)}=${value}</text>`;
+  }
+
+  function circuitSVG() {
+    const a = state.a, b = state.b, c = state.c;
+    const out = circuitOutputs();
+    const circuit = CIRCUITS[state.circuit] || CIRCUITS.gate;
+    let wires = "", boxes = "", outputs = "";
+    const wire = (x1, y1, x2, y2) => { wires += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`; };
+    const inputs = circuit.inputs.map((name, i) => ({ name, y: 26 + i * 62, value: [a, b, c][i] }));
+    const nodes = inputs.map(inp => svgInput(8, inp.y, inp.name, inp.value)).join("");
+    const put = (x, y, label, detail) => { boxes += svgGate(x, y, label, detail); };
+    const emit = (x, y, label, value) => { outputs += svgOutput(x, y, label, value); };
+
+    if (state.circuit === "half") {
+      put(150, 30, "XOR", `S = ${a}⊕${b} = ${out.S}`);
+      put(150, 112, "AND", `C = ${a}·${b} = ${out.C}`);
+      wire(92, inputs[0].y + 17, 150, 51); wire(92, inputs[1].y + 17, 150, 133);
+      wire(300, 51, 360, 51); wire(300, 133, 360, 133);
+      emit(362, 40, "S", out.S); emit(362, 122, "C", out.C);
+    } else if (state.circuit === "full") {
+      const t = a ^ b;
+      put(150, 18, "XOR 1", `t = A⊕B = ${t}`);
+      put(150, 80, "XOR 2", `S = t⊕Cin = ${out.S}`);
+      put(150, 142, "Cout", `(A·B)+(Cin·t) = ${out.Cout}`);
+      wire(92, inputs[0].y + 17, 150, 39); wire(92, inputs[1].y + 17, 150, 101);
+      wire(92, inputs[2].y + 17, 150, 163);
+      wire(300, 39, 360, 55); wire(300, 163, 360, 137);
+      emit(362, 44, "S", out.S); emit(362, 126, "Cout", out.Cout);
+    } else if (state.circuit === "mux") {
+      const notSel = c ? 0 : 1;
+      put(150, 18, "NOT SEL", `¬SEL = ${notSel}`);
+      put(150, 80, "AND A", `A·¬SEL = ${a & notSel}`);
+      put(150, 142, "AND B", `B·SEL = ${b & c}`);
+      wire(92, inputs[0].y + 17, 150, 101);
+      wire(92, inputs[1].y + 17, 150, 163);
+      wire(92, inputs[2].y + 17, 150, 39);
+      wire(300, 101, 360, 111); wire(300, 163, 360, 111);
+      emit(362, 100, "Y", out.Y);
+    } else {
+      put(150, 78, "D latch", `EN=${b} · D=${a}`);
+      wire(92, inputs[0].y + 17, 150, 99); wire(92, inputs[1].y + 17, 150, 110);
+      wire(300, 99, 360, 99);
+      emit(362, 88, "Q", out.Q);
+      outputs += `<text x="10" y="222" class="sim-svg-label">EN=0: Q retém ${state.q} (estado de 1 bit).</text>`;
+    }
+    return `<svg class="sim-svg" viewBox="0 0 500 240" role="img" aria-label="Grafo do circuito ${esc(circuit.label)}; saídas ${esc(idsText(out))}">
+      <g class="sim-wire">${wires}</g>${nodes}${boxes}${outputs}
+    </svg>`;
+  }
+
+  function idsText(outputs) {
+    return Object.keys(outputs).map(k => `${k}=${outputs[k]}`).join(", ");
+  }
+
   function truthTableHTML() {
+    if (state.circuit !== "gate") return presetTableHTML();
     const rows = [];
     const single = state.gate === "NOT";
     const combos = single ? [[0], [1]] : [[0, 0], [0, 1], [1, 0], [1, 1]];
@@ -66,6 +228,7 @@
   }
 
   function gateSVG() {
+    if (state.circuit !== "gate") return circuitSVG();
     const inv = GATES[state.gate].inverted;
     const single = state.gate === "NOT";
     const label = GATES[state.gate].label;
@@ -215,20 +378,37 @@
 
   function refresh() {
     if (!state.mounted) return;
-    const g = GATES[state.gate];
+    applyCircuitInputs(true);
+    const circuit = CIRCUITS[state.circuit] || CIRCUITS.gate;
+    const outputs = circuitOutputs();
+    const primary = Object.keys(outputs)[0];
     const select = document.getElementById("logicGateSelect");
-    if (select) select.value = state.gate;
+    if (select) { select.value = state.gate; select.disabled = state.circuit !== "gate"; }
+    const presetSel = document.getElementById("logicCircuitSelect");
+    if (presetSel) presetSel.value = state.circuit;
     const varsSel = document.getElementById("logicVarsSelect");
     if (varsSel) varsSel.value = String(state.vars);
     const out = document.getElementById("logicOutput");
     if (out) {
-      out.textContent = String(gateOutput());
-      out.dataset.value = String(gateOutput());
+      out.textContent = String(outputs[primary]);
+      out.dataset.value = String(outputs[primary]);
     }
-    const a = document.getElementById("logicA");
-    const b = document.getElementById("logicB");
-    if (a) { a.textContent = `A = ${state.a}`; a.setAttribute("aria-pressed", String(state.a === 1)); }
-    if (b) { b.textContent = `B = ${state.b}`; b.setAttribute("aria-pressed", String(state.b === 1)); }
+    const all = document.getElementById("logicOutputs");
+    if (all) all.textContent = Object.keys(outputs).map(k => `${k}=${outputs[k]}`).join("  ·  ");
+    const holder = document.getElementById("logicInputs");
+    if (holder) {
+      const keys = ["a", "b", "c"].slice(0, circuit.inputs.length);
+      holder.innerHTML = keys.map((key, i) => {
+        const val = state[key];
+        const name = esc(inputName(i));
+        return `<button type="button" id="logic${key.toUpperCase()}" class="secondary" aria-pressed="${val === 1}"
+          aria-label="${name} = ${val}. Clique para alternar." onclick="LogicSim.toggle('${key}')">${name} = ${val}</button>`;
+      }).join("");
+    }
+    const latch = document.getElementById("logicLatchState");
+    if (latch) latch.textContent = state.circuit === "latch" ? `Q retido: ${state.q}` : "";
+    const latchBtn = document.getElementById("logicResetLatch");
+    if (latchBtn) latchBtn.hidden = state.circuit !== "latch";
     const svg = document.getElementById("logicDiagram");
     if (svg) svg.innerHTML = gateSVG();
     const table = document.getElementById("logicTable");
@@ -236,9 +416,9 @@
     const kmap = document.getElementById("logicKmap");
     if (kmap) kmap.innerHTML = kmapHTML();
     const hint = document.getElementById("logicHint");
-    if (hint) hint.textContent = g.hint;
+    if (hint) hint.textContent = circuitHint();
     const count = document.getElementById("logicRunCount");
-    if (typeof Storage !== "undefined" && Storage.get()) {
+    if (count && typeof Storage !== "undefined" && Storage.get()) {
       const rec = (Storage.get().forge3?.simulators || {}).logic || { runs: 0 };
       count.textContent = String(rec.runs || 0);
     }
@@ -266,17 +446,21 @@
         <div class="sim-grid">
           <section class="card sim-panel" aria-labelledby="logicControlsTitle">
             <h3 id="logicControlsTitle">1. Escolha a função</h3>
-            <label for="logicGateSelect">Porta lógica</label>
+            <label for="logicCircuitSelect">Circuito montado</label>
+            <select class="field" id="logicCircuitSelect" onchange="LogicSim.setCircuit(this.value)">
+              ${Object.keys(CIRCUITS).map(k => `<option value="${k}" ${k === state.circuit ? "selected" : ""}>${esc(CIRCUITS[k].label)}</option>`).join("")}
+            </select>
+            <label for="logicGateSelect">Porta lógica (quando o circuito é isolado)</label>
             <select class="field" id="logicGateSelect" onchange="LogicSim.setGate(this.value)">
               ${Object.keys(GATES).map(k => `<option value="${k}" ${k === state.gate ? "selected" : ""}>${k} — ${GATES[k].symbol}</option>`).join("")}
             </select>
-            <div class="sim-inputs" role="group" aria-label="Entradas da porta lógica">
-              <button type="button" id="logicA" class="secondary" aria-pressed="false" onclick="LogicSim.toggle('a')">A = 0</button>
-              <button type="button" id="logicB" class="secondary" aria-pressed="false" onclick="LogicSim.toggle('b')">B = 1</button>
-            </div>
-            <p class="sim-output">Saída Y <output id="logicOutput" aria-live="polite">1</output></p>
+            <div id="logicInputs" class="sim-inputs" role="group" aria-label="Entradas do circuito"></div>
+            <p class="sim-output">Saída principal <output id="logicOutput" aria-live="polite">1</output></p>
+            <p class="small"><b>Todas as saídas:</b> <code id="logicOutputs"></code></p>
+            <p class="small muted" id="logicLatchState" aria-live="polite"></p>
             <p class="small muted" id="logicHint"></p>
             <button type="button" class="ghost" onclick="LogicSim.resetInputs()">Zerar entradas</button>
+            <button type="button" class="ghost" id="logicResetLatch" hidden onclick="LogicSim.resetLatch()">Limpar memória Q</button>
           </section>
 
           <section class="card sim-panel" aria-labelledby="logicDiagramTitle">
@@ -316,14 +500,27 @@
       log(`Porta ${gate}; A=${state.a}, B=${state.b}`);
       refresh();
     },
+    setCircuit(id) {
+      if (!CIRCUITS[id]) return;
+      state.circuit = id;
+      if (id === "latch") state.q = 0;
+      log(`Circuito selecionado: ${CIRCUITS[id].label}`);
+      refresh();
+    },
     toggle(input) {
-      if (input !== "a" && input !== "b") return;
+      if (input !== "a" && input !== "b" && input !== "c") return;
       state[input] = 1 - state[input];
-      log(`${input.toUpperCase()}=${state[input]} na porta ${state.gate}`);
+      applyCircuitInputs(false);
+      log(`${input.toUpperCase()}=${state[input]} em ${(CIRCUITS[state.circuit] || CIRCUITS.gate).label}`);
       refresh();
     },
     resetInputs() {
-      state.a = 0; state.b = 0;
+      state.a = 0; state.b = 0; state.c = 0;
+      refresh();
+    },
+    resetLatch() {
+      state.q = 0;
+      log("Memória da trava D limpa (Q=0)");
       refresh();
     },
     setVars(n) {

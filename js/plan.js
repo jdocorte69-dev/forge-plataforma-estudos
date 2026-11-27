@@ -34,6 +34,74 @@
       page: "bugs", cta: "Abrir caça-bugs" }
   ];
 
+  /* FORGE 7.0 — cronograma expandível. Doze blocos de duas semanas cobrem
+     24 semanas; horizontes de 12 e 18 meses repetem o ciclo com profundidade
+     crescente. Cada bloco exige um mini-projeto verificável localmente. */
+  const SCHEDULE_BLOCKS = [
+    { focus: "Peano, conjuntos e aritmética", project: "Implemente meio-somador em C e prove a recursão por indução" },
+    { focus: "Álgebra e geometria plana", project: "Meça um terreno com corda 3-4-5 e documente o erro" },
+    { focus: "Funções, trigonometria e logaritmos", project: "Construa tabela de seno e régua logarítmica em Python" },
+    { focus: "Discreta e álgebra linear", project: "Resolva sistema linear com Gauss e verifique autovalores" },
+    { focus: "Probabilidade e estatística", project: "Simule 10.000 lançamentos e compare com Bayes analítico" },
+    { focus: "Cálculo: limites e derivadas", project: "Auditor simbólico de derivadas com SymPy" },
+    { focus: "Cálculo: integrais e TFC", project: "Comparação numérica: Riemann vs integral exata" },
+    { focus: "Linux, C e depuração", project: "CLI de arquivos com valgrind sanitizers e README" },
+    { focus: "Memória, ponteiros e structs", project: "Caça-bugs: UAF, overflow e vazamento corrigidos" },
+    { focus: "Estruturas, algoritmos e complexidade", project: "Benchmark de busca e ordenação com tabela de resultados" },
+    { focus: "Arquitetura e assembly", project: "Mesma função em x86-64, ARM64 e RISC-V com notas" },
+    { focus: "Redes, cripto e IA", project: "Servidor TCP + CSPRNG + Tensor Engine em C17" }
+  ];
+
+  const HORIZONS = [
+    { weeks: 24, label: "24 semanas" },
+    { weeks: 52, label: "12 meses" },
+    { weeks: 78, label: "18 meses" }
+  ];
+
+  function horizonWeeks() {
+    const n = Number(planState().horizon);
+    return HORIZONS.some(h => h.weeks === n) ? n : 24;
+  }
+
+  function setHorizon(value) {
+    const n = Number(value);
+    if (!HORIZONS.some(h => h.weeks === n)) return;
+    planState().horizon = n;
+    Storage.save();
+    renderPage(document.getElementById("view"));
+    toast("Cronograma ajustado para " + HORIZONS.find(h => h.weeks === n).label + ".");
+  }
+
+  function scheduleHTML() {
+    const weeks = horizonWeeks();
+    const blocks = Math.ceil(weeks / 2);
+    const p = planState();
+    const rows = Array.from({ length: blocks }, (_, i) => {
+      const start = i * 2 + 1;
+      const end = Math.min(start + 1, weeks);
+      const base = SCHEDULE_BLOCKS[i % SCHEDULE_BLOCKS.length];
+      const cycle = Math.floor(i / SCHEDULE_BLOCKS.length);
+      const done = !!p.milestones["week-" + start];
+      return `<tr class="${done ? "good" : ""}">
+        <td><strong>${start}–${end}</strong></td>
+        <td>${esc(base.focus)}${cycle ? ` <span class="small muted">· ciclo ${cycle + 1}</span>` : ""}</td>
+        <td>${esc(base.project)}</td>
+        <td><label class="check"><input type="checkbox" ${done ? "checked" : ""} aria-label="Marcar mini-projeto das semanas ${start} e ${end} como entregue" onchange="Plan.toggleMilestone('week-${start}', this.checked)"> <span class="small">Entregue</span></label></td>
+      </tr>`;
+    }).join("");
+    return `<div class="card section" id="planSchedule">
+      <div class="row"><h2>Cronograma expandível</h2>
+        <label class="small muted">Horizonte
+          <select class="field" id="planHorizon" aria-label="Horizonte do cronograma" onchange="Plan.setHorizon(this.value)">
+            ${HORIZONS.map(h => `<option value="${h.weeks}" ${h.weeks === weeks ? "selected" : ""}>${esc(h.label)}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+      <p class="muted">${weeks} semanas · ${blocks} blocos. Um mini-projeto obrigatório a cada duas semanas; a evidência fica no caderno de erros, nos logs de simulador ou no resumo mestre.</p>
+      <div style="overflow-x:auto"><table class="plan-schedule"><thead><tr><th scope="col">Semanas</th><th scope="col">Foco</th><th scope="col">Mini-projeto obrigatório</th><th scope="col">Entrega</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>`;
+  }
+
   function esc(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -137,9 +205,9 @@
     renderPage(document.getElementById("view"));
   }
 
-  function toggleMilestone(key) {
+  function toggleMilestone(key, checked) {
     const p = planState();
-    p.milestones[key] = !p.milestones[key];
+    p.milestones[key] = (typeof checked === "boolean") ? checked : !p.milestones[key];
     Storage.save();
     renderPage(document.getElementById("view"));
   }
@@ -337,6 +405,8 @@
   <ol class="plan-phases">${phaseCards()}</ol>
 </div>
 
+${scheduleHTML()}
+
 <div class="grid2 section">
   <div class="card" id="planNext">
     <div class="row"><h3>Próximas aulas</h3><span class="pill">${next.length} na fila</span></div>
@@ -367,7 +437,8 @@
 
   window.Plan = {
     renderPage, generate, setHours, setDeadline, toggleMilestone,
-    addCustom, removeCustom, clearPlan, togglePhase,
-    progress, pace, pathIds, phaseEvidence, phases: PHASES, goals: GOALS
+    addCustom, removeCustom, clearPlan, togglePhase, setHorizon,
+    progress, pace, pathIds, phaseEvidence, scheduleHTML,
+    phases: PHASES, goals: GOALS, horizons: HORIZONS, blocks: SCHEDULE_BLOCKS
   };
 })();

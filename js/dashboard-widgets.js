@@ -1,8 +1,9 @@
 /* ============================================================
-   FORGE 4.0 — dashboard-widgets.js
+   FORGE 7.0 — dashboard-widgets.js
    Command center: hero de prioridade, radar SM-2, grafo de
-   pré-requisitos e heatmap 52×7. Determinístico e 100% local.
-   Expõe window.ForgeWidgets4.
+   pré-requisitos, heatmap 52×7 e caça-bugs diário com quatro
+   categorias (C, assembly, TCP/IP e cripto). Determinístico e local.
+   Expõe window.ForgeWidgets4 (API preservada).
    ============================================================ */
 
 (function () {
@@ -353,6 +354,382 @@
     return { ...BUGS[index], index, day };
   }
 
+  /* ---------- FORGE 7.0: caça-bugs em quatro categorias ---------- */
+
+  const FORGE7_GROUPS = [
+    { key: "memoria", label: "Memória C", hint: "UAF, estouro de buffer e vazamento." },
+    { key: "assembly", label: "Assembly", hint: "Flags, divisão e pilha desbalanceada." },
+    { key: "rede", label: "TCP/IP", hint: "Checksum, ordem de bytes e offset." },
+    { key: "cripto", label: "Cripto", hint: "Viés de módulo, nonce e comparação de tag." }
+  ];
+
+  const FORGE7_BUGS = [
+    {
+      id: "uaf", category: "memoria", title: "Ponteiro usado após free",
+      lines: ["no *p = criar_no();", "free(p);", "if (p->prox != NULL) processar(p->prox);", "return 0;"],
+      fault: 3,
+      identify: [
+        "A liberação acontece na linha 2 e a leitura na linha 3.",
+        "Depois de free o ponteiro guarda o mesmo endereço, mas o bloco pode ter sido reutilizado."
+      ],
+      fix: [
+        "Copie p->prox para uma variável local antes de free.",
+        "Anule o ponteiro (p = NULL) após a liberação para transformar o erro em falha explícita."
+      ],
+      autopsy: [
+        "1. free(p) devolve o bloco ao alocador.",
+        "2. A linha 3 dereferencia p: comportamento indefinido (use-after-free).",
+        "3. Uma alocação posterior pode reapropiar o bloco e alterar p->prox.",
+        "4. Copiar o dado antes de free e anular o ponteiro elimina a leitura inválida."
+      ],
+      why: "UAF é silencioso: o programa pode parecer correto até que o alocador reutilize a memória."
+    },
+    {
+      id: "overflow", category: "memoria", title: "Cópia sem limite para buffer fixo",
+      lines: ["char nome[16];", "strcpy(nome, entrada_do_usuario);", "printf(\"%s\\n\", nome);"],
+      fault: 2,
+      identify: [
+        "strcpy não recebe a capacidade de nome: grava até o caractere nulo da entrada.",
+        "Com mais de 15 caracteres, os bytes excedentes invadem a memória vizinha."
+      ],
+      fix: [
+        "Use snprintf(nome, sizeof nome, \"%s\", entrada_do_usuario).",
+        "Se a entrada vier de arquivo, prefira fgets com sizeof nome e remova a quebra de linha."
+      ],
+      autopsy: [
+        "1. nome tem 16 bytes, então os índices válidos vão de 0 a 15.",
+        "2. strcpy escreve 16 + N bytes quando a entrada é longa.",
+        "3. O caractere nulo pode sobrescrever variáveis locais e até o endereço de retorno.",
+        "4. snprintf respeita sizeof nome e garante terminação da string."
+      ],
+      why: "Estouro de buffer em stack é uma das vias clássicas de comprometimento de processo."
+    },
+    {
+      id: "leak", category: "memoria", title: "Vazamento no caminho de erro",
+      lines: ["buf = malloc(1024);", "if (!carregar_config(buf)) return -1;", "processar(buf);", "free(buf);"],
+      fault: 2,
+      identify: [
+        "O retorno antecipado da linha 2 nunca alcança o free da linha 4.",
+        "Todo caminho de saída deve liberar exatamente o que alocou."
+      ],
+      fix: [
+        "Libere antes de retornar: if (!carregar_config(buf)) { free(buf); return -1; }.",
+        "Ou centralize a saída em um rótulo cleanup com um único free no final."
+      ],
+      autopsy: [
+        "1. malloc reserva 1024 bytes.",
+        "2. carregar_config falha e return -1 pula o free.",
+        "3. Cada falha repete o vazamento; em um serviço a memória cresce sem limite.",
+        "4. Um único ponto de liberação cobre todos os caminhos de erro."
+      ],
+      why: "Vazamento não quebra o programa imediatamente: ele aparece como consumo crescente."
+    },
+    {
+      id: "flags", category: "assembly", title: "Flags destruídas antes do salto",
+      lines: ["cmp rax, rbx", "add rcx, 1", "je igual"],
+      fault: 2,
+      identify: [
+        "add entre cmp e je recalcula ZF.",
+        "O je passa a testar o resultado do add, não a comparação original."
+      ],
+      fix: [
+        "Reordene: cmp rax, rbx; je igual; add rcx, 1.",
+        "Se o código entre cmp e salto precisar alterar flags, use pushfq/popfq."
+      ],
+      autopsy: [
+        "1. cmp rax, rbx define ZF=1 quando os valores são iguais.",
+        "2. add rcx, 1 substitui ZF pelo resultado do acréscimo.",
+        "3. je agora desvia com base em uma condição que não existe mais.",
+        "4. Manter cmp e je adjacentes preserva a semântica da comparação."
+      ],
+      why: "Em x86, quase toda operação aritmética sobrescreve as flags de condição."
+    },
+    {
+      id: "divzero", category: "assembly", title: "Divisão sem validar o divisor",
+      lines: ["mov rax, [total]", "mov rcx, [contador]", "div rcx"],
+      fault: 3,
+      identify: [
+        "div rcx divide rdx:rax por rcx e falha se contador for zero.",
+        "Não há teste de contador maior que zero antes da instrução."
+      ],
+      fix: [
+        "Insira test rcx, rcx / jz tratamento_erro antes do div.",
+        "Prepare rdx com cqo quando o dividendo for sinalizado."
+      ],
+      autopsy: [
+        "1. O dividendo é o par rdx:rax.",
+        "2. Com contador igual a zero, a CPU levanta a exceção #DE.",
+        "3. Sem tratador, o sistema normalmente encerra o processo.",
+        "4. Validar o divisor antes permite um caminho de erro controlado."
+      ],
+      why: "Divisão por zero em assembly é uma exceção de CPU, não um valor especial."
+    },
+    {
+      id: "stack", category: "assembly", title: "Pilha desbalanceada na chamada",
+      lines: ["push rbx", "call processar", "ret"],
+      fault: 3,
+      identify: [
+        "push rbx não tem pop rbx correspondente.",
+        "call empurra o endereço de retorno; ret consome esse endereço, deixando rbx na pilha."
+      ],
+      fix: [
+        "Adicione pop rbx entre call e ret.",
+        "Respeite a convenção de chamada: registradores preservados voltam ao valor original."
+      ],
+      autopsy: [
+        "1. push rbx salva o registrador no topo da pilha.",
+        "2. call empurra o endereço de retorno por cima dele.",
+        "3. ret consome somente o endereço; rbx continua empilhado.",
+        "4. O chamador encontra a pilha desalinhada; pop rbx restaura o equilíbrio."
+      ],
+      why: "Desequilíbrio de pilha costuma aparecer como falha no chamador, não na função defeituosa."
+    },
+    {
+      id: "checksum", category: "rede", title: "Checksum IPv4 nunca gravado",
+      lines: ["cabecalho->checksum = 0;", "soma = soma16(cabecalho, 20);", "enviar(cabecalho);"],
+      fault: 3,
+      identify: [
+        "O checksum é calculado, mas o resultado não é escrito de volta no cabeçalho.",
+        "O pacote sai com o campo zerado e será descartado no destino."
+      ],
+      fix: [
+        "Atribua cabecalho->checksum = soma antes de enviar.",
+        "Some em 16 bits com carry end-around e aplique o complemento de 1."
+      ],
+      autopsy: [
+        "1. O campo é zerado para que o cálculo não se inclua.",
+        "2. soma16 produz o valor correto.",
+        "3. Como não há atribuição, o receptor soma o cabeçalho e não obtém 0xFFFF.",
+        "4. Gravar o resultado e converter para ordem de rede com htons corrige o envio."
+      ],
+      why: "O checksum IPv4 cobre apenas o cabeçalho; o payload é protegido por TCP/UDP."
+    },
+    {
+      id: "endian", category: "rede", title: "Porta TCP lida na ordem errada",
+      lines: ["uint16_t total = ip->tot_len;", "uint16_t porta = tcp->src_port;", "printf(\"%u -> %u\\n\", porta, total);"],
+      fault: 2,
+      identify: [
+        "Campos de rede são big-endian; em x86 a leitura direta troca os bytes.",
+        "A porta 8080 (0x1F90) aparece como 0x901F (36895)."
+      ],
+      fix: [
+        "Use ntohs(tcp->src_port) e ntohs(ip->tot_len).",
+        "Para gravar cabeçalhos, use htons/htonl; para 32 bits de entrada, ntohl."
+      ],
+      autopsy: [
+        "1. O fio carrega os bytes na ordem de rede.",
+        "2. A CPU little-endian interpreta o par de bytes invertido.",
+        "3. Filtros e logs passam a usar uma porta inexistente.",
+        "4. ntohs converte para a ordem do host antes de qualquer comparação."
+      ],
+      why: "Endianness é um defeito frequente em capturas e em parsing manual de pacotes."
+    },
+    {
+      id: "dataoffset", category: "rede", title: "Offset TCP tratado como bytes",
+      lines: ["uint8_t cab = tcp->data_offset;", "payload = pacote + 20 + cab;"],
+      fault: 2,
+      identify: [
+        "O campo data offset conta palavras de 32 bits, não bytes.",
+        "Falta isolar os 4 bits e multiplicar por 4."
+      ],
+      fix: [
+        "Calcule (tcp->data_offset & 0xF0) >> 4 e multiplique por 4.",
+        "Some ao tamanho do cabeçalho IP, que também vem de (ihl & 0x0F) * 4."
+      ],
+      autopsy: [
+        "1. O data offset ocupa os 4 bits altos do byte 12 do cabeçalho TCP.",
+        "2. Valor 5 significa 5 * 4 = 20 bytes de cabeçalho.",
+        "3. Somar 5 faz o payload começar no meio do cabeçalho.",
+        "4. Isolar os bits e multiplicar por 4 aponta para o início real dos dados."
+      ],
+      why: "Opções TCP aumentam o cabeçalho, então o offset nunca deve ser fixo em 20."
+    },
+    {
+      id: "modulo", category: "cripto", title: "Viés de módulo no sorteio",
+      lines: ["uint32_t x = csprng();", "int dado = (x % 6) + 1;"],
+      fault: 2,
+      identify: [
+        "2^32 não é múltiplo de 6, logo alguns restos aparecem uma vez a mais.",
+        "O viés é pequeno por amostra, mas mensurável em muitos sorteios."
+      ],
+      fix: [
+        "Use rejeição: limite = 2^32 - (2^32 % 6) e descarte x maior ou igual ao limite.",
+        "Em alternativa, use bits com rejeição e descarte os valores acima do último bloco completo."
+      ],
+      autopsy: [
+        "1. csprng() é uniforme em [0, 2^32).",
+        "2. 2^32 = 6 * 715827882 + 4, então quatro restos ganham um valor extra.",
+        "3. Os dados 1 a 4 ficam marginalmente mais prováveis que 5 e 6.",
+        "4. Descartar os quatro valores excedentes antes do módulo restaura a uniformidade."
+      ],
+      why: "A fonte pode ser perfeita e ainda assim o módulo introduzir viés."
+    },
+    {
+      id: "nonce", category: "cripto", title: "Nonce repetido sob a mesma chave",
+      lines: ["nonce = \"fixo-para-todos\";", "tag = aes_gcm_encrypt(chave, nonce, msg, &ct);"],
+      fault: 1,
+      identify: [
+        "O nonce é constante, mas AEAD exige unicidade por chave.",
+        "Com o mesmo nonce, o XOR dos ciphertexts revela o XOR dos plaintexts."
+      ],
+      fix: [
+        "Gere 96 bits aleatórios por mensagem com um CSPRNG.",
+        "Envie o nonce junto do ciphertext: ele não é secreto, mas nunca pode repetir sob a mesma chave."
+      ],
+      autopsy: [
+        "1. AES-GCM deriva o keystream daquela mensagem a partir do nonce.",
+        "2. Repetir nonce gera o mesmo keystream para duas mensagens.",
+        "3. C1 xor C2 = P1 xor P2, e a tag perde a garantia de originalidade.",
+        "4. Nonce aleatório ou contador por chave elimina a colisão."
+      ],
+      why: "Nonce é público e único; chave é secreta e reutilizável. Trocar os papéis é fatal."
+    },
+    {
+      id: "tagcmp", category: "cripto", title: "Tag autenticada comparada com memcmp",
+      lines: ["if (memcmp(tag_recebido, tag_calculado, 16) == 0) Aceitar();"],
+      fault: 1,
+      identify: [
+        "memcmp costuma parar no primeiro byte diferente.",
+        "O tempo de resposta revela quantos bytes iniciais o atacante acertou."
+      ],
+      fix: [
+        "Use uma comparação em tempo constante, como CRYPTO_memcmp.",
+        "Percorra sempre os 16 bytes acumulando diferenças com XOR, sem retorno antecipado."
+      ],
+      autopsy: [
+        "1. O atacante envia tags candidatas e mede o tempo até a resposta.",
+        "2. O retorno cedo de memcmp vaza o prefixo correto byte a byte.",
+        "3. Com poucas centenas de tentativas por posição, a tag é recuperada.",
+        "4. Comparação em tempo constante fecha esse canal lateral."
+      ],
+      why: "Canais laterais de tempo transformam comparações 'corretas' em oráculos."
+    }
+  ];
+
+  const forge7State = { category: "", caseId: "", day: "", revealed: {} };
+  const forge7StepLabels = {
+    identify: { off: "1. Identificar a linha", on: "1. Linha identificada" },
+    fix: { off: "2. Ver a correção", on: "2. Correção revelada" },
+    autopsy: { off: "3. Abrir autópsia", on: "3. Autópsia completa" }
+  };
+
+  function forge7DailyBug() {
+    const day = todayISO();
+    const group = FORGE7_GROUPS[next(seedFor(`bug7cat|${day}`)) % FORGE7_GROUPS.length];
+    const pool = FORGE7_BUGS.filter(b => b.category === group.key);
+    const bug = pool[next(seedFor(`bug7case|${day}`)) % pool.length];
+    return { ...bug, day, categoryLabel: group.label };
+  }
+
+  function resetForge7Reveals() {
+    forge7State.revealed = { identify: false, fix: false, autopsy: false };
+  }
+
+  function ensureForge7Selection() {
+    if (forge7State.caseId && FORGE7_BUGS.some(b =>
+      b.id === forge7State.caseId && b.category === forge7State.category)) return;
+    const daily = forge7DailyBug();
+    forge7State.category = daily.category;
+    forge7State.caseId = daily.id;
+    forge7State.day = daily.day;
+    resetForge7Reveals();
+  }
+
+  function currentForge7Bug() {
+    ensureForge7Selection();
+    return FORGE7_BUGS.find(b => b.id === forge7State.caseId) || FORGE7_BUGS[0];
+  }
+
+  function forge7StepsHTML(items) {
+    return `<ol class="small">${(items || []).map(item => `<li>${esc(item)}</li>`).join("")}</ol>`;
+  }
+
+  function forge7BugHuntHTML() {
+    ensureForge7Selection();
+    const bug = currentForge7Bug();
+    const group = FORGE7_GROUPS.find(g => g.key === forge7State.category) || FORGE7_GROUPS[0];
+    const tabs = FORGE7_GROUPS.map(g => `
+      <button type="button" id="forge7Tab-${esc(g.key)}" class="${g.key === forge7State.category ? "" : "secondary"}"
+        style="min-height:48px" aria-pressed="${g.key === forge7State.category}" title="${esc(g.hint)}"
+        onclick="ForgeWidgets4.selectBugCategory('${esc(g.key)}')">${esc(g.label)}</button>`).join("");
+    const cases = FORGE7_BUGS.filter(b => b.category === forge7State.category);
+    const options = cases.map(b => `<option value="${esc(b.id)}" ${b.id === bug.id ? "selected" : ""}>${esc(b.title)}</option>`).join("");
+    const lines = bug.lines.map((line, i) => {
+      const marked = forge7State.revealed.identify && (i + 1) === bug.fault;
+      return `<li${marked ? ' data-line="fault"' : ""}><code>${esc(line)}</code>${marked ? " <b class=\"small\">← defeito</b>" : ""}</li>`;
+    }).join("");
+    const step = (key, title, content) => `
+      <div id="forge7Step-${key}" ${forge7State.revealed[key] ? "" : 'hidden style="display:none"'}>
+        <h4>${esc(title)}</h4>${content}
+      </div>`;
+    const button = key => `
+      <button type="button" id="forge7Btn-${key}" style="min-height:48px" aria-expanded="${Boolean(forge7State.revealed[key])}"
+        aria-controls="forge7Step-${key}" ${forge7State.revealed[key] ? "disabled" : ""}
+        onclick="ForgeWidgets4.revealBugStep('${key}')">${esc(forge7State.revealed[key] ? forge7StepLabels[key].on : forge7StepLabels[key].off)}</button>`;
+    return `
+<section class="card forge4-panel" id="forge7BugLab" aria-labelledby="forge7BugLabTitle">
+  <p class="forge4-kicker">FORGE 7.0 · quatro categorias</p>
+  <h2 id="forge7BugLabTitle" style="margin-top:0">Laboratório de defeitos reais</h2>
+  <p class="small muted">Caso do dia: ${esc(forge7State.day)} · ${esc(group.label)}. Identifique a linha, aplique a correção e só depois abra a autópsia.</p>
+  <div class="actions" role="group" aria-label="Categorias de defeitos">${tabs}</div>
+  <label for="forge7CaseSelect" class="small muted" style="display:block;margin-top:12px">Caso</label>
+  <select class="field" id="forge7CaseSelect" style="min-height:48px" onchange="ForgeWidgets4.selectBugCase(this.value)">${options}</select>
+  <div id="forge7BugCasePanel" style="margin-top:12px">
+    <h3>${esc(bug.title)}</h3>
+    <ol class="bug-autopsy">${lines}</ol>
+    <div class="actions">${button("identify")}${button("fix")}${button("autopsy")}</div>
+    ${step("identify", "1. Identificação", forge7StepsHTML(bug.identify))}
+    ${step("fix", "2. Correção", forge7StepsHTML(bug.fix))}
+    ${step("autopsy", "3. Autópsia resolvida (passo a passo)", forge7StepsHTML(bug.autopsy) + `<p class="small muted">${esc(bug.why)}</p>`)}
+  </div>
+</section>`;
+  }
+
+  function refreshForge7Lab() {
+    if (typeof document === "undefined" || !document.getElementById) return;
+    const holder = document.getElementById("forge7BugLab");
+    if (!holder) return;
+    const active = document.activeElement;
+    const activeId = active && active.id ? active.id : "";
+    holder.outerHTML = forge7BugHuntHTML();
+    const again = activeId ? document.getElementById(activeId) : null;
+    if (again && typeof again.focus === "function") again.focus();
+  }
+
+  function selectBugCategory(key) {
+    if (!FORGE7_GROUPS.some(g => g.key === key)) return false;
+    forge7State.category = key;
+    const first = FORGE7_BUGS.find(b => b.category === key);
+    forge7State.caseId = first ? first.id : "";
+    resetForge7Reveals();
+    refreshForge7Lab();
+    return true;
+  }
+
+  function selectBugCase(id) {
+    const bug = FORGE7_BUGS.find(b => b.id === id && b.category === forge7State.category);
+    if (!bug) return false;
+    forge7State.caseId = bug.id;
+    resetForge7Reveals();
+    refreshForge7Lab();
+    return true;
+  }
+
+  function revealBugStep(key) {
+    if (!Object.prototype.hasOwnProperty.call(forge7StepLabels, key)) return false;
+    forge7State.revealed[key] = true;
+    if (typeof document === "undefined") return true;
+    const panel = document.getElementById("forge7Step-" + key);
+    if (panel) { panel.hidden = false; panel.style.display = ""; }
+    const btn = document.getElementById("forge7Btn-" + key);
+    if (btn) {
+      btn.setAttribute("aria-expanded", "true");
+      btn.textContent = forge7StepLabels[key].on;
+      btn.disabled = true;
+    }
+    return true;
+  }
+
   function bugHuntHTML() {
     const bug = dailyBug();
     const history = Array.isArray(state().bug_hunt_history) ? state().bug_hunt_history : [];
@@ -374,7 +751,8 @@
     </div>
   </form>
   <div id="bugAutopsy" class="bug-autopsy" hidden></div>
-</section>`;
+</section>
+${forge7BugHuntHTML()}`;
   }
 
   function submitBug() {
@@ -418,7 +796,7 @@
     if (!v || typeof v.insertAdjacentHTML !== "function") return null;
     if (typeof v.querySelector === "function") v.querySelector("#forge4Widgets")?.remove();
     const html = `
-<section id="forge4Widgets" class="forge4-grid forge4-grid--wide" aria-label="Painel de comando FORGE 4.0" style="margin-top:16px">
+<section id="forge4Widgets" class="forge4-grid forge4-grid--wide" aria-label="Painel de comando FORGE 7.0" style="margin-top:16px">
   ${heroHTML()}
   <div class="forge4-grid">
     ${sm2RadarHTML()}
@@ -443,6 +821,10 @@
   const api = {
     mount, go, heroHTML, sm2RadarHTML, constellationHTML, heatmapHTML, bugHuntHTML,
     priorityAction, dailyBug, submitBug, toggleAutopsy, openLesson,
+    /* FORGE 7.0 — API aditiva; as funções acima permanecem inalteradas. */
+    FORGE7_GROUPS, FORGE7_BUGS,
+    forge7BugHuntHTML, forge7DailyBug, currentForge7Bug,
+    selectBugCategory, selectBugCase, revealBugStep,
     state: { get seed() { return userSeed(); } }
   };
   if (typeof window !== "undefined") window.ForgeWidgets4 = api;

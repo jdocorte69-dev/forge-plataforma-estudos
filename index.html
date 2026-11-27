@@ -9,6 +9,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="stylesheet" href="css/style.css">
+<!-- FORGE 7.0 — folha aditiva (Obsidian Studio / Editorial Ivory). -->
+<link rel="stylesheet" href="css/forge7.css">
 <!-- KaTeX (CSS e JS) é injetado sob demanda por ForgeMath: o painel inicial
      não contém fórmulas e trocar a folha em tempo ocioso invalidava o layout. -->
 </head>
@@ -28,6 +30,8 @@
 <button data-page="mistakes">✎ Caderno de erros</button>
 <button data-page="feynman">◎ Técnica Feynman</button>
 <button data-page="study">✦ Aprenda a estudar</button>
+<button data-page="porque">✧ O Porquê de Tudo</button>
+<button data-page="protocol">◫ Protocolo de estudo</button>
 <button data-page="domain">◈ Mapa de domínio</button>
 <button data-page="oral">◉ Prova oral</button>
 <button data-page="bugs">✖ Caça-bugs</button>
@@ -46,23 +50,31 @@
 </aside>
 <main class="main" id="main" tabindex="-1">
 <header class="top"><div class="row"><button class="secondary mobilemenu" id="menuBtn" aria-label="Abrir menu de navegação" aria-expanded="false">☰</button><strong id="pageTitle">Painel geral</strong></div><div class="topright"><span class="pill hide-sm" id="today"></span><button class="secondary" id="searchBtn" aria-label="Buscar em todo o conteúdo (Ctrl+K)" title="Buscar (Ctrl+K)" onclick="if(window.GlobalSearch)GlobalSearch.open()">⌕ Buscar</button><button class="secondary" id="themeBtn" aria-label="Alternar tema claro e escuro" title="Alternar tema">☾</button></div></header>
-<!-- FORGE 3.0: o cartão inicial é estático para que o LCP aconteça no
-     primeiro paint, sem esperar a execução dos módulos JavaScript. -->
+<!-- FORGE 7.0: o herói é estático para que o LCP aconteça no primeiro paint.
+     Mapa estelar e hub são preenchidos pelo módulo aditivo sem deslocamento. -->
 <div class="content" id="view" role="region" aria-label="Conteúdo da página" aria-live="polite">
-<div class="eyebrow">Seu espaço de aprendizagem</div>
-<h1 class="h1">Construa domínio, uma sessão por vez.</h1>
-<p class="sub">Estude com intenção, pratique, registre erros e revise. O progresso fica salvo neste navegador.</p>
-<div class="card section focus-hero">
+<div id="f7HeroRoot">
+<section class="f7-hero focus-hero" aria-labelledby="f7HeroTitle">
   <div>
-    <div class="eyebrow">Estudar com intenção</div>
-    <h2 style="margin:4px 0 6px">Modo foco: uma etapa por vez</h2>
-    <p class="muted">Oito passos curtos, timer de blocos, pausa quando precisar e retomada de onde parou. Ideal para sessões de 5 a 25 minutos.</p>
+    <p class="f7-eyebrow">Sua missão agora · M1</p>
+    <h2 id="f7HeroTitle">Peano e Aritmética</h2>
+    <p>Construa domínio, uma sessão por vez. Cada aula concluída vira evidência no mapa e cartão no radar SM-2.</p>
+    <div class="f7-hero-actions">
+      <button type="button" data-f7-action="continue">▶ Continuar estudando</button>
+      <button type="button" data-f7-action="goto" data-page="porque">O porquê de tudo</button>
+      <button type="button" data-f7-action="goto" data-page="protocol">Protocolo de estudo</button>
+    </div>
   </div>
-  <div class="actions">
-    <button type="button" onclick="if(window.Focus)Focus.open(nextLessonId(),'dashboard')">▶ Iniciar modo foco</button>
-    <button type="button" class="secondary" onclick="if(window.Focus)Focus.openPicker()">Escolher aula</button>
+  <div class="f7-hero-ring" data-value="0%" style="--f7-progress:0" role="img" aria-label="Progresso geral: 0%">
+    <svg viewBox="0 0 92 92" aria-hidden="true" focusable="false">
+      <circle class="f7-ring-track" cx="46" cy="46" r="40"></circle>
+      <circle class="f7-ring-value" cx="46" cy="46" r="40"></circle>
+    </svg>
   </div>
+</section>
 </div>
+<div id="f7MapRoot"></div>
+<div id="f7HubRoot"></div>
 </div>
 </main>
 </div>
@@ -90,6 +102,9 @@
 <script defer src="js/data-trilha10.js"></script>
 <script defer src="js/data-trilha11.js"></script>
 <script defer src="js/data-trilha12.js"></script>
+<!-- FORGE 7.0: conteúdo didático e UI aditiva, carregados antes do roteador. -->
+<script defer src="js/data-porque.js"></script>
+<script defer src="js/forge7-ui.js"></script>
 <script defer src="js/utils-math.js"></script>
 <script defer src="js/storage.js"></script>
 <script defer src="js/exercises.js"></script>

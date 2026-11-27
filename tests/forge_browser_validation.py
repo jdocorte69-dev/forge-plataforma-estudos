@@ -98,7 +98,7 @@ with sync_playwright() as pw:
 
     def c_initial():
         n = page.locator("#nav button[data-page]").count()
-        assert n == 21, f"nav={n}"
+        assert n == 23, f"nav={n}"
         return f"nav={n}"
 
     check("carregamento inicial e 21 páginas na navegação", c_initial)
@@ -418,12 +418,12 @@ with sync_playwright() as pw:
 
     def c_router():
         keys = page.evaluate("Array.from(document.querySelectorAll('#nav button[data-page]')).map(b=>b.dataset.page)")
-        assert len(keys) == 21, keys
+        assert len(keys) == 23, keys
         for key in keys:
             page.evaluate("k => goToPage(k)", key)
             title = page.locator("#pageTitle").inner_text().strip()
             assert title, f"página sem título: {key}"
-        return "21/21 páginas renderizaram"
+        return "23/23 páginas renderizaram"
 
     check("roteador: todas as páginas existentes", c_router)
 
@@ -634,13 +634,15 @@ with sync_playwright() as pw:
         p2 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
         p2.goto(BASE, wait_until="domcontentloaded")
         wait_ready(p2)
-        p2.evaluate("localStorage.setItem('forge.study.v5', '{broken')")
+        p2.evaluate("localStorage.setItem('forge.study.v7', '{broken')")
         p2.reload(wait_until="domcontentloaded")
         wait_ready(p2)
         backup = p2.evaluate("localStorage.getItem('forge.study.v2.lastBackup')")
         assert backup and '"corrupted":true' in backup and "{broken" in backup, (backup or "")[:300]
+        versioned = p2.evaluate("Object.keys(localStorage).filter(k => k.startsWith('forge.study.v5.bak_'))")
+        assert len(versioned) == 1, versioned
         p2.context.close()
-        return "JSON corrompido preservado em forge.study.v2.lastBackup"
+        return "JSON corrompido preservado em forge.study.v2.lastBackup e forge.study.v5.bak_"
 
     check("REGRESSÃO: estado corrompido gera backup antes de resetar", c_corrupt_backup)
 
@@ -679,10 +681,10 @@ with sync_playwright() as pw:
             backup: !!localStorage.getItem('forge.study.v2.lastBackup')
           };
         }""")
-        assert r["version"] == 5 and r["done"] == ["importado"] and r["xp"] == 555, r
+        assert r["version"] == 7 and r["done"] == ["importado"] and r["xp"] == 555, r
         assert r["goal"] == "meta" and r["backup"] is True, r
-        assert "v2 → v5" in r["toast"], r
-        return "v2 migrada para v5 com backup e aviso"
+        assert "v2 → v7" in r["toast"], r
+        return "v2 migrada para v7 com backup e aviso"
 
     check("IMPORTAÇÃO: versão compatível ainda migra com backup", c_import_valid_migration)
 
@@ -718,15 +720,15 @@ with sync_playwright() as pw:
             v4Preserved: !!localStorage.getItem('forge.study.v4')
           };
         }""")
-        assert r["version"] == 5 and r["userId"] == "usr_teste_v4", r
+        assert r["version"] == 7 and r["userId"] == "usr_teste_v4", r
         assert r["done"] == ["aula-1"] and r["xp"] == 321 and r["lessonScore"] == 9, r
         assert r["sourceVersion"] == 4 and r["checksum"] == r["backupChecksum"], r
         assert r["backupAlgorithm"] == "FNV-1a-32" and r["backupCount"] == 1, r
         assert r["markerStatus"] == "complete" and r["v4Preserved"] is True, r
         p3.context.close()
-        return "v4→v5 atômica: backup, checksum, userId e progresso preservados"
+        return "v4→v5→v7 atômica: backup, checksum, userId e progresso preservados"
 
-    check("MIGRAÇÃO: v4→v5 atômica com backup e checksum", c_v4_to_v5_migration)
+    check("MIGRAÇÃO: v4→v5→v7 atômica com backup e checksum", c_v4_to_v5_migration)
 
     def c_forge4_widgets():
         page.evaluate("goToPage('dashboard')")
@@ -875,7 +877,7 @@ with sync_playwright() as pw:
         page.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=20000)
         cached = page.evaluate("""async () => {
           const keys = await caches.keys();
-          const key = keys.find(k => k.startsWith('forge-v7'));
+          const key = keys.find(k => k.startsWith('forge-v8'));
           if (!key) return { keys, key: null, found: false, total: 0 };
           const cache = await caches.open(key);
           const found = Boolean(await cache.match('./saida/02_resumos_por_livro/FME_1/cap01.md'));
@@ -883,7 +885,7 @@ with sync_playwright() as pw:
         }""")
         assert cached["key"], cached
         assert cached["found"] and cached["total"] >= 233, cached
-        assert all(k.startswith("forge-v7") for k in cached["keys"]), cached
+        assert all(k.startswith("forge-v8") for k in cached["keys"]), cached
         context.set_offline(True)
         try:
             page.evaluate("SummariesPage.open('FME_1/cap01')")
@@ -896,9 +898,9 @@ with sync_playwright() as pw:
         finally:
             context.set_offline(False)
             page.evaluate("SummariesPage.back()")
-        return f"cache forge-v7 com {cached['total']} entradas; resumo lido offline"
+        return f"cache forge-v8 com {cached['total']} entradas; resumo lido offline"
 
-    check("PWA/offline: resumo do acervo no cache forge-v7", c_forge4_offline_summaries)
+    check("PWA/offline: resumo do acervo no cache forge-v8", c_forge4_offline_summaries)
 
     def c_forge4_plan_six_phases():
         page.evaluate("goToPage('plan')")

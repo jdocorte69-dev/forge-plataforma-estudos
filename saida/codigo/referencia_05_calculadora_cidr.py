@@ -47,10 +47,39 @@ def calcular_vlsm(bloco_pai, necessidades):
     return atual
 
 
+def verificar_casos_deterministicos():
+    """Casos fixos com assert: a auditoria não depende de entrada externa."""
+    print("\n=== CASOS DETERMINISTICOS (assert) ===")
+    caso = ipaddress.ip_network("192.168.10.0/26", strict=True)
+    assert (str(caso.network_address), str(caso.broadcast_address)) == (
+        "192.168.10.0", "192.168.10.63")
+    assert caso.num_addresses == 64 and caso.num_addresses - 2 == 62
+    print("[OK] 192.168.10.0/26: rede .0, broadcast .63, 64 IPs / 62 hosts.")
+
+    pai = ipaddress.ip_network("192.168.10.0/24", strict=True)
+    subredes = list(pai.subnets(new_prefix=26))
+    esperado = ["192.168.10.0/26", "192.168.10.64/26",
+                "192.168.10.128/26", "192.168.10.192/26"]
+    assert len(subredes) == 4
+    assert [s.with_prefixlen for s in subredes] == esperado
+    print("[OK] 192.168.10.0/24 -> 4 sub-redes /26:", ", ".join(esperado))
+
+    ponto = ipaddress.ip_network("10.20.30.0/30", strict=True)
+    assert ponto.num_addresses == 4 and ponto.num_addresses - 2 == 2
+    assert str(ponto.network_address + 1) == "10.20.30.1"
+    assert str(ponto.broadcast_address - 1) == "10.20.30.2"
+    print("[OK] 10.20.30.0/30: 4 IPs / 2 hosts uteis (.1 e .2).")
+
+    vlsm = calcular_vlsm("10.0.0.0/24", [100, 50, 20, 10])
+    assert vlsm == int(ipaddress.IPv4Address("10.0.0.240"))
+    print("[OK] VLSM [100,50,20,10] cabe em 10.0.0.0/24.")
+
+
 def main():
     auditar_subrede("192.168.10.0/26")
     auditar_subrede("10.20.30.0/30")
     calcular_vlsm("10.0.0.0/24", [100, 50, 20, 10])
+    verificar_casos_deterministicos()
     print("\n[OK] Calculos de CIDR/VLSM concluidos.")
 
 

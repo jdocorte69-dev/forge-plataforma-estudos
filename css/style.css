@@ -543,6 +543,20 @@ a:hover {
   contain-intrinsic-size: auto 1080px;
 }
 
+/* WCAG 2.2 target-size: a altura aproximada reservada pelo content-visibility
+   aproximava dois alvos em 9px. Este cartão é a única exceção; os demais
+   sections continuam renderizados sob demanda. */
+#view[data-page="dashboard"] > .card.section:has(button[onclick="Gamification.saveRewards()"]) {
+  content-visibility: visible;
+}
+
+/* O painel legado é injetado depois do scripts adiados; sem contenção, o
+   layout dos 364 retáculos do heatmap virava a última tarefa longa. */
+#view[data-page="dashboard"] > #forge4Widgets {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 1080px;
+}
+
 .card h2 {
   font-size: 1.1rem;
   font-weight: 700;

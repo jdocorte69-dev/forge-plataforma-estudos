@@ -1,4 +1,4 @@
-"""FORGE 4.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
+"""FORGE 7.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
 
 Uso:
     $env:FORGE_AXE_PATH='<caminho para axe.min.js>'
@@ -17,7 +17,7 @@ BASE = os.environ.get("FORGE_BASE", "http://127.0.0.1:8766/index.html")
 VIEWPORTS = [("desktop", 1440, 900), ("mobile", 390, 844)]
 PAGES = [
     "dashboard", "tracks", "lab", "study", "settings", "library", "plan",
-    "oral", "bugs", "crypto", "summaries",
+    "oral", "bugs", "crypto", "summaries", "porque", "protocol", "stellar", "tools",
 ]
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
@@ -80,6 +80,8 @@ def main():
                 total += 1
                 page.evaluate("goToPage('summaries'); SummariesPage.open('FME_1/cap01')")
                 page.wait_for_selector("#summaryArticle h3", timeout=10000)
+                # Mesma espera das rotas: a cor da aba ativa ainda transiciona.
+                page.wait_for_timeout(320)
                 violations = page.evaluate("""async tags => {
                   const r = await axe.run(document, { runOnly: { type: 'tag', values: tags } });
                   return r.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length,

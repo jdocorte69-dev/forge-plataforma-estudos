@@ -23,6 +23,7 @@
 - [2026-11-26 20:46] Fase 6 — Glossário (273), mapas (362), rotas (209) e catálogo (150) concluídos; CJK residual corrigido.
 - [2026-11-26 20:47] Fase 7 — 12 semanas (349), 6 meses (186), 30 dias (159), calendário (184) e matriz (165) concluídos; datas conferidas.
 - [2026-11-26 20:48] Painel — `LEIA-ME.md` (116 linhas) e `RELATORIO.md` (280 linhas) gerados a partir de contagens reais.
+- [2026-11-27 06:48] FORGE 7.0 Fases 0–2 — `scripts/generate_master_summaries.py` (somente stdlib) inventariou 13 obras/220 blocos e gerou 13 resumos mestres: 156 porquês, 130 fórmulas ilustrativas, 26 snippets e 260 questões (10 conceituais + 10 práticas por obra). Lacunas reais registradas em `PENDENCIAS.md` (P014–P019) e `00_inventario/inventario_v7.md`.
 
 ## Estado por fase
 
@@ -40,6 +41,7 @@
 | — | Arquitetura criptográfica (Parte III) | CONCLUÍDA | `extras/arquitetura_criptografica.md` |
 | — | Códigos de referência (Parte V) | CONCLUÍDA | `codigo/` — 5/5 validados |
 | — | Painel central e relatório único | CONCLUÍDA | `LEIA-ME.md`, `RELATORIO.md` |
+| 7.0 | Resumos mestres FORGE (Fases 0–2) | CONCLUÍDA | `02_resumos_por_livro/` — 13 resumos, gerador determinístico |
 
 ## Portões de qualidade
 
@@ -51,11 +53,13 @@
 | CJK / LaTeX indevido | varredura Unicode e regex | 0 / 0 | `logs/auditoria_saidas.md`, `logs/verificacao_fases67.md` |
 | Código C | GCC `-Wall -Wextra -Werror -pedantic` | 5/5, 0 avisos | `logs/compilacao.md` |
 | PDFs | pypdf | 2/2 válidos | `logs/verificacao_pdfs.md` |
+| Estrutura FORGE 7.0 | varredura de 5 seções e 20 questões | 13/13 | `00_inventario/inventario_v7.md`, verificação local de 2026-11-27 |
 
 ## Ação atual
 
-Nenhuma ação pendente de execução. Lacunas de fonte e limitações de ambiente permanecem
-registradas com honestidade em `PENDENCIAS.md` e não bloqueiam o uso do ecossistema.
+Nenhuma ação pendente de execução. As lacunas FORGE 7.0 (P014–P018) são de fidelidade documental
+e estão sinalizadas nos resumos mestres e no inventário; o defeito de numeração P019 foi corrigido
+e os 13 resumos foram regenerados e verificados.
 
 ## Como regenerar
 
@@ -63,6 +67,7 @@ registradas com honestidade em `PENDENCIAS.md` e não bloqueiam o uso do ecossis
 python saida/scripts/baixar_corpus.py
 python saida/scripts/inventariar.py
 python saida/scripts/extrair.py
+python scripts/generate_master_summaries.py
 python saida/scripts/gerar_resumos.py
 python saida/scripts/gerar_compendio.py
 python saida/scripts/md_para_pdf.py saida/03_matematica_consolidada/compendio_matematica.pdf "Compendio Consolidado de Matematica" saida/03_matematica_consolidada/compendio_matematica.md

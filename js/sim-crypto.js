@@ -1,9 +1,10 @@
 /* ============================================================
-   FORGE 4.0 — sim-crypto.js
-   Laboratório didático: CSPRNG vs LCG em tela, entropia de
-   Shannon, parâmetros Argon2id e layout de bytes de um cofre.
-   Nenhuma operação criptográfica real é executada nem dados
-   do usuário são enviados a qualquer lugar. Expõe window.CryptoSim.
+   FORGE 7.0 — sim-crypto.js
+   Laboratório DIDÁTICO: CSPRNG vs LCG em tela, entropia de
+   Shannon, parâmetros Argon2id e layout AEAD com inspeção de
+   bytes. Nenhuma operação criptográfica real é executada nem
+   dados do usuário são enviados a qualquer lugar.
+   Expõe window.CryptoSim (API pública preservada).
    ============================================================ */
 
 (function () {
@@ -16,6 +17,7 @@
     iterations: 2,
     parallelism: 1,
     plaintextLen: 64,
+    textSample: "",
     bytes: [],
     lastRun: null,
     mounted: false
@@ -113,6 +115,7 @@
   <p class="forge4-kicker">Laboratório de criptografia · didático</p>
   <h1 class="h1" id="cryptoTitle">Aleatoriedade, entropia e cofre</h1>
   <p class="sub">Compare uma fonte criptográfica com um gerador linear e veja por que previsibilidade importa. Nada aqui protege dados reais.</p>
+  <p class="small" role="note"><b>SIMULAÇÃO DIDÁTICA:</b> apenas visualizações locais. Não há derivação de chave, cifragem, decifragem, rede nem envio de dados; bytes mostrados são ilustrativos.</p>
   <div id="cryptoRoot" class="crypto-grid"></div>
 </section>`;
   }
@@ -139,11 +142,21 @@
   <canvas id="cryptoCanvas" class="crypto-canvas" width="320" height="320" role="img" aria-label="Matriz 8 por 8 de bytes gerados"></canvas>
   <p class="sim-metrics"><span>Fonte <b id="cryptoSource">—</b></span><span>Entropia <b id="cryptoEntropy">0.00</b> bits/símbolo</span><span>Valores distintos <b id="cryptoUnique">0</b>/64</span></p>
   <p class="small muted">Primeiros bytes: <code id="cryptoHex">—</code></p>
+  <p class="small muted">LCG exibido: x<sub>n+1</sub> = (1664525·x<sub>n</sub> + 1013904223) mod 2<sup>32</sup> — previsível por construção.</p>
+</section>
+
+<section class="card forge4-panel" aria-labelledby="cryptoLiveTitle">
+  <h2 id="cryptoLiveTitle" style="margin-top:0">Calculadora de entropia ao vivo</h2>
+  <p class="small muted">Digite qualquer sequência: a entropia de Shannon é calculada neste navegador, em bits por símbolo. Nada é salvo ou enviado.</p>
+  <label for="cryptoEntropyText">Sequência para análise</label>
+  <input class="field" id="cryptoEntropyText" type="text" style="min-height:48px" autocomplete="off"
+    placeholder="Ex.: ABABAB" oninput="CryptoSim.entropyOf(this.value)">
+  <p class="sim-metrics"><span>Entropia <b id="cryptoLiveEntropy">0.00</b> bits/símbolo</span><span>Símbolos distintos <b id="cryptoLiveUnique">0</b></span></p>
 </section>
 
 <section class="card forge4-panel" aria-labelledby="cryptoKdfTitle">
   <h2 id="cryptoKdfTitle" style="margin-top:0">2. Argon2id (simulação de parâmetros)</h2>
-  <p class="small muted">Ajuste o custo e leia o impacto. Não há derivação real de chave nesta página.</p>
+  <p class="small muted" role="note">DIDÁTICO: ajuste m (memória KiB), t (iterações) e p (paralelismo) para ler o impacto. Não há derivação real de chave nesta página.</p>
   <label for="cryptoMem">Memória (<output id="cryptoMemOut">${state.memoryKiB}</output> KiB)</label>
   <input class="crypto-slider" id="cryptoMem" type="range" min="64" max="2048" step="64" value="${state.memoryKiB}" oninput="CryptoSim.setParam('memoryKiB',Number(this.value))">
   <label for="cryptoT">Iterações t (<output id="cryptoTOut">${state.iterations}</output>)</label>
@@ -155,11 +168,26 @@
 </section>
 
 <section class="card forge4-panel forge4-grid--wide" aria-labelledby="cryptoVaultTitle">
-  <h2 id="cryptoVaultTitle" style="margin-top:0">3. Layout de bytes do cofre</h2>
+  <h2 id="cryptoVaultTitle" style="margin-top:0">3. Layout AEAD e inspeção de bytes</h2>
+  <p class="small muted" role="note">DIDÁTICO: salt 16 B, nonce 12 B, ciphertext configurável e tag 16 B. Os bytes exibidos são apenas ilustrativos — não houve cifragem nem autenticação real.</p>
   <label for="cryptoLen">Tamanho do payload (<output id="cryptoLenOut">${state.plaintextLen}</output> bytes)</label>
   <input class="crypto-slider" id="cryptoLen" type="range" min="16" max="256" step="16" value="${state.plaintextLen}" oninput="CryptoSim.setParam('plaintextLen',Number(this.value))">
   <div class="crypto-bytes" id="cryptoVault"></div>
+  <div id="cryptoByteInspection"></div>
   <p class="small muted" id="cryptoTotal">—</p>
+</section>
+
+<section class="card forge4-panel forge4-grid--wide" aria-labelledby="cryptoPitfallsTitle">
+  <h2 id="cryptoPitfallsTitle" style="margin-top:0">4. Duas armadilhas clássicas</h2>
+  <details>
+    <summary>Viés de módulo: por que <code>x % 6</code> não é uniforme</summary>
+    <p class="small">Se x é uniforme em [0, 2<sup>32</sup>) e 2<sup>32</sup> não é múltiplo de 6, alguns restos recebem um valor a mais que os outros. O viés é pequeno, mas acumula em simulações e sorteadores. Caminho didático: amostragem por rejeição — descartar valores acima do último bloco completo antes de aplicar o módulo. Nenhum sorteio real é feito aqui.</p>
+  </details>
+  <details>
+    <summary>Reuso de nonce: por que destrói a segurança do AEAD</summary>
+    <p class="small">Sob a mesma chave, reutilizar nonce em AEAD (por exemplo, AES-GCM) é fatal: o XOR dos dois ciphertexts revela o XOR dos plaintexts, e a tag de autenticação perde a garantia de originalidade. Nonce não precisa ser secreto, mas precisa ser único por chave. Aqui o nonce é só um campo de 12 bytes desenhado na tela; não há operação criptográfica.</p>
+  </details>
+  <p class="small muted">Para proteger dados reais, use uma biblioteca auditada e parâmetros avaliados para o seu dispositivo. Este laboratório serve apenas para entender o formato e os riscos.</p>
 </section>`;
   }
 
@@ -169,7 +197,51 @@
     el.innerHTML = controlsHTML();
     draw(state.bytes.length ? state.bytes : []);
     updateMetrics();
+    renderLiveEntropy();
     renderVault();
+  }
+
+  /* Entropia de uma sequência digitada — apenas cálculo local.
+     Mantém o campo na memória para sobreviver a um refresh completo. */
+  function entropyOf(text) {
+    const sample = String(text == null ? "" : text).slice(0, 2000);
+    state.textSample = sample;
+    const set = (id, value) => {
+      const el = (typeof document !== "undefined") ? document.getElementById(id) : null;
+      if (el) el.textContent = value;
+    };
+    set("cryptoLiveEntropy", entropy(sample).toFixed(2));
+    set("cryptoLiveUnique", String(new Set(sample).size));
+    return entropy(sample);
+  }
+
+  function renderLiveEntropy() {
+    if (typeof document === "undefined") return;
+    const input = document.getElementById("cryptoEntropyText");
+    if (input && input.value !== state.textSample) input.value = state.textSample;
+    entropyOf(state.textSample);
+  }
+
+  /* Inspeção didática: bytes ilustrativos gerados a partir da amostra já
+     exibida no painel — não representam cifragem nem autenticação reais. */
+  function renderByteInspection() {
+    const el = (typeof document !== "undefined") ? document.getElementById("cryptoByteInspection") : null;
+    if (!el) return;
+    const source = state.bytes.length ? state.bytes : [0];
+    let offset = 0;
+    const rows = vaultFields().map(f => {
+      const start = offset;
+      offset += f.size;
+      const preview = Array.from({ length: Math.min(16, f.size) }, (_, i) =>
+        source[(start + i) % source.length].toString(16).padStart(2, "0")).join(" ");
+      return `<tr><th scope="row">${esc(f.name)}</th><td>${start}..${offset - 1}</td>
+        <td>${f.size} B</td><td><code>${preview}${f.size > 16 ? " …" : ""}</code></td></tr>`;
+    }).join("");
+    el.innerHTML = `<div class="sim-table-wrap" tabindex="0"><table class="sim-table">
+      <caption class="sr-only">Inspeção ilustrativa dos bytes do layout AEAD</caption>
+      <thead><tr><th scope="col">Campo</th><th scope="col">Offset</th><th scope="col">Tamanho</th><th scope="col">Bytes ilustrativos (hex)</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      <p class="small muted">Offsets em bytes a partir do início do registro. Os valores hex vêm da amostra visual do gerador e servem apenas para treinar leitura de layout.</p>`;
   }
 
   function updateMetrics() {
@@ -207,6 +279,7 @@
     }).join("");
     const total = document.getElementById("cryptoTotal");
     if (total) total.textContent = `Total: ${offset} bytes · campos fixos + payload configurável.`;
+    renderByteInspection();
   }
 
   function setMode(mode) {
@@ -255,7 +328,7 @@
   if (typeof window !== "undefined") {
     window.CryptoSim = {
       state, pageHTML, renderPage, refresh, setMode, setParam, run,
-      vaultFields, entropy, makeBytes
+      vaultFields, entropy, entropyOf, makeBytes, renderByteInspection
     };
   }
 })();
