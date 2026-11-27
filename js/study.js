@@ -151,10 +151,18 @@
     if (typeof global.toast === "function") global.toast(message);
   }
 
+  /* Datas de revisão são locais: toISOString() converte para UTC e, em fusos
+     como o brasileiro, desloca a data no fim do dia. */
+  function localDateISO(d) {
+    const date = d || new Date();
+    const pad = n => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  }
+
   function daysFromToday(days) {
     const d = new Date();
     d.setDate(d.getDate() + Number(days || 7));
-    return d.toISOString().slice(0, 10);
+    return localDateISO(d);
   }
 
   /* ------- análise de texto estritamente local ------- */
@@ -723,7 +731,7 @@
     if (!rows.length) return '<p class="small muted">Nenhuma revisão agendada.</p>';
     return `<ul class="study-list">${rows.map(([key, v]) => `
       <li><b>${esc(v.bookTitle || "Geral")}</b> · ${esc(v.section || "sem seção")} ·
-        ${esc(v.reviewDue)} ${v.reviewDue <= new Date().toISOString().slice(0, 10) ? '<span class="pill warn">vencida</span>' : ""}
+        ${esc(v.reviewDue)} ${v.reviewDue <= localDateISO() ? '<span class="pill warn">vencida</span>' : ""}
         <button class="linklike" onclick="Study.openSession('${esc(key)}')">Retomar →</button></li>`).join("")}</ul>`;
   }
 

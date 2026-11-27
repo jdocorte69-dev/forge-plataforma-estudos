@@ -22,12 +22,26 @@ function hashSeed(value) {
   return h >>> 0;
 }
 
+// A semente combina o ID da aula (passado por quem chama) com o ID local do
+// usuário, conforme a especificação FORGE 3.0. O fallback mantém o módulo
+// utilizável em contextos isolados, como testes sem localStorage.
+function shuffleUserSeed(seed) {
+  let userId = "local";
+  try {
+    if (typeof Storage !== "undefined" && typeof Storage.get === "function") {
+      const state = Storage.get();
+      if (state && state.userId) userId = String(state.userId);
+    }
+  } catch (e) { /* usa o fallback */ }
+  return `${userId}|${seed}`;
+}
+
 function shuffledExercise(q, seed) {
   const source = Array.isArray(q)
     ? { question: q[0], options: q.slice(1), correctIndex: 0 }
     : { question: q.question, options: (q.options || []).slice(), correctIndex: Number(q.correctIndex) || 0 };
   const indexed = source.options.map((text, original) => ({ text, original }));
-  let h = hashSeed(seed);
+  let h = hashSeed(shuffleUserSeed(seed));
   for (let i = indexed.length - 1; i > 0; i--) {
     h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
     const j = h % (i + 1);

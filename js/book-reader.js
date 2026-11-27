@@ -234,6 +234,7 @@ ${text && text.chapters && text.chapters.length ? `<section class="card">
     if (!book) { container.innerHTML = '<section class="card"><h1>Livro não encontrado.</h1><button onclick="goToPage(\'books\')">Voltar</button></section>'; return; }
     container.innerHTML = '<section class="card reader-shell"><p>Carregando PDF no leitor interno…</p></section>';
     try {
+      if (global.ForgePDF && typeof global.ForgePDF.ensure === "function") await global.ForgePDF.ensure();
       if (!global.pdfjsLib) throw new Error("PDF.js não foi carregado.");
       if (global.pdfjsLib.GlobalWorkerOptions) global.pdfjsLib.GlobalWorkerOptions.workerSrc = "./vendor/pdfjs/pdf.worker.min.js";
       const record = await global.BookStore.getPdf(id);

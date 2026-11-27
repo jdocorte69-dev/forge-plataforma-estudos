@@ -3,14 +3,30 @@
    Gerenciamento de estado, localStorage, export/import
    ============================================================ */
 
-const STORE_KEY = "forge.study.v2";
-const CURRENT_VERSION = 3;
+// FORGE 3.0 — namespace v4. As chaves v2/v3 continuam legíveis e são
+// preservadas (nunca apagadas) para garantir retrocompatibilidade total.
+const STORE_KEY = "forge.study.v4";
+const LEGACY_KEYS = ["forge.study.v2", "forge.study.v3"];
+const CURRENT_VERSION = 4;
 // Cópia de segurança automática antes de qualquer migração/importação.
 const BACKUP_KEY = "forge.study.v2.lastBackup";
+
+// Identificador local estável: usado como semente do embaralhamento
+// determinístico (FNV-1a + LCG) junto com o ID da aula. Não é dado pessoal
+// nem é enviado a qualquer serviço externo.
+function makeUserId() {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch (e) { /* ambiente sem Web Crypto: usa o fallback abaixo */ }
+  return "local-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
 
 function defaultState() {
   return {
     version: CURRENT_VERSION,
+    userId: makeUserId(),
     done: [],
     // Conclusão sem evidência: guardada separadamente, sem selo de domínio.
     declared: [],
@@ -23,7 +39,8 @@ function defaultState() {
     dayLog: {},
     feynman: {},
     notes: {},
-    theme: "light",
+    // Novo padrão FORGE 3.0: OLED escuro. Usuários antigos mantêm o tema salvo.
+    theme: "dark",
     labDone: [],
     lastVisit: new Date().toISOString().slice(0, 10),
     placementDone: false,
@@ -78,7 +95,19 @@ function defaultState() {
       autoSave: true,
       fontScale: 15,
       highContrast: false
-    }
+    },
+    // FORGE 3.0 — espaços aditivos do schema v4. Nenhum campo antigo é sobrescrito.
+    forge3: {
+      trails: {},
+      simulators: {
+        logic: { runs: 0, lastRun: null },
+        cpu: { runs: 0, lastRun: null },
+        ai: { runs: 0, lastRun: null }
+      },
+      pwaVersion: 6,
+      migratedAt: null
+    },
+    simLogs: []
   };
 }
 
@@ -132,6 +161,7 @@ function normalizeState(raw) {
   // Versões posteriores à atual nunca são rebaixadas: preservamos o número original.
   const future = Number(raw && raw.version) > CURRENT_VERSION;
   const out = { ...fresh, ...(raw || {}), version: future ? Number(raw.version) : CURRENT_VERSION };
+  if (typeof out.userId !== "string" || !out.userId) out.userId = fresh.userId;
   out.settings = { ...fresh.settings, ...((raw && raw.settings) || {}) };
   out.focus = { ...fresh.focus, ...((raw && raw.focus) || {}) };
   out.plan = { ...fresh.plan, ...((raw && raw.plan) || {}) };
@@ -150,6 +180,20 @@ function normalizeState(raw) {
   out.study.gaps = Array.isArray(out.study.gaps) ? out.study.gaps.slice(-200) : [];
   out.study.lastSessionKey = typeof out.study.lastSessionKey === "string" ? out.study.lastSessionKey : "";
   out.assessmentLog = Array.isArray(out.assessmentLog) ? out.assessmentLog.slice(-300) : [];
+  // FORGE 3.0: mescla os espaços aditivos sem descartar progresso de simuladores.
+  const forge3Raw = out.forge3 && typeof out.forge3 === "object" && !Array.isArray(out.forge3) ? out.forge3 : {};
+  out.forge3 = { ...fresh.forge3, ...forge3Raw };
+  out.forge3.trails = forge3Raw.trails && typeof forge3Raw.trails === "object" && !Array.isArray(forge3Raw.trails) ? forge3Raw.trails : {};
+  const simsRaw = forge3Raw.simulators && typeof forge3Raw.simulators === "object" && !Array.isArray(forge3Raw.simulators) ? forge3Raw.simulators : {};
+  out.forge3.simulators = {};
+  for (const key of ["logic", "cpu", "ai"]) {
+    const sim = simsRaw[key] && typeof simsRaw[key] === "object" ? simsRaw[key] : {};
+    out.forge3.simulators[key] = {
+      runs: Number(sim.runs) || 0,
+      lastRun: typeof sim.lastRun === "string" ? sim.lastRun : null
+    };
+  }
+  out.simLogs = Array.isArray(out.simLogs) ? out.simLogs.slice(-200) : [];
   for (const key of ["done", "declared", "labDone", "timerSessions", "mentalMathHistory"]) {
     if (!Array.isArray(out[key])) out[key] = [];
   }
@@ -179,6 +223,17 @@ function loadState() {
   let stored = null;
   try {
     stored = localStorage.getItem(STORE_KEY);
+    if (!stored) {
+      // Primeira execução do FORGE 3.0: procura estados v2/v3 antes de criar um
+      // estado novo. As chaves antigas nunca são apagadas — apenas copiadas.
+      for (const legacyKey of LEGACY_KEYS) {
+        const legacyRaw = localStorage.getItem(legacyKey);
+        if (legacyRaw) {
+          stored = legacyRaw;
+          break;
+        }
+      }
+    }
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Number(parsed.version) > CURRENT_VERSION) {
@@ -231,10 +286,36 @@ function migrateState(oldState, skipBackup = false) {
   if (!migrated.assessments || typeof migrated.assessments !== "object") migrated.assessments = {};
   if (!migrated.focus || typeof migrated.focus !== "object") migrated.focus = defaultState().focus;
   if (!migrated.focus.goals || typeof migrated.focus.goals !== "object") migrated.focus.goals = defaultState().focus.goals;
-  // v2 → v3: a única mudança estrutural é a adição dos quatro espaços acima.
+  // v2/v3 → v4: mudanças aditivas (forge3, simLogs, tema escuro padrão).
   // Todos os dados antigos (done, mistakes, xp, labDone, plan, focus...) são mantidos.
+  if (!migrated.forge3.migratedAt) migrated.forge3.migratedAt = new Date().toISOString();
   saveState(migrated);
   return migrated;
+}
+
+// Idempotente: garante que o namespace v4 exista e esteja normalizado mesmo
+// quando o app.js é carregado depois do storage.js. Retorna o estado atual.
+function ensureV4() {
+  if (!state) return loadState();
+  // Verifica o que já estava persistido antes de normalizar: um userId recém
+  // gerado precisa ser gravado uma única vez para que a semente seja estável.
+  let persistedUserId = null;
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) persistedUserId = JSON.parse(raw).userId;
+  } catch (e) { persistedUserId = null; }
+  if (Number(state.version) !== CURRENT_VERSION) {
+    state = migrateState(state);
+  } else {
+    state = normalizeState(state);
+  }
+  if (!persistedUserId) saveState(state);
+  return state;
+}
+
+// Ponto de entrada público usado no topo de app.js (Fase 2).
+function migrateStorage() {
+  return ensureV4();
 }
 
 function saveState(newState = state) {
@@ -474,7 +555,7 @@ function setTheme(theme) {
 }
 
 function getTheme() {
-  return state.theme || "light";
+  return state.theme || "dark";
 }
 
 function setSetting(key, value) {
@@ -567,8 +648,33 @@ function addStudyGap(gap) {
   return study.gaps[study.gaps.length - 1];
 }
 
+// FORGE 3.0 — registra uma execução de simulador sem apagar o histórico de
+// progresso. O log é limitado a 200 entradas para não inflar o localStorage.
+function logSimulator(name, detail) {
+  const s = getState();
+  const key = ["logic", "cpu", "ai"].includes(name) ? name : "logic";
+  if (!s.forge3 || typeof s.forge3 !== "object") s.forge3 = defaultState().forge3;
+  if (!s.forge3.simulators || typeof s.forge3.simulators !== "object") s.forge3.simulators = {};
+  const rec = s.forge3.simulators[key] || { runs: 0, lastRun: null };
+  rec.runs = (Number(rec.runs) || 0) + 1;
+  rec.lastRun = new Date().toISOString();
+  s.forge3.simulators[key] = rec;
+  if (!Array.isArray(s.simLogs)) s.simLogs = [];
+  s.simLogs.push({
+    at: rec.lastRun,
+    simulator: key,
+    detail: typeof detail === "string" ? detail.slice(0, 240) : ""
+  });
+  s.simLogs = s.simLogs.slice(-200);
+  saveState(s);
+  return rec;
+}
+
 window.Storage = {
   load: loadState,
+  logSimulator,
+  migrate: migrateStorage,
+  ensureV4,
   save: saveState,
   updateStreak,
   get: getState,

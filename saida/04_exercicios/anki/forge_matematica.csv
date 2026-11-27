@@ -1,0 +1,301 @@
+Frente;Verso;Tags
+[Q001] Classifique √4: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√4 = 2, pois 2² = 4.;FORGE Conjuntos_numéricos
+[Q002] Classifique √49: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√49 = 7, pois 7² = 49.;FORGE Conjuntos_numéricos
+[Q003] Converta 0,66… (bloco 6 repetido) em fração irredutível.;**2/3**<br><br>100x − x = 66 ⇒ x = 66/99 = 2/3.;FORGE Conjuntos_numéricos
+[Q004] Classifique √49: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√49 = 7, pois 7² = 49.;FORGE Conjuntos_numéricos
+[Q005] Converta 0,44… (bloco 4 repetido) em fração irredutível.;**4/9**<br><br>100x − x = 44 ⇒ x = 44/99 = 4/9.;FORGE Conjuntos_numéricos
+[Q006] Converta 0,88… (bloco 8 repetido) em fração irredutível.;**8/9**<br><br>100x − x = 88 ⇒ x = 88/99 = 8/9.;FORGE Conjuntos_numéricos
+[Q007] Converta 0,77… (bloco 7 repetido) em fração irredutível.;**7/9**<br><br>100x − x = 77 ⇒ x = 77/99 = 7/9.;FORGE Conjuntos_numéricos
+[Q008] Classifique 8/3: inteiro, racional não inteiro ou irracional.;**racional não inteiro**<br><br>8/3 já é razão de inteiros com denominador não nulo.;FORGE Conjuntos_numéricos
+[Q009] Converta 0,55… (bloco 5 repetido) em fração irredutível.;**5/9**<br><br>100x − x = 55 ⇒ x = 55/99 = 5/9.;FORGE Conjuntos_numéricos
+[Q010] Classifique √121: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√121 = 11, pois 11² = 121.;FORGE Conjuntos_numéricos
+[Q011] Classifique √100: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√100 = 10, pois 10² = 100.;FORGE Conjuntos_numéricos
+[Q012] Classifique √4: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√4 = 2, pois 2² = 4.;FORGE Conjuntos_numéricos
+[Q013] Classifique √4: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√4 = 2, pois 2² = 4.;FORGE Conjuntos_numéricos
+[Q014] Classifique √49: inteiro, racional não inteiro ou irracional.;**inteiro**<br><br>√49 = 7, pois 7² = 49.;FORGE Conjuntos_numéricos
+[Q015] Classifique 3/5: inteiro, racional não inteiro ou irracional.;**racional não inteiro**<br><br>3/5 já é razão de inteiros com denominador não nulo.;FORGE Conjuntos_numéricos
+[Q016] Calcule 16³ + (16)² × 3.;"**324**<br><br>(16)³ = 216; (16)² = 36; 36×3 = 108; soma = 324.";FORGE Operações_com_inteiros
+[Q017] Calcule 16³ + (16)² × 3.;"**324**<br><br>(16)³ = 216; (16)² = 36; 36×3 = 108; soma = 324.";FORGE Operações_com_inteiros
+[Q018] Calcule 16³ + (16)² × 4.;"**360**<br><br>(16)³ = 216; (16)² = 36; 36×4 = 144; soma = 360.";FORGE Operações_com_inteiros
+[Q019] Calcule 15³ + (15)² × 2.;"**175**<br><br>(15)³ = 125; (15)² = 25; 25×2 = 50; soma = 175.";FORGE Operações_com_inteiros
+[Q020] Calcule 16³ + (16)² × 2.;"**288**<br><br>(16)³ = 216; (16)² = 36; 36×2 = 72; soma = 288.";FORGE Operações_com_inteiros
+[Q021] Calcule -13³ + (-13)² × 4.;"**9**<br><br>(-13)³ = -27; (-13)² = 9; 9×4 = 36; soma = 9.";FORGE Operações_com_inteiros
+[Q022] Calcule -16³ + (-16)² × 2.;"**-144**<br><br>(-16)³ = -216; (-16)² = 36; 36×2 = 72; soma = -144.";FORGE Operações_com_inteiros
+[Q023] Calcule 15³ + (15)² × 4.;"**225**<br><br>(15)³ = 125; (15)² = 25; 25×4 = 100; soma = 225.";FORGE Operações_com_inteiros
+[Q024] Calcule 16³ + (16)² × 4.;"**360**<br><br>(16)³ = 216; (16)² = 36; 36×4 = 144; soma = 360.";FORGE Operações_com_inteiros
+[Q025] Calcule 12³ + (12)² × 3.;"**20**<br><br>(12)³ = 8; (12)² = 4; 4×3 = 12; soma = 20.";FORGE Operações_com_inteiros
+[Q026] Calcule 16³ + (16)² × 3.;"**324**<br><br>(16)³ = 216; (16)² = 36; 36×3 = 108; soma = 324.";FORGE Operações_com_inteiros
+[Q027] Calcule -16³ + (-16)² × 4.;"**-72**<br><br>(-16)³ = -216; (-16)² = 36; 36×4 = 144; soma = -72.";FORGE Operações_com_inteiros
+[Q028] Calcule 14³ + (14)² × 3.;"**112**<br><br>(14)³ = 64; (14)² = 16; 16×3 = 48; soma = 112.";FORGE Operações_com_inteiros
+[Q029] Calcule 13³ + (13)² × 3.;"**54**<br><br>(13)³ = 27; (13)² = 9; 9×3 = 27; soma = 54.";FORGE Operações_com_inteiros
+[Q030] Calcule -16³ + (-16)² × 4.;"**-72**<br><br>(-16)³ = -216; (-16)² = 36; 36×4 = 144; soma = -72.";FORGE Operações_com_inteiros
+[Q031] Calcule mentalmente (16+6)(16−6) usando diferença de quadrados.;**220**<br><br>(16+6)(16−6) = 16² − 6² = 256 − 36 = 220.;FORGE Produtos_notáveis
+[Q032] Calcule mentalmente (16+9)(16−9) usando diferença de quadrados.;**175**<br><br>(16+9)(16−9) = 16² − 9² = 256 − 81 = 175.;FORGE Produtos_notáveis
+[Q033] Calcule mentalmente (29+9)(29−9) usando diferença de quadrados.;**760**<br><br>(29+9)(29−9) = 29² − 9² = 841 − 81 = 760.;FORGE Produtos_notáveis
+[Q034] Calcule mentalmente (39+4)(39−4) usando diferença de quadrados.;**1505**<br><br>(39+4)(39−4) = 39² − 4² = 1521 − 16 = 1505.;FORGE Produtos_notáveis
+[Q035] Calcule mentalmente (22+5)(22−5) usando diferença de quadrados.;**459**<br><br>(22+5)(22−5) = 22² − 5² = 484 − 25 = 459.;FORGE Produtos_notáveis
+[Q036] Calcule mentalmente (10+8)(10−8) usando diferença de quadrados.;**36**<br><br>(10+8)(10−8) = 10² − 8² = 100 − 64 = 36.;FORGE Produtos_notáveis
+[Q037] Calcule mentalmente (14+8)(14−8) usando diferença de quadrados.;**132**<br><br>(14+8)(14−8) = 14² − 8² = 196 − 64 = 132.;FORGE Produtos_notáveis
+[Q038] Calcule mentalmente (21+7)(21−7) usando diferença de quadrados.;**392**<br><br>(21+7)(21−7) = 21² − 7² = 441 − 49 = 392.;FORGE Produtos_notáveis
+[Q039] Calcule mentalmente (35+9)(35−9) usando diferença de quadrados.;**1144**<br><br>(35+9)(35−9) = 35² − 9² = 1225 − 81 = 1144.;FORGE Produtos_notáveis
+[Q040] Calcule mentalmente (30+7)(30−7) usando diferença de quadrados.;**851**<br><br>(30+7)(30−7) = 30² − 7² = 900 − 49 = 851.;FORGE Produtos_notáveis
+[Q041] Calcule mentalmente (18+2)(18−2) usando diferença de quadrados.;**320**<br><br>(18+2)(18−2) = 18² − 2² = 324 − 4 = 320.;FORGE Produtos_notáveis
+[Q042] Calcule mentalmente (10+7)(10−7) usando diferença de quadrados.;**51**<br><br>(10+7)(10−7) = 10² − 7² = 100 − 49 = 51.;FORGE Produtos_notáveis
+[Q043] Calcule mentalmente (34+1)(34−1) usando diferença de quadrados.;**1155**<br><br>(34+1)(34−1) = 34² − 1² = 1156 − 1 = 1155.;FORGE Produtos_notáveis
+[Q044] Calcule mentalmente (40+9)(40−9) usando diferença de quadrados.;**1519**<br><br>(40+9)(40−9) = 40² − 9² = 1600 − 81 = 1519.;FORGE Produtos_notáveis
+[Q045] Calcule mentalmente (20+3)(20−3) usando diferença de quadrados.;**391**<br><br>(20+3)(20−3) = 20² − 3² = 400 − 9 = 391.;FORGE Produtos_notáveis
+[Q046] Fatore x² + (+4)x + (-5).;**(x + 5)(x − 1)**<br><br>Procuramos dois números com soma +4 e produto -5: 5 e -1. Logo (x - 1)*(x + 5).;FORGE Fatoração
+[Q047] Fatore x² + (-1)x + (-20).;**(x + 4)(x − 5)**<br><br>Procuramos dois números com soma -1 e produto -20: 4 e -5. Logo (x - 5)*(x + 4).;FORGE Fatoração
+[Q048] Fatore x² + (-4)x + (+0).;**(x + 0)(x − 4)**<br><br>Procuramos dois números com soma -4 e produto +0: 0 e -4. Logo x*(x - 4).;FORGE Fatoração
+[Q049] Fatore x² + (-12)x + (+36).;**(x − 6)(x − 6)**<br><br>Procuramos dois números com soma -12 e produto +36: -6 e -6. Logo (x - 6)**2.;FORGE Fatoração
+[Q050] Fatore x² + (+2)x + (-35).;**(x − 5)(x + 7)**<br><br>Procuramos dois números com soma +2 e produto -35: -5 e 7. Logo (x - 5)*(x + 7).;FORGE Fatoração
+[Q051] Fatore x² + (+10)x + (+25).;**(x + 5)(x + 5)**<br><br>Procuramos dois números com soma +10 e produto +25: 5 e 5. Logo (x + 5)**2.;FORGE Fatoração
+[Q052] Fatore x² + (+3)x + (-18).;**(x − 3)(x + 6)**<br><br>Procuramos dois números com soma +3 e produto -18: -3 e 6. Logo (x - 3)*(x + 6).;FORGE Fatoração
+[Q053] Fatore x² + (-5)x + (-14).;**(x + 2)(x − 7)**<br><br>Procuramos dois números com soma -5 e produto -14: 2 e -7. Logo (x - 7)*(x + 2).;FORGE Fatoração
+[Q054] Fatore x² + (-4)x + (-21).;**(x − 7)(x + 3)**<br><br>Procuramos dois números com soma -4 e produto -21: -7 e 3. Logo (x - 7)*(x + 3).;FORGE Fatoração
+[Q055] Fatore x² + (-1)x + (-42).;**(x − 7)(x + 6)**<br><br>Procuramos dois números com soma -1 e produto -42: -7 e 6. Logo (x - 7)*(x + 6).;FORGE Fatoração
+[Q056] Fatore x² + (+2)x + (+0).;**(x + 2)(x + 0)**<br><br>Procuramos dois números com soma +2 e produto +0: 2 e 0. Logo x*(x + 2).;FORGE Fatoração
+[Q057] Fatore x² + (+10)x + (+24).;**(x + 6)(x + 4)**<br><br>Procuramos dois números com soma +10 e produto +24: 6 e 4. Logo (x + 4)*(x + 6).;FORGE Fatoração
+[Q058] Fatore x² + (-6)x + (-7).;**(x − 7)(x + 1)**<br><br>Procuramos dois números com soma -6 e produto -7: -7 e 1. Logo (x - 7)*(x + 1).;FORGE Fatoração
+[Q059] Fatore x² + (-12)x + (+35).;**(x − 7)(x − 5)**<br><br>Procuramos dois números com soma -12 e produto +35: -7 e -5. Logo (x - 7)*(x - 5).;FORGE Fatoração
+[Q060] Fatore x² + (+2)x + (-15).;**(x + 5)(x − 3)**<br><br>Procuramos dois números com soma +2 e produto -15: 5 e -3. Logo (x - 3)*(x + 5).;FORGE Fatoração
+[Q061] Resolva x² + 0x − 16 = 0.;"**x = -4 ou x = 4**<br><br>Soma 0 = 0 e produto -16 = -16; Δ = 64 = 64.";FORGE Equações
+[Q062] Resolva x² − 10x + 24 = 0.;"**x = 4 ou x = 6**<br><br>Soma 10 = 10 e produto 24 = 24; Δ = 4 = 4.";FORGE Equações
+[Q063] Resolva x² + 1x − 6 = 0.;"**x = 2 ou x = -3**<br><br>Soma -1 = -1 e produto -6 = -6; Δ = 25 = 25.";FORGE Equações
+[Q064] Resolva x² + 2x − 8 = 0.;"**x = 2 ou x = -4**<br><br>Soma -2 = -2 e produto -8 = -8; Δ = 36 = 36.";FORGE Equações
+[Q065] Resolva x² + 4x − 5 = 0.;"**x = -5 ou x = 1**<br><br>Soma -4 = -4 e produto -5 = -5; Δ = 36 = 36.";FORGE Equações
+[Q066] Resolva x² + 1x − 2 = 0.;"**x = 1 ou x = -2**<br><br>Soma -1 = -1 e produto -2 = -2; Δ = 9 = 9.";FORGE Equações
+[Q067] Resolva x² + 3x + 2 = 0.;"**x = -1 ou x = -2**<br><br>Soma -3 = -3 e produto 2 = 2; Δ = 1 = 1.";FORGE Equações
+[Q068] Resolva x² + 11x + 30 = 0.;"**x = -6 ou x = -5**<br><br>Soma -11 = -11 e produto 30 = 30; Δ = 1 = 1.";FORGE Equações
+[Q069] Resolva x² − 1x − 2 = 0.;"**x = -1 ou x = 2**<br><br>Soma 1 = 1 e produto -2 = -2; Δ = 9 = 9.";FORGE Equações
+[Q070] Resolva x² − 8x + 12 = 0.;"**x = 6 ou x = 2**<br><br>Soma 8 = 8 e produto 12 = 12; Δ = 16 = 16.";FORGE Equações
+[Q071] Resolva x² + 8x + 12 = 0.;"**x = -2 ou x = -6**<br><br>Soma -8 = -8 e produto 12 = 12; Δ = 16 = 16.";FORGE Equações
+[Q072] Resolva x² − 3x + 2 = 0.;"**x = 2 ou x = 1**<br><br>Soma 3 = 3 e produto 2 = 2; Δ = 1 = 1.";FORGE Equações
+[Q073] Resolva x² − 5x − 6 = 0.;"**x = -1 ou x = 6**<br><br>Soma 5 = 5 e produto -6 = -6; Δ = 49 = 49.";FORGE Equações
+[Q074] Resolva x² − 2x − 8 = 0.;"**x = -2 ou x = 4**<br><br>Soma 2 = 2 e produto -8 = -8; Δ = 36 = 36.";FORGE Equações
+[Q075] Resolva x² − 1x − 30 = 0.;"**x = 6 ou x = -5**<br><br>Soma 1 = 1 e produto -30 = -30; Δ = 121 = 121.";FORGE Equações
+[Q076] Dada f(x) = 6x + (-5), calcule f⁻¹(11).;"**8/3**<br><br>y = 6x + (-5) ⇒ x = (y − (-5))/6; com y = 11, x = 8/3.";FORGE Funções
+[Q077] Dada f(x) = 8x + (+7), calcule f⁻¹(5).;"**-1/4**<br><br>y = 8x + (+7) ⇒ x = (y − (+7))/8; com y = 5, x = -1/4.";FORGE Funções
+[Q078] Dada f(x) = 3x + (+2), calcule f⁻¹(29).;"**9**<br><br>y = 3x + (+2) ⇒ x = (y − (+2))/3; com y = 29, x = 9.";FORGE Funções
+[Q079] Dada f(x) = 3x + (+7), calcule f⁻¹(19).;"**4**<br><br>y = 3x + (+7) ⇒ x = (y − (+7))/3; com y = 19, x = 4.";FORGE Funções
+[Q080] Dada f(x) = 5x + (-8), calcule f⁻¹(0).;"**8/5**<br><br>y = 5x + (-8) ⇒ x = (y − (-8))/5; com y = 0, x = 8/5.";FORGE Funções
+[Q081] Dada f(x) = 6x + (-8), calcule f⁻¹(14).;"**11/3**<br><br>y = 6x + (-8) ⇒ x = (y − (-8))/6; com y = 14, x = 11/3.";FORGE Funções
+[Q082] Dada f(x) = 4x + (+5), calcule f⁻¹(26).;"**21/4**<br><br>y = 4x + (+5) ⇒ x = (y − (+5))/4; com y = 26, x = 21/4.";FORGE Funções
+[Q083] Dada f(x) = 3x + (-1), calcule f⁻¹(15).;"**16/3**<br><br>y = 3x + (-1) ⇒ x = (y − (-1))/3; com y = 15, x = 16/3.";FORGE Funções
+[Q084] Dada f(x) = 4x + (+6), calcule f⁻¹(9).;"**3/4**<br><br>y = 4x + (+6) ⇒ x = (y − (+6))/4; com y = 9, x = 3/4.";FORGE Funções
+[Q085] Dada f(x) = 5x + (-4), calcule f⁻¹(9).;"**13/5**<br><br>y = 5x + (-4) ⇒ x = (y − (-4))/5; com y = 9, x = 13/5.";FORGE Funções
+[Q086] Dada f(x) = 8x + (+6), calcule f⁻¹(8).;"**1/4**<br><br>y = 8x + (+6) ⇒ x = (y − (+6))/8; com y = 8, x = 1/4.";FORGE Funções
+[Q087] Dada f(x) = 5x + (+3), calcule f⁻¹(19).;"**16/5**<br><br>y = 5x + (+3) ⇒ x = (y − (+3))/5; com y = 19, x = 16/5.";FORGE Funções
+[Q088] Dada f(x) = 4x + (-1), calcule f⁻¹(28).;"**29/4**<br><br>y = 4x + (-1) ⇒ x = (y − (-1))/4; com y = 28, x = 29/4.";FORGE Funções
+[Q089] Dada f(x) = 6x + (+1), calcule f⁻¹(5).;"**2/3**<br><br>y = 6x + (+1) ⇒ x = (y − (+1))/6; com y = 5, x = 2/3.";FORGE Funções
+[Q090] Dada f(x) = 5x + (+8), calcule f⁻¹(29).;"**21/5**<br><br>y = 5x + (+8) ⇒ x = (y − (+8))/5; com y = 29, x = 21/5.";FORGE Funções
+[Q091] Calcule log_5(3125).;**5**<br><br>Pela definição, log_5(3125) = 5 porque 5^5 = 3125.;FORGE Logaritmos
+[Q092] Calcule log_10(1000).;**3**<br><br>Pela definição, log_10(1000) = 3 porque 10^3 = 1000.;FORGE Logaritmos
+[Q093] Calcule log_5(15625).;**6**<br><br>Pela definição, log_5(15625) = 6 porque 5^6 = 15625.;FORGE Logaritmos
+[Q094] Calcule log_3(243).;**5**<br><br>Pela definição, log_3(243) = 5 porque 3^5 = 243.;FORGE Logaritmos
+[Q095] Calcule log_3(27).;**3**<br><br>Pela definição, log_3(27) = 3 porque 3^3 = 27.;FORGE Logaritmos
+[Q096] Calcule log_2(16).;**4**<br><br>Pela definição, log_2(16) = 4 porque 2^4 = 16.;FORGE Logaritmos
+[Q097] Calcule log_5(3125).;**5**<br><br>Pela definição, log_5(3125) = 5 porque 5^5 = 3125.;FORGE Logaritmos
+[Q098] Calcule log_5(125).;**3**<br><br>Pela definição, log_5(125) = 3 porque 5^3 = 125.;FORGE Logaritmos
+[Q099] Calcule log_10(1000).;**3**<br><br>Pela definição, log_10(1000) = 3 porque 10^3 = 1000.;FORGE Logaritmos
+[Q100] Calcule log_2(4).;**2**<br><br>Pela definição, log_2(4) = 2 porque 2^2 = 4.;FORGE Logaritmos
+[Q101] Calcule log_10(100).;**2**<br><br>Pela definição, log_10(100) = 2 porque 10^2 = 100.;FORGE Logaritmos
+[Q102] Calcule log_2(32).;**5**<br><br>Pela definição, log_2(32) = 5 porque 2^5 = 32.;FORGE Logaritmos
+[Q103] Calcule log_3(729).;**6**<br><br>Pela definição, log_3(729) = 6 porque 3^6 = 729.;FORGE Logaritmos
+[Q104] Calcule log_2(32).;**5**<br><br>Pela definição, log_2(32) = 5 porque 2^5 = 32.;FORGE Logaritmos
+[Q105] Calcule log_2(16).;**4**<br><br>Pela definição, log_2(16) = 4 porque 2^4 = 16.;FORGE Logaritmos
+[Q106] Quanto vale cos(90°)? Use o círculo unitário.;"**0**<br><br>No círculo unitário, cos(90°) = 0; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q107] Quanto vale sen(90°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, sen(90°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q108] Quanto vale sen(45°)? Use o círculo unitário.;"**√2/2**<br><br>No círculo unitário, sen(45°) = √2/2; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q109] Quanto vale sen(30°)? Use o círculo unitário.;"**1/2**<br><br>No círculo unitário, sen(30°) = 1/2; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q110] Quanto vale cos(0°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, cos(0°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q111] Quanto vale sen(45°)? Use o círculo unitário.;"**√2/2**<br><br>No círculo unitário, sen(45°) = √2/2; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q112] Quanto vale cos(0°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, cos(0°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q113] Quanto vale cos(30°)? Use o círculo unitário.;"**√3/2**<br><br>No círculo unitário, cos(30°) = √3/2; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q114] Quanto vale cos(0°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, cos(0°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q115] Quanto vale sen(0°)? Use o círculo unitário.;"**0**<br><br>No círculo unitário, sen(0°) = 0; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q116] Quanto vale cos(90°)? Use o círculo unitário.;"**0**<br><br>No círculo unitário, cos(90°) = 0; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q117] Quanto vale cos(0°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, cos(0°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q118] Quanto vale cos(90°)? Use o círculo unitário.;"**0**<br><br>No círculo unitário, cos(90°) = 0; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q119] Quanto vale sen(90°)? Use o círculo unitário.;"**1**<br><br>No círculo unitário, sen(90°) = 1; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q120] Quanto vale sen(30°)? Use o círculo unitário.;"**1/2**<br><br>No círculo unitário, sen(30°) = 1/2; confira com sen²+cos² = 1.";FORGE Trigonometria
+[Q121] Calcule o determinante de [[-3,-2],[5,5]].;**-5**<br><br>det = -3×5 − -2×5 = -15 − (-10) = -5.;FORGE Matrizes
+[Q122] Calcule o determinante de [[1,-5],[3,-5]].;**10**<br><br>det = 1×-5 − -5×3 = -5 − (-15) = 10.;FORGE Matrizes
+[Q123] Calcule o determinante de [[-4,-6],[6,-2]].;**44**<br><br>det = -4×-2 − -6×6 = 8 − (-36) = 44.;FORGE Matrizes
+[Q124] Calcule o determinante de [[-6,1],[4,-1]].;**2**<br><br>det = -6×-1 − 1×4 = 6 − (4) = 2.;FORGE Matrizes
+[Q125] Calcule o determinante de [[-4,-3],[5,5]].;**-5**<br><br>det = -4×5 − -3×5 = -20 − (-15) = -5.;FORGE Matrizes
+[Q126] Calcule o determinante de [[2,-2],[0,-2]].;**-4**<br><br>det = 2×-2 − -2×0 = -4 − (0) = -4.;FORGE Matrizes
+[Q127] Calcule o determinante de [[0,5],[-3,5]].;**15**<br><br>det = 0×5 − 5×-3 = 0 − (-15) = 15.;FORGE Matrizes
+[Q128] Calcule o determinante de [[-2,-6],[-1,0]].;**-6**<br><br>det = -2×0 − -6×-1 = 0 − (6) = -6.;FORGE Matrizes
+[Q129] Calcule o determinante de [[3,-5],[-1,-6]].;**-23**<br><br>det = 3×-6 − -5×-1 = -18 − (5) = -23.;FORGE Matrizes
+[Q130] Calcule o determinante de [[-5,-2],[5,2]].;**0**<br><br>det = -5×2 − -2×5 = -10 − (-10) = 0.;FORGE Matrizes
+[Q131] Calcule o determinante de [[2,1],[1,-1]].;**-3**<br><br>det = 2×-1 − 1×1 = -2 − (1) = -3.;FORGE Matrizes
+[Q132] Calcule o determinante de [[3,-5],[0,-6]].;**-18**<br><br>det = 3×-6 − -5×0 = -18 − (0) = -18.;FORGE Matrizes
+[Q133] Calcule o determinante de [[-4,5],[-6,2]].;**22**<br><br>det = -4×2 − 5×-6 = -8 − (-30) = 22.;FORGE Matrizes
+[Q134] Calcule o determinante de [[-3,4],[-3,6]].;**-6**<br><br>det = -3×6 − 4×-3 = -18 − (-12) = -6.;FORGE Matrizes
+[Q135] Calcule o determinante de [[-2,1],[-4,-5]].;**14**<br><br>det = -2×-5 − 1×-4 = 10 − (-4) = 14.;FORGE Matrizes
+[Q136] Calcule C(9,2).;"**36**<br><br>A ordem não importa; C(9,2) = 36.";FORGE Combinatória
+[Q137] Calcule C(5,3).;"**10**<br><br>A ordem não importa; C(5,3) = 10.";FORGE Combinatória
+[Q138] Calcule A(9,4).;"**3024**<br><br>A ordem importa; A(9,4) = 3024.";FORGE Combinatória
+[Q139] Calcule A(7,4).;"**840**<br><br>A ordem importa; A(7,4) = 840.";FORGE Combinatória
+[Q140] Calcule A(7,4).;"**840**<br><br>A ordem importa; A(7,4) = 840.";FORGE Combinatória
+[Q141] Calcule A(6,3).;"**120**<br><br>A ordem importa; A(6,3) = 120.";FORGE Combinatória
+[Q142] Calcule A(8,2).;"**56**<br><br>A ordem importa; A(8,2) = 56.";FORGE Combinatória
+[Q143] Calcule C(9,2).;"**36**<br><br>A ordem não importa; C(9,2) = 36.";FORGE Combinatória
+[Q144] Calcule C(8,2).;"**28**<br><br>A ordem não importa; C(8,2) = 28.";FORGE Combinatória
+[Q145] Calcule C(10,4).;"**210**<br><br>A ordem não importa; C(10,4) = 210.";FORGE Combinatória
+[Q146] Calcule A(9,4).;"**3024**<br><br>A ordem importa; A(9,4) = 3024.";FORGE Combinatória
+[Q147] Calcule A(5,2).;"**20**<br><br>A ordem importa; A(5,2) = 20.";FORGE Combinatória
+[Q148] Calcule A(9,3).;"**504**<br><br>A ordem importa; A(9,3) = 504.";FORGE Combinatória
+[Q149] Calcule A(7,4).;"**840**<br><br>A ordem importa; A(7,4) = 840.";FORGE Combinatória
+[Q150] Calcule A(7,3).;"**210**<br><br>A ordem importa; A(7,3) = 210.";FORGE Combinatória
+[Q151] Numa turma, P(A) = 0.40, P(B) = 0.20 e P(A∩B) = 0.0400. Calcule P(A∪B).;**0.5600**<br><br>P(A∪B) = 0.40 + 0.20 − 0.0400 = 0.5600.;FORGE Probabilidade
+[Q152] Numa turma, P(A) = 0.60, P(B) = 0.20 e P(A∩B) = 0.1000. Calcule P(A∪B).;**0.7000**<br><br>P(A∪B) = 0.60 + 0.20 − 0.1000 = 0.7000.;FORGE Probabilidade
+[Q153] Numa turma, P(A) = 0.50, P(B) = 0.40 e P(A∩B) = 0.1200. Calcule P(A∪B).;**0.7800**<br><br>P(A∪B) = 0.50 + 0.40 − 0.1200 = 0.7800.;FORGE Probabilidade
+[Q154] Numa turma, P(A) = 0.30, P(B) = 0.30 e P(A∩B) = 0.0600. Calcule P(A∪B).;**0.5400**<br><br>P(A∪B) = 0.30 + 0.30 − 0.0600 = 0.5400.;FORGE Probabilidade
+[Q155] Numa turma, P(A) = 0.40, P(B) = 0.50 e P(A∩B) = 0.0800. Calcule P(A∪B).;**0.8200**<br><br>P(A∪B) = 0.40 + 0.50 − 0.0800 = 0.8200.;FORGE Probabilidade
+[Q156] Numa turma, P(A) = 0.50, P(B) = 0.50 e P(A∩B) = 0.1500. Calcule P(A∪B).;**0.8500**<br><br>P(A∪B) = 0.50 + 0.50 − 0.1500 = 0.8500.;FORGE Probabilidade
+[Q157] Numa turma, P(A) = 0.20, P(B) = 0.50 e P(A∩B) = 0.0400. Calcule P(A∪B).;**0.6600**<br><br>P(A∪B) = 0.20 + 0.50 − 0.0400 = 0.6600.;FORGE Probabilidade
+[Q158] Numa turma, P(A) = 0.20, P(B) = 0.20 e P(A∩B) = 0.0600. Calcule P(A∪B).;**0.3400**<br><br>P(A∪B) = 0.20 + 0.20 − 0.0600 = 0.3400.;FORGE Probabilidade
+[Q159] Numa turma, P(A) = 0.50, P(B) = 0.20 e P(A∩B) = 0.0600. Calcule P(A∪B).;**0.6400**<br><br>P(A∪B) = 0.50 + 0.20 − 0.0600 = 0.6400.;FORGE Probabilidade
+[Q160] Numa turma, P(A) = 0.40, P(B) = 0.20 e P(A∩B) = 0.0600. Calcule P(A∪B).;**0.5400**<br><br>P(A∪B) = 0.40 + 0.20 − 0.0600 = 0.5400.;FORGE Probabilidade
+[Q161] Numa turma, P(A) = 0.30, P(B) = 0.30 e P(A∩B) = 0.0900. Calcule P(A∪B).;**0.5100**<br><br>P(A∪B) = 0.30 + 0.30 − 0.0900 = 0.5100.;FORGE Probabilidade
+[Q162] Numa turma, P(A) = 0.30, P(B) = 0.50 e P(A∩B) = 0.1500. Calcule P(A∪B).;**0.6500**<br><br>P(A∪B) = 0.30 + 0.50 − 0.1500 = 0.6500.;FORGE Probabilidade
+[Q163] Numa turma, P(A) = 0.60, P(B) = 0.50 e P(A∩B) = 0.2500. Calcule P(A∪B).;**0.8500**<br><br>P(A∪B) = 0.60 + 0.50 − 0.2500 = 0.8500.;FORGE Probabilidade
+[Q164] Numa turma, P(A) = 0.40, P(B) = 0.20 e P(A∩B) = 0.0600. Calcule P(A∪B).;**0.5400**<br><br>P(A∪B) = 0.40 + 0.20 − 0.0600 = 0.5400.;FORGE Probabilidade
+[Q165] Numa turma, P(A) = 0.40, P(B) = 0.40 e P(A∩B) = 0.1200. Calcule P(A∪B).;**0.6800**<br><br>P(A∪B) = 0.40 + 0.40 − 0.1200 = 0.6800.;FORGE Probabilidade
+[Q166] Um triângulo retângulo tem catetos 9 cm e 40 cm. Quanto mede a hipotenusa?;**41 cm**<br><br>h² = 9² + 40² = 81 + 1600 = 1681 ⇒ h = 41 cm.;FORGE Geometria_plana
+[Q167] Um triângulo retângulo tem catetos 10 cm e 24 cm. Quanto mede a hipotenusa?;**26 cm**<br><br>h² = 10² + 24² = 100 + 576 = 676 ⇒ h = 26 cm.;FORGE Geometria_plana
+[Q168] Um triângulo retângulo tem catetos 8 cm e 15 cm. Quanto mede a hipotenusa?;**17 cm**<br><br>h² = 8² + 15² = 64 + 225 = 289 ⇒ h = 17 cm.;FORGE Geometria_plana
+[Q169] Um triângulo retângulo tem catetos 6 cm e 8 cm. Quanto mede a hipotenusa?;**10 cm**<br><br>h² = 6² + 8² = 36 + 64 = 100 ⇒ h = 10 cm.;FORGE Geometria_plana
+[Q170] Um triângulo retângulo tem catetos 5 cm e 12 cm. Quanto mede a hipotenusa?;**13 cm**<br><br>h² = 5² + 12² = 25 + 144 = 169 ⇒ h = 13 cm.;FORGE Geometria_plana
+[Q171] Um triângulo retângulo tem catetos 18 cm e 80 cm. Quanto mede a hipotenusa?;**82 cm**<br><br>h² = 18² + 80² = 324 + 6400 = 6724 ⇒ h = 82 cm.;FORGE Geometria_plana
+[Q172] Um triângulo retângulo tem catetos 6 cm e 8 cm. Quanto mede a hipotenusa?;**10 cm**<br><br>h² = 6² + 8² = 36 + 64 = 100 ⇒ h = 10 cm.;FORGE Geometria_plana
+[Q173] Um triângulo retângulo tem catetos 9 cm e 40 cm. Quanto mede a hipotenusa?;**41 cm**<br><br>h² = 9² + 40² = 81 + 1600 = 1681 ⇒ h = 41 cm.;FORGE Geometria_plana
+[Q174] Um triângulo retângulo tem catetos 10 cm e 24 cm. Quanto mede a hipotenusa?;**26 cm**<br><br>h² = 10² + 24² = 100 + 576 = 676 ⇒ h = 26 cm.;FORGE Geometria_plana
+[Q175] Um triângulo retângulo tem catetos 24 cm e 45 cm. Quanto mede a hipotenusa?;**51 cm**<br><br>h² = 24² + 45² = 576 + 2025 = 2601 ⇒ h = 51 cm.;FORGE Geometria_plana
+[Q176] Um triângulo retângulo tem catetos 9 cm e 40 cm. Quanto mede a hipotenusa?;**41 cm**<br><br>h² = 9² + 40² = 81 + 1600 = 1681 ⇒ h = 41 cm.;FORGE Geometria_plana
+[Q177] Um triângulo retângulo tem catetos 7 cm e 24 cm. Quanto mede a hipotenusa?;**25 cm**<br><br>h² = 7² + 24² = 49 + 576 = 625 ⇒ h = 25 cm.;FORGE Geometria_plana
+[Q178] Um triângulo retângulo tem catetos 27 cm e 120 cm. Quanto mede a hipotenusa?;**123 cm**<br><br>h² = 27² + 120² = 729 + 14400 = 15129 ⇒ h = 123 cm.;FORGE Geometria_plana
+[Q179] Um triângulo retângulo tem catetos 27 cm e 120 cm. Quanto mede a hipotenusa?;**123 cm**<br><br>h² = 27² + 120² = 729 + 14400 = 15129 ⇒ h = 123 cm.;FORGE Geometria_plana
+[Q180] Um triângulo retângulo tem catetos 27 cm e 120 cm. Quanto mede a hipotenusa?;**123 cm**<br><br>h² = 27² + 120² = 729 + 14400 = 15129 ⇒ h = 123 cm.;FORGE Geometria_plana
+[Q181] Calcule o volume de um paralelepípedo de arestas 7 cm, 3 cm e 2 cm.;**42 cm³**<br><br>V = a·b·c = 7×3×2 = 42 cm³.;FORGE Geometria_espacial
+[Q182] Calcule o volume de um paralelepípedo de arestas 8 cm, 8 cm e 2 cm.;**128 cm³**<br><br>V = a·b·c = 8×8×2 = 128 cm³.;FORGE Geometria_espacial
+[Q183] Calcule o volume de um paralelepípedo de arestas 2 cm, 5 cm e 5 cm.;**50 cm³**<br><br>V = a·b·c = 2×5×5 = 50 cm³.;FORGE Geometria_espacial
+[Q184] Calcule o volume de um paralelepípedo de arestas 6 cm, 6 cm e 2 cm.;**72 cm³**<br><br>V = a·b·c = 6×6×2 = 72 cm³.;FORGE Geometria_espacial
+[Q185] Calcule o volume de um paralelepípedo de arestas 6 cm, 9 cm e 7 cm.;**378 cm³**<br><br>V = a·b·c = 6×9×7 = 378 cm³.;FORGE Geometria_espacial
+[Q186] Calcule o volume de um paralelepípedo de arestas 9 cm, 5 cm e 6 cm.;**270 cm³**<br><br>V = a·b·c = 9×5×6 = 270 cm³.;FORGE Geometria_espacial
+[Q187] Calcule o volume de um paralelepípedo de arestas 2 cm, 5 cm e 8 cm.;**80 cm³**<br><br>V = a·b·c = 2×5×8 = 80 cm³.;FORGE Geometria_espacial
+[Q188] Calcule o volume de um paralelepípedo de arestas 6 cm, 3 cm e 5 cm.;**90 cm³**<br><br>V = a·b·c = 6×3×5 = 90 cm³.;FORGE Geometria_espacial
+[Q189] Calcule o volume de um paralelepípedo de arestas 4 cm, 8 cm e 5 cm.;**160 cm³**<br><br>V = a·b·c = 4×8×5 = 160 cm³.;FORGE Geometria_espacial
+[Q190] Calcule o volume de um paralelepípedo de arestas 6 cm, 2 cm e 9 cm.;**108 cm³**<br><br>V = a·b·c = 6×2×9 = 108 cm³.;FORGE Geometria_espacial
+[Q191] Calcule o volume de um paralelepípedo de arestas 6 cm, 8 cm e 3 cm.;**144 cm³**<br><br>V = a·b·c = 6×8×3 = 144 cm³.;FORGE Geometria_espacial
+[Q192] Calcule o volume de um paralelepípedo de arestas 4 cm, 6 cm e 7 cm.;**168 cm³**<br><br>V = a·b·c = 4×6×7 = 168 cm³.;FORGE Geometria_espacial
+[Q193] Calcule o volume de um paralelepípedo de arestas 6 cm, 7 cm e 3 cm.;**126 cm³**<br><br>V = a·b·c = 6×7×3 = 126 cm³.;FORGE Geometria_espacial
+[Q194] Calcule o volume de um paralelepípedo de arestas 2 cm, 4 cm e 5 cm.;**40 cm³**<br><br>V = a·b·c = 2×4×5 = 40 cm³.;FORGE Geometria_espacial
+[Q195] Calcule o volume de um paralelepípedo de arestas 2 cm, 2 cm e 4 cm.;**16 cm³**<br><br>V = a·b·c = 2×2×4 = 16 cm³.;FORGE Geometria_espacial
+[Q196] Qual o ponto médio entre (-3,-6) e (6,1)?;**(1.5,-2.5)**<br><br>M = ((-3+(6))/2, (-6+(1))/2) = (1.5,-2.5).;FORGE Geometria_analítica
+[Q197] Qual o ponto médio entre (5,-6) e (4,3)?;**(4.5,-1.5)**<br><br>M = ((5+(4))/2, (-6+(3))/2) = (4.5,-1.5).;FORGE Geometria_analítica
+[Q198] Qual o ponto médio entre (-2,3) e (2,-6)?;**(0,-1.5)**<br><br>M = ((-2+(2))/2, (3+(-6))/2) = (0,-1.5).;FORGE Geometria_analítica
+[Q199] Qual o ponto médio entre (-2,-3) e (4,2)?;**(1,-0.5)**<br><br>M = ((-2+(4))/2, (-3+(2))/2) = (1,-0.5).;FORGE Geometria_analítica
+[Q200] Qual o ponto médio entre (-4,2) e (-2,-1)?;**(-3,0.5)**<br><br>M = ((-4+(-2))/2, (2+(-1))/2) = (-3,0.5).;FORGE Geometria_analítica
+[Q201] Qual o ponto médio entre (5,-2) e (-2,-3)?;**(1.5,-2.5)**<br><br>M = ((5+(-2))/2, (-2+(-3))/2) = (1.5,-2.5).;FORGE Geometria_analítica
+[Q202] Qual o ponto médio entre (2,-4) e (-5,1)?;**(-1.5,-1.5)**<br><br>M = ((2+(-5))/2, (-4+(1))/2) = (-1.5,-1.5).;FORGE Geometria_analítica
+[Q203] Qual o ponto médio entre (-1,2) e (-2,1)?;**(-1.5,1.5)**<br><br>M = ((-1+(-2))/2, (2+(1))/2) = (-1.5,1.5).;FORGE Geometria_analítica
+[Q204] Qual o ponto médio entre (-3,5) e (1,-1)?;**(-1,2)**<br><br>M = ((-3+(1))/2, (5+(-1))/2) = (-1,2).;FORGE Geometria_analítica
+[Q205] Qual o ponto médio entre (1,-3) e (3,-3)?;**(2,-3)**<br><br>M = ((1+(3))/2, (-3+(-3))/2) = (2,-3).;FORGE Geometria_analítica
+[Q206] Qual o ponto médio entre (5,4) e (-1,1)?;**(2,2.5)**<br><br>M = ((5+(-1))/2, (4+(1))/2) = (2,2.5).;FORGE Geometria_analítica
+[Q207] Qual o ponto médio entre (-2,0) e (-6,6)?;**(-4,3)**<br><br>M = ((-2+(-6))/2, (0+(6))/2) = (-4,3).;FORGE Geometria_analítica
+[Q208] Qual o ponto médio entre (-3,0) e (-6,-2)?;**(-4.5,-1)**<br><br>M = ((-3+(-6))/2, (0+(-2))/2) = (-4.5,-1).;FORGE Geometria_analítica
+[Q209] Qual o ponto médio entre (-1,5) e (6,-3)?;**(2.5,1)**<br><br>M = ((-1+(6))/2, (5+(-3))/2) = (2.5,1).;FORGE Geometria_analítica
+[Q210] Qual o ponto médio entre (2,-6) e (-1,-5)?;**(0.5,-5.5)**<br><br>M = ((2+(-1))/2, (-6+(-5))/2) = (0.5,-5.5).;FORGE Geometria_analítica
+[Q211] Numa PA com a₁ = 4 e razão r = 3, qual o termo a_19?;**58**<br><br>aₙ = a₁ + (n−1)r = 4 + 18×3 = 58.;FORGE Sequências
+[Q212] Numa PA com a₁ = 5 e razão r = 2, qual o termo a_19?;**41**<br><br>aₙ = a₁ + (n−1)r = 5 + 18×2 = 41.;FORGE Sequências
+[Q213] Numa PA com a₁ = 5 e razão r = 3, qual o termo a_8?;**26**<br><br>aₙ = a₁ + (n−1)r = 5 + 7×3 = 26.;FORGE Sequências
+[Q214] Numa PA com a₁ = 1 e razão r = 3, qual o termo a_8?;**22**<br><br>aₙ = a₁ + (n−1)r = 1 + 7×3 = 22.;FORGE Sequências
+[Q215] Numa PA com a₁ = 2 e razão r = 6, qual o termo a_9?;**50**<br><br>aₙ = a₁ + (n−1)r = 2 + 8×6 = 50.;FORGE Sequências
+[Q216] Numa PA com a₁ = 8 e razão r = 6, qual o termo a_16?;**98**<br><br>aₙ = a₁ + (n−1)r = 8 + 15×6 = 98.;FORGE Sequências
+[Q217] Numa PA com a₁ = 7 e razão r = 3, qual o termo a_15?;**49**<br><br>aₙ = a₁ + (n−1)r = 7 + 14×3 = 49.;FORGE Sequências
+[Q218] Numa PA com a₁ = 6 e razão r = 6, qual o termo a_11?;**66**<br><br>aₙ = a₁ + (n−1)r = 6 + 10×6 = 66.;FORGE Sequências
+[Q219] Numa PA com a₁ = 7 e razão r = 2, qual o termo a_13?;**31**<br><br>aₙ = a₁ + (n−1)r = 7 + 12×2 = 31.;FORGE Sequências
+[Q220] Numa PA com a₁ = 6 e razão r = 6, qual o termo a_20?;**120**<br><br>aₙ = a₁ + (n−1)r = 6 + 19×6 = 120.;FORGE Sequências
+[Q221] Numa PA com a₁ = 8 e razão r = 3, qual o termo a_16?;**53**<br><br>aₙ = a₁ + (n−1)r = 8 + 15×3 = 53.;FORGE Sequências
+[Q222] Numa PA com a₁ = 6 e razão r = 6, qual o termo a_17?;**102**<br><br>aₙ = a₁ + (n−1)r = 6 + 16×6 = 102.;FORGE Sequências
+[Q223] Numa PA com a₁ = 5 e razão r = 3, qual o termo a_14?;**44**<br><br>aₙ = a₁ + (n−1)r = 5 + 13×3 = 44.;FORGE Sequências
+[Q224] Numa PA com a₁ = 8 e razão r = 6, qual o termo a_13?;**80**<br><br>aₙ = a₁ + (n−1)r = 8 + 12×6 = 80.;FORGE Sequências
+[Q225] Numa PA com a₁ = 6 e razão r = 5, qual o termo a_17?;**86**<br><br>aₙ = a₁ + (n−1)r = 6 + 16×5 = 86.;FORGE Sequências
+[Q226] Calcule lim(x→6) (x² − 36)/(x − 6).;"**12**<br><br>(x² − 36) = (x−6)(x+6); cancelando, sobra x+6 ⇒ limite 12.";FORGE Limites
+[Q227] Calcule lim(x→6) (x² − 36)/(x − 6).;"**12**<br><br>(x² − 36) = (x−6)(x+6); cancelando, sobra x+6 ⇒ limite 12.";FORGE Limites
+[Q228] Calcule lim(x→7) (x² − 49)/(x − 7).;"**14**<br><br>(x² − 49) = (x−7)(x+7); cancelando, sobra x+7 ⇒ limite 14.";FORGE Limites
+[Q229] Calcule lim(x→4) (x² − 16)/(x − 4).;"**8**<br><br>(x² − 16) = (x−4)(x+4); cancelando, sobra x+4 ⇒ limite 8.";FORGE Limites
+[Q230] Calcule lim(x→4) (x² − 16)/(x − 4).;"**8**<br><br>(x² − 16) = (x−4)(x+4); cancelando, sobra x+4 ⇒ limite 8.";FORGE Limites
+[Q231] Calcule lim(x→7) (x² − 49)/(x − 7).;"**14**<br><br>(x² − 49) = (x−7)(x+7); cancelando, sobra x+7 ⇒ limite 14.";FORGE Limites
+[Q232] Calcule lim(x→9) (x² − 81)/(x − 9).;"**18**<br><br>(x² − 81) = (x−9)(x+9); cancelando, sobra x+9 ⇒ limite 18.";FORGE Limites
+[Q233] Calcule lim(x→5) (x² − 25)/(x − 5).;"**10**<br><br>(x² − 25) = (x−5)(x+5); cancelando, sobra x+5 ⇒ limite 10.";FORGE Limites
+[Q234] Calcule lim(x→2) (x² − 4)/(x − 2).;"**4**<br><br>(x² − 4) = (x−2)(x+2); cancelando, sobra x+2 ⇒ limite 4.";FORGE Limites
+[Q235] Calcule lim(x→2) (x² − 4)/(x − 2).;"**4**<br><br>(x² − 4) = (x−2)(x+2); cancelando, sobra x+2 ⇒ limite 4.";FORGE Limites
+[Q236] Calcule lim(x→7) (x² − 49)/(x − 7).;"**14**<br><br>(x² − 49) = (x−7)(x+7); cancelando, sobra x+7 ⇒ limite 14.";FORGE Limites
+[Q237] Calcule lim(x→2) (x² − 4)/(x − 2).;"**4**<br><br>(x² − 4) = (x−2)(x+2); cancelando, sobra x+2 ⇒ limite 4.";FORGE Limites
+[Q238] Calcule lim(x→9) (x² − 81)/(x − 9).;"**18**<br><br>(x² − 81) = (x−9)(x+9); cancelando, sobra x+9 ⇒ limite 18.";FORGE Limites
+[Q239] Calcule lim(x→2) (x² − 4)/(x − 2).;"**4**<br><br>(x² − 4) = (x−2)(x+2); cancelando, sobra x+2 ⇒ limite 4.";FORGE Limites
+[Q240] Calcule lim(x→6) (x² − 36)/(x − 6).;"**12**<br><br>(x² − 36) = (x−6)(x+6); cancelando, sobra x+6 ⇒ limite 12.";FORGE Limites
+[Q241] Se f(x) = x^4, calcule f′(2).;"**32**<br><br>f′(x) = 4x^3; f′(2) = 4×2^3 = 32.";FORGE Derivadas
+[Q242] Se f(x) = x^7, calcule f′(5).;"**109375**<br><br>f′(x) = 7x^6; f′(5) = 7×5^6 = 109375.";FORGE Derivadas
+[Q243] Se f(x) = x^3, calcule f′(4).;"**48**<br><br>f′(x) = 3x^2; f′(4) = 3×4^2 = 48.";FORGE Derivadas
+[Q244] Se f(x) = x^2, calcule f′(5).;"**10**<br><br>f′(x) = 2x^1; f′(5) = 2×5^1 = 10.";FORGE Derivadas
+[Q245] Se f(x) = x^6, calcule f′(1).;"**6**<br><br>f′(x) = 6x^5; f′(1) = 6×1^5 = 6.";FORGE Derivadas
+[Q246] Se f(x) = x^6, calcule f′(5).;"**18750**<br><br>f′(x) = 6x^5; f′(5) = 6×5^5 = 18750.";FORGE Derivadas
+[Q247] Se f(x) = x^7, calcule f′(1).;"**7**<br><br>f′(x) = 7x^6; f′(1) = 7×1^6 = 7.";FORGE Derivadas
+[Q248] Se f(x) = x^4, calcule f′(5).;"**500**<br><br>f′(x) = 4x^3; f′(5) = 4×5^3 = 500.";FORGE Derivadas
+[Q249] Se f(x) = x^4, calcule f′(1).;"**4**<br><br>f′(x) = 4x^3; f′(1) = 4×1^3 = 4.";FORGE Derivadas
+[Q250] Se f(x) = x^4, calcule f′(5).;"**500**<br><br>f′(x) = 4x^3; f′(5) = 4×5^3 = 500.";FORGE Derivadas
+[Q251] Se f(x) = x^2, calcule f′(4).;"**8**<br><br>f′(x) = 2x^1; f′(4) = 2×4^1 = 8.";FORGE Derivadas
+[Q252] Se f(x) = x^6, calcule f′(5).;"**18750**<br><br>f′(x) = 6x^5; f′(5) = 6×5^5 = 18750.";FORGE Derivadas
+[Q253] Se f(x) = x^6, calcule f′(5).;"**18750**<br><br>f′(x) = 6x^5; f′(5) = 6×5^5 = 18750.";FORGE Derivadas
+[Q254] Se f(x) = x^6, calcule f′(1).;"**6**<br><br>f′(x) = 6x^5; f′(1) = 6×1^5 = 6.";FORGE Derivadas
+[Q255] Se f(x) = x^5, calcule f′(4).;"**1280**<br><br>f′(x) = 5x^4; f′(4) = 5×4^4 = 1280.";FORGE Derivadas
+[Q256] Calcule ∫₀¹ x^2 dx.;"**1/3**<br><br>Primitiva: x^3/3; de 0 a 1 dá 1/3 = 1/3.";FORGE Integrais
+[Q257] Calcule ∫₀¹ x^3 dx.;"**1/4**<br><br>Primitiva: x^4/4; de 0 a 1 dá 1/4 = 1/4.";FORGE Integrais
+[Q258] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q259] Calcule ∫₀¹ x^5 dx.;"**1/6**<br><br>Primitiva: x^6/6; de 0 a 1 dá 1/6 = 1/6.";FORGE Integrais
+[Q260] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q261] Calcule ∫₀¹ x^3 dx.;"**1/4**<br><br>Primitiva: x^4/4; de 0 a 1 dá 1/4 = 1/4.";FORGE Integrais
+[Q262] Calcule ∫₀¹ x^2 dx.;"**1/3**<br><br>Primitiva: x^3/3; de 0 a 1 dá 1/3 = 1/3.";FORGE Integrais
+[Q263] Calcule ∫₀¹ x^3 dx.;"**1/4**<br><br>Primitiva: x^4/4; de 0 a 1 dá 1/4 = 1/4.";FORGE Integrais
+[Q264] Calcule ∫₀¹ x^2 dx.;"**1/3**<br><br>Primitiva: x^3/3; de 0 a 1 dá 1/3 = 1/3.";FORGE Integrais
+[Q265] Calcule ∫₀¹ x^5 dx.;"**1/6**<br><br>Primitiva: x^6/6; de 0 a 1 dá 1/6 = 1/6.";FORGE Integrais
+[Q266] Calcule ∫₀¹ x^4 dx.;"**1/5**<br><br>Primitiva: x^5/5; de 0 a 1 dá 1/5 = 1/5.";FORGE Integrais
+[Q267] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q268] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q269] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q270] Calcule ∫₀¹ x^1 dx.;"**1/2**<br><br>Primitiva: x^2/2; de 0 a 1 dá 1/2 = 1/2.";FORGE Integrais
+[Q271] Calcule média e mediana de 12, 19, 16, 9, 15.;"**média 14.20; mediana 15**<br><br>Média = 71/5 = 14.20; ordenados: [9, 12, 15, 16, 19] ⇒ mediana 15.";FORGE Estatística
+[Q272] Calcule média e mediana de 18, 10, 14, 9, 18.;"**média 13.80; mediana 14**<br><br>Média = 69/5 = 13.80; ordenados: [9, 10, 14, 18, 18] ⇒ mediana 14.";FORGE Estatística
+[Q273] Calcule média e mediana de 13, 17, 6, 7, 1.;"**média 8.80; mediana 7**<br><br>Média = 44/5 = 8.80; ordenados: [1, 6, 7, 13, 17] ⇒ mediana 7.";FORGE Estatística
+[Q274] Calcule média e mediana de 15, 10, 13, 15, 12.;"**média 13.00; mediana 13**<br><br>Média = 65/5 = 13.00; ordenados: [10, 12, 13, 15, 15] ⇒ mediana 13.";FORGE Estatística
+[Q275] Calcule média e mediana de 2, 17, 6, 5, 5.;"**média 7.00; mediana 5**<br><br>Média = 35/5 = 7.00; ordenados: [2, 5, 5, 6, 17] ⇒ mediana 5.";FORGE Estatística
+[Q276] Calcule média e mediana de 3, 20, 7, 2, 20.;"**média 10.40; mediana 7**<br><br>Média = 52/5 = 10.40; ordenados: [2, 3, 7, 20, 20] ⇒ mediana 7.";FORGE Estatística
+[Q277] Calcule média e mediana de 5, 4, 18, 20, 16.;"**média 12.60; mediana 16**<br><br>Média = 63/5 = 12.60; ordenados: [4, 5, 16, 18, 20] ⇒ mediana 16.";FORGE Estatística
+[Q278] Calcule média e mediana de 13, 1, 2, 1, 7.;"**média 4.80; mediana 2**<br><br>Média = 24/5 = 4.80; ordenados: [1, 1, 2, 7, 13] ⇒ mediana 2.";FORGE Estatística
+[Q279] Calcule média e mediana de 1, 18, 4, 18, 7.;"**média 9.60; mediana 7**<br><br>Média = 48/5 = 9.60; ordenados: [1, 4, 7, 18, 18] ⇒ mediana 7.";FORGE Estatística
+[Q280] Calcule média e mediana de 3, 5, 7, 1, 4.;"**média 4.00; mediana 4**<br><br>Média = 20/5 = 4.00; ordenados: [1, 3, 4, 5, 7] ⇒ mediana 4.";FORGE Estatística
+[Q281] Calcule média e mediana de 4, 16, 9, 4, 7.;"**média 8.00; mediana 7**<br><br>Média = 40/5 = 8.00; ordenados: [4, 4, 7, 9, 16] ⇒ mediana 7.";FORGE Estatística
+[Q282] Calcule média e mediana de 7, 9, 20, 6, 17.;"**média 11.80; mediana 9**<br><br>Média = 59/5 = 11.80; ordenados: [6, 7, 9, 17, 20] ⇒ mediana 9.";FORGE Estatística
+[Q283] Calcule média e mediana de 20, 19, 6, 14, 8.;"**média 13.40; mediana 14**<br><br>Média = 67/5 = 13.40; ordenados: [6, 8, 14, 19, 20] ⇒ mediana 14.";FORGE Estatística
+[Q284] Calcule média e mediana de 16, 14, 12, 8, 5.;"**média 11.00; mediana 12**<br><br>Média = 55/5 = 11.00; ordenados: [5, 8, 12, 14, 16] ⇒ mediana 12.";FORGE Estatística
+[Q285] Calcule média e mediana de 3, 18, 3, 6, 6.;"**média 7.20; mediana 6**<br><br>Média = 36/5 = 7.20; ordenados: [3, 3, 6, 6, 18] ⇒ mediana 6.";FORGE Estatística
+[Q286] Calcule o montante de R$ 2000,00 a 1% a.m. por 8 meses no regime composto.;**R$ 2.165,71**<br><br>M = P(1+i)ⁿ = 2000(1+0.01)^8 ≈ 2165.71.;FORGE Matemática_financeira
+[Q287] Calcule o montante de R$ 2000,00 a 3% a.m. por 5 meses no regime composto.;**R$ 2.318,55**<br><br>M = P(1+i)ⁿ = 2000(1+0.03)^5 ≈ 2318.55.;FORGE Matemática_financeira
+[Q288] Calcule o montante de R$ 500,00 a 3% a.m. por 6 meses no regime composto.;**R$ 597,03**<br><br>M = P(1+i)ⁿ = 500(1+0.03)^6 ≈ 597.03.;FORGE Matemática_financeira
+[Q289] Calcule o montante de R$ 1000,00 a 2% a.m. por 12 meses no regime simples.;**R$ 1.240,00**<br><br>M = P(1 + i·t) = 1000(1 + 0.02×12) ≈ 1240.0.;FORGE Matemática_financeira
+[Q290] Calcule o montante de R$ 1500,00 a 1% a.m. por 8 meses no regime composto.;**R$ 1.624,29**<br><br>M = P(1+i)ⁿ = 1500(1+0.01)^8 ≈ 1624.29.;FORGE Matemática_financeira
+[Q291] Calcule o montante de R$ 2000,00 a 3% a.m. por 10 meses no regime simples.;**R$ 2.600,00**<br><br>M = P(1 + i·t) = 2000(1 + 0.03×10) ≈ 2600.0.;FORGE Matemática_financeira
+[Q292] Calcule o montante de R$ 1500,00 a 3% a.m. por 5 meses no regime composto.;**R$ 1.738,91**<br><br>M = P(1+i)ⁿ = 1500(1+0.03)^5 ≈ 1738.91.;FORGE Matemática_financeira
+[Q293] Calcule o montante de R$ 1000,00 a 2% a.m. por 9 meses no regime composto.;**R$ 1.195,09**<br><br>M = P(1+i)ⁿ = 1000(1+0.02)^9 ≈ 1195.09.;FORGE Matemática_financeira
+[Q294] Calcule o montante de R$ 1500,00 a 1% a.m. por 12 meses no regime composto.;**R$ 1.690,24**<br><br>M = P(1+i)ⁿ = 1500(1+0.01)^12 ≈ 1690.24.;FORGE Matemática_financeira
+[Q295] Calcule o montante de R$ 500,00 a 1% a.m. por 6 meses no regime composto.;**R$ 530,76**<br><br>M = P(1+i)ⁿ = 500(1+0.01)^6 ≈ 530.76.;FORGE Matemática_financeira
+[Q296] Calcule o montante de R$ 2000,00 a 2% a.m. por 4 meses no regime simples.;**R$ 2.160,00**<br><br>M = P(1 + i·t) = 2000(1 + 0.02×4) ≈ 2160.0.;FORGE Matemática_financeira
+[Q297] Calcule o montante de R$ 500,00 a 1% a.m. por 6 meses no regime simples.;**R$ 530,00**<br><br>M = P(1 + i·t) = 500(1 + 0.01×6) ≈ 530.0.;FORGE Matemática_financeira
+[Q298] Calcule o montante de R$ 500,00 a 1% a.m. por 6 meses no regime simples.;**R$ 530,00**<br><br>M = P(1 + i·t) = 500(1 + 0.01×6) ≈ 530.0.;FORGE Matemática_financeira
+[Q299] Calcule o montante de R$ 2000,00 a 3% a.m. por 6 meses no regime composto.;**R$ 2.388,10**<br><br>M = P(1+i)ⁿ = 2000(1+0.03)^6 ≈ 2388.1.;FORGE Matemática_financeira
+[Q300] Calcule o montante de R$ 500,00 a 3% a.m. por 4 meses no regime simples.;**R$ 560,00**<br><br>M = P(1 + i·t) = 500(1 + 0.03×4) ≈ 560.0.;FORGE Matemática_financeira

@@ -1,0 +1,149 @@
+{
+  "gerado_em": "2026-11-26T20:31:45-03:00",
+  "total_pdfs": 13,
+  "livros": [
+    {
+      "arquivo": "livros/1. TQM (Ensino Fundamental) - Roberto Ávila_text.pdf",
+      "titulo": "TQM Ensino Fundamental (verde)",
+      "autores": "Roberto Ávila",
+      "area": "Matemática",
+      "nivel": "Introdução",
+      "bytes": 29472196,
+      "paginas": 370,
+      "sha256": "6e4baec00915a582a0d6e22bcdaa373d33b9c0dc85c23b7e7033c04e7f9bdd53",
+      "texto": "Pesquisável / OCR nativo"
+    },
+    {
+      "arquivo": "livros/2. TQM (Ensino Médio) - Roberto Ávila_text.pdf",
+      "titulo": "TQM Ensino Médio (azul)",
+      "autores": "Roberto Ávila",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 12030187,
+      "paginas": 419,
+      "sha256": "d7295c13dac0a80150b32e638b4a38773192bdb96d2e4334f78db4b1a3c15786",
+      "texto": "Pesquisável / OCR nativo"
+    },
+    {
+      "arquivo": "livros/Análise combinatória e probabilidade Morgado.pdf",
+      "titulo": "Análise Combinatória e Probabilidade",
+      "autores": "Augusto C. Morgado et al.",
+      "area": "Matemática",
+      "nivel": "Avançado",
+      "bytes": 3352718,
+      "paginas": 99,
+      "sha256": "97a6c5af29f6ac500f2dae69eccf907185971f82303f9d1f6e0f5c78f79e4119",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 1 - Conjuntos e Funções.pdf",
+      "titulo": "FME 1 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 24559176,
+      "paginas": 420,
+      "sha256": "926c2e833634e511119a8c8f86b28f5818fd92fe79659cb82f55a70c7f54258c",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 10 - Geometria Espacial, Posição e Métrica.pdf",
+      "titulo": "FME 10 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 27657613,
+      "paginas": 484,
+      "sha256": "3e8ecfdd8782a61d0e1a891024473741b5637e65bd454db3322aea709aecfc6b",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 11 - Matemática Comercial, Matemática Financeira e Estatística Descritiva.pdf",
+      "titulo": "FME 11 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 10688572,
+      "paginas": 260,
+      "sha256": "22be4e11286f16c201ccd1e5a16d7e5c1fc5f60d53a4e21184950b2b04e8df2d",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 2 - Logaritmos.pdf",
+      "titulo": "FME 2 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 11920227,
+      "paginas": 228,
+      "sha256": "ddfc31d165c562da587daadf071ef7ced39e3170fbad1fb08b785e74ddffa12d",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 3 - Trigonometria.pdf",
+      "titulo": "FME 3 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 15073065,
+      "paginas": 324,
+      "sha256": "0c955d30436b7a3864f1040c73d0fc45350df2ac105ddb1eecccaa48d9383189",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 4 - Sequências, Matrizes e Determinantes.pdf",
+      "titulo": "FME 4 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 22243930,
+      "paginas": 292,
+      "sha256": "849e4767560f450839b5e90689912bc8c5a71205a12f088331729104541ba521",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 5 - Análise Combinatória e Probabilidade.pdf",
+      "titulo": "FME 5 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 17061479,
+      "paginas": 212,
+      "sha256": "69352f59ce8acf882af4670b73d723fe1683fa27eada81ddbd4922f49aa1422a",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 7 - Geometria Analítica.pdf",
+      "titulo": "FME 7 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 19343151,
+      "paginas": 324,
+      "sha256": "eadaa89e4034444a51682d8b8a18d463aff1461ba0b5742e86f75b0026d92e67",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/FME 9 - Geometria Plana.pdf",
+      "titulo": "FME 9 — Fundamentos da Matemática Elementar",
+      "autores": "Gelson Iezzi / Carlos Murakami",
+      "area": "Matemática",
+      "nivel": "Intermediário",
+      "bytes": 32789153,
+      "paginas": 468,
+      "sha256": "57338c33f1c51390544a2ce2dbf3888b6299dc9e73b1d885ca5cf05a561a003e",
+      "texto": "Verificar camada de texto"
+    },
+    {
+      "arquivo": "livros/O Algebrista.pdf",
+      "titulo": "O Algebrista",
+      "autores": "Laércio Vasconcelos",
+      "area": "Matemática",
+      "nivel": "Introdução",
+      "bytes": 211707691,
+      "paginas": 694,
+      "sha256": "c6e42526744649ac428b7bbf98810b1766448e31cea71f8840ed3554583408aa",
+      "texto": "Verificar camada de texto"
+    }
+  ]
+}

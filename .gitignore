@@ -9,3 +9,7 @@ desktop.ini
 *.tmp
 .vscode/
 .idea/
+
+# Cache de bytecode Python gerado pelos scripts do ecossistema
+__pycache__/
+*.pyc

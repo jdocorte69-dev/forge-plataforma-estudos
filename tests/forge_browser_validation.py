@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import tempfile
+import traceback
 
 from playwright.sync_api import sync_playwright
 
@@ -63,13 +64,24 @@ def check(name, fn):
         detail = fn() or ""
         results.append(("PASS", name, str(detail)[:300]))
     except Exception as exc:
-        msg = " ".join(str(exc).split())[:400]
+        frame = traceback.extract_tb(exc.__traceback__)[-1]
+        detail = f"{type(exc).__name__}@{frame.lineno}: {exc}"
+        msg = " ".join(detail.split())[:400]
         results.append(("FAIL", name, msg))
 
 
 def session_of(page):
     key = page.evaluate("Storage.get().study.lastSessionKey")
     return page.evaluate("k => Storage.get().study.sessions[k]", key)
+
+
+def wait_ready(page):
+    """Aguarda o carregamento dos módulos diferidos do app.js.
+
+    O primeiro paint acontece antes deles (para manter o LCP baixo), então um
+    intervalo fixo após domcontentloaded não é suficiente para as asserções.
+    """
+    page.wait_for_function("() => window.__forgeReady === true", timeout=30000)
 
 
 with sync_playwright() as pw:
@@ -82,7 +94,7 @@ with sync_playwright() as pw:
     page.on("pageerror", lambda e: page_errors.append(str(e)))
 
     page.goto(BASE, wait_until="domcontentloaded")
-    page.wait_for_timeout(900)
+    wait_ready(page)
 
     def c_initial():
         n = page.locator("#nav button[data-page]").count()
@@ -125,6 +137,7 @@ with sync_playwright() as pw:
         assert st.get("tutorialTopic") == "3.2 Estruturas", st.get("tutorialTopic")
         assert st.get("tutorialDone", {}).get("0") is True
         page.reload(wait_until="domcontentloaded")
+        wait_ready(page)
         page.evaluate("goToPage('study')")
         page.evaluate("Study.setTab('tutorial')")
         page.evaluate("Study.tutorialGo(0)")
@@ -243,6 +256,7 @@ with sync_playwright() as pw:
         arts = page.evaluate("Storage.get().study.articles")
         assert any(a.get("title") == "Artigo validação" for a in arts.values())
         page.reload(wait_until="domcontentloaded")
+        wait_ready(page)
         page.evaluate("goToPage('study')")
         page.evaluate("Study.setTab('article')")
         page.evaluate("Study.loadArticle('artigo-validacao')")
@@ -274,7 +288,8 @@ with sync_playwright() as pw:
         assert page.locator("#booksGrid .study-book-btn").count() == 24
         assert page.locator("#booksGrid .book-card-status").count() == 24
         page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
-        page.wait_for_function("document.getElementById('pageTitle').textContent.includes('Detalhe do livro')")
+        # renderDetail é assíncrono; o título muda antes do conteúdo do livro.
+        page.wait_for_function("() => !!document.getElementById('bookImportInput') && document.getElementById('pageTitle').textContent.includes('Detalhe do livro')")
         text = page.locator("#view").inner_text()
         assert "Cálculo — Volume 1" in text
         assert "CC BY 4.0" in text
@@ -384,7 +399,7 @@ with sync_playwright() as pw:
 
     def c_persistence():
         page.reload(wait_until="domcontentloaded")
-        page.wait_for_timeout(800)
+        wait_ready(page)
         page.evaluate("goToPage('books')")
         page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
         page.wait_for_function("document.getElementById('bookStatus')?.textContent.includes('concluído')")
@@ -460,6 +475,7 @@ with sync_playwright() as pw:
         context.set_offline(True)
         try:
             page.reload(wait_until="domcontentloaded")
+            wait_ready(page)
             page.evaluate("goToPage('study')")
             text = page.locator("#view").inner_text()
             assert "Tutorial em 9 etapas" in text, text[:200]
@@ -474,7 +490,8 @@ with sync_playwright() as pw:
         context.set_offline(True)
         try:
             page.reload(wait_until="domcontentloaded")
-            page.wait_for_function("typeof BookUI !== 'undefined' && typeof pdfjsLib !== 'undefined'")
+            wait_ready(page)
+            # PDF.js é carregado sob demanda por ForgePDF ao abrir o leitor.
             page.evaluate("goToPage('books')")
             page.locator("#booksGrid button[onclick^='BookUI.open']").first.click()
             page.wait_for_function("""() => {
@@ -616,8 +633,10 @@ with sync_playwright() as pw:
     def c_corrupt_backup():
         p2 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
         p2.goto(BASE, wait_until="domcontentloaded")
-        p2.evaluate("localStorage.setItem('forge.study.v2', '{broken')")
+        wait_ready(p2)
+        p2.evaluate("localStorage.setItem('forge.study.v4', '{broken')")
         p2.reload(wait_until="domcontentloaded")
+        wait_ready(p2)
         backup = p2.evaluate("localStorage.getItem('forge.study.v2.lastBackup')")
         assert backup and '"corrupted":true' in backup and "{broken" in backup, (backup or "")[:300]
         p2.context.close()
@@ -660,10 +679,10 @@ with sync_playwright() as pw:
             backup: !!localStorage.getItem('forge.study.v2.lastBackup')
           };
         }""")
-        assert r["version"] == 3 and r["done"] == ["importado"] and r["xp"] == 555, r
+        assert r["version"] == 4 and r["done"] == ["importado"] and r["xp"] == 555, r
         assert r["goal"] == "meta" and r["backup"] is True, r
-        assert "v2 → v3" in r["toast"], r
-        return "v2 migrada para v3 com backup e aviso"
+        assert "v2 → v4" in r["toast"], r
+        return "v2 migrada para v4 com backup e aviso"
 
     check("IMPORTAÇÃO: versão compatível ainda migra com backup", c_import_valid_migration)
 

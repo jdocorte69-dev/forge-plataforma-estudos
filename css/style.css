@@ -47,6 +47,91 @@
   --shadow: 0 12px 35px #0004;
 }
 
+/* ============================================================
+   FORGE 3.0 — Design Tokens (Mobile-First v3)
+   Tema escuro OLED é o padrão; o tema claro editorial sobrescreve
+   os mesmos tokens sem alterar variáveis legadas usadas pelo legado.
+   ============================================================ */
+
+:root {
+  /* Tipografia */
+  --font-sans: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-heading: "Plus Jakarta Sans", var(--font-sans);
+  --font-mono: "JetBrains Mono", "Fira Code", Consolas, monospace;
+
+  /* Escuro profundo (OLED-friendly) — padrão do sistema */
+  --bg-base: #0b0f19;
+  --bg-surface-elevated: #111827;
+  --bg-surface-card: #1e293b;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #a8b6ca;
+
+  /* Acentos semânticos por trilha — WCAG AA 4.5:1 sobre --bg-surface-card */
+  --accent-math: #60a5fa;
+  --accent-assembly: #10b981;
+  --accent-ai: #818cf8;
+  --accent-network: #06b6d4;
+  --accent-arch: #f59e0b;
+  --accent-security: #f87171;
+
+  /* Safe area / espaçamento mobile */
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sat: env(safe-area-inset-top, 0px);
+  --bottom-nav-h: 60px;
+
+  /* Aliases: o CSS legado continua válido sobre os tokens novos */
+  --bg: var(--bg-base);
+  --panel: var(--bg-surface-card);
+  --panel2: var(--bg-surface-elevated);
+  --text: var(--text-main);
+  --muted: var(--text-muted);
+  --line: var(--border-subtle);
+  --accent: var(--accent-ai);
+  --accent-hover: #a5b4fc;
+  --accent-contrast: #0b0f19;
+}
+
+/* Modo claro editorial — alto contraste, sobrescreve apenas tokens semânticos */
+[data-theme="light"] {
+  --bg-base: #faf9f6;
+  --bg-surface-elevated: #ffffff;
+  --bg-surface-card: #f1f5f9;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-subtle: #5b6a7d;
+  --bg: var(--bg-base);
+  --panel: var(--bg-surface-elevated);
+  --panel2: var(--bg-surface-card);
+  --text: var(--text-main);
+  --muted: var(--text-muted);
+  --line: var(--border-subtle);
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-contrast: #ffffff;
+  /* Acentos sobre fundos claros: versões escuras para WCAG AA 4.5:1 */
+  --accent-math: #1d4ed8;
+  --accent-assembly: #047857;
+  --accent-ai: #4338ca;
+  --accent-network: #0e7490;
+  --accent-arch: #b45309;
+  --accent-security: #b91c1c;
+}
+
+html.high-contrast {
+  --bg-base: #000;
+  --bg-surface-elevated: #000;
+  --bg-surface-card: #101010;
+  --text-main: #fff;
+  --text-muted: #e8e8e8;
+  --border-subtle: #fff;
+  --border-strong: #fff;
+}
+
 /* Alto contraste opcional — aplicado sobre qualquer tema. */
 html.high-contrast {
   --bg: #000;
@@ -80,10 +165,42 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 1rem/1.55 var(--font-sans);
+  /* Tipografia fluida: 320px a 480px sem saltos bruscos de breakpoint */
+  font: clamp(0.95rem, 1vw + 0.8rem, 1.1rem)/1.6 var(--font-sans);
   min-height: 100vh;
+  padding-top: var(--sat);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Títulos fluidos e medida de linha confortável (60–70 caracteres) */
+h1, .h1 {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw + 1rem, 2.5rem);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+h2 { font-family: var(--font-heading); font-size: clamp(1.15rem, 2vw + 0.8rem, 1.5rem); }
+h3 { font-family: var(--font-heading); font-size: clamp(1rem, 1.5vw + 0.7rem, 1.2rem); }
+
+.prose, .lesson, .card p, .sub {
+  max-width: 68ch;
+}
+
+/* Rolagem horizontal controlada em código e tabelas */
+pre, code, .code, table {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+.code {
+  background: linear-gradient(90deg, var(--bg-surface-elevated) 0%, var(--bg-surface-card) 6%, var(--bg-surface-card) 94%, var(--bg-surface-elevated) 100%);
+  color: var(--text-main);
+  border: 1px solid var(--border-subtle);
+  mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
 }
 
 button,
@@ -200,7 +317,7 @@ a:hover {
 
 .nav button.active {
   background: var(--accent);
-  color: white;
+  color: var(--accent-contrast, #fff);
 }
 
 .nav button.active:hover {
@@ -303,7 +420,7 @@ a:hover {
 
 #themeBtn:hover {
   background: var(--accent);
-  color: white;
+  color: var(--accent-contrast, #fff);
   border-color: var(--accent);
 }
 
@@ -411,6 +528,18 @@ a:hover {
 
 .card.section {
   margin-top: 24px;
+}
+
+/* Seções abaixo da dobra são renderizadas sob demanda. A altura reservada
+   para a gamificação acompanha o conteúdo real para não deslocar alvos. */
+#view[data-page="dashboard"] > .section:not(.focus-hero),
+#view[data-page="dashboard"] > .grid2 {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+#view[data-page="dashboard"] > .grid3.section[aria-label="Gamificação e execução diária"] {
+  contain-intrinsic-size: auto 1080px;
 }
 
 .card h2 {
@@ -604,7 +733,7 @@ button.ghost:hover:not(:disabled) {
 
 button.danger {
   background: var(--bad);
-  color: white;
+  color: var(--accent-contrast, #fff);
 }
 
 button.danger:hover:not(:disabled) {
@@ -613,7 +742,7 @@ button.danger:hover:not(:disabled) {
 
 button.success {
   background: var(--good);
-  color: white;
+  color: var(--accent-contrast, #fff);
 }
 
 button.success:hover:not(:disabled) {
@@ -1469,6 +1598,143 @@ button.tiny { width: auto; padding: 4px 9px; font-size: 0.72rem; margin-left: au
   font-size: 0.8rem;
 }
 code { font-family: var(--font-mono); font-size: 0.9em; }
+
+/* ============================================================
+   Pedagogia das 5 Camadas da Gênese (FORGE 3.0)
+   ============================================================ */
+
+.genesis-step {
+  border-left: 3px solid var(--accent-ai);
+  padding: 4px 0 4px 16px;
+  margin: 18px 0;
+  scroll-margin-top: 12px;
+}
+
+.genesis-step[data-step="1"] { border-left-color: var(--accent-arch); }
+.genesis-step[data-step="2"] { border-left-color: var(--accent-security); }
+.genesis-step[data-step="3"] { border-left-color: var(--accent-math); }
+.genesis-step[data-step="4"] { border-left-color: var(--accent-assembly); }
+.genesis-step[data-step="5"] { border-left-color: var(--accent-ai); }
+.genesis-step[data-step="6"] { border-left-color: var(--accent-network); }
+
+.genesis-step h2 {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  color: var(--text-main);
+}
+
+.genesis-step p { margin: 0; }
+
+/* Destaque semântico por trilha (usado em cartões de trilha e labs) */
+.trail-arch { --trail-accent: var(--accent-arch); }
+.trail-assembly { --trail-accent: var(--accent-assembly); }
+.trail-ai { --trail-accent: var(--accent-ai); }
+
+.trail-accent {
+  border-top: 3px solid var(--trail-accent, var(--accent-ai));
+}
+
+/* ============================================================
+   Bottom Navigation — zona do polegar (≤768px)
+   ============================================================ */
+
+.bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .app {
+    display: block;
+  }
+
+  .side,
+  .mobilemenu {
+    display: none !important;
+  }
+
+  .content {
+    padding: 16px 16px calc(var(--bottom-nav-h) + var(--sab) + 24px);
+  }
+
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(var(--bottom-nav-h) + var(--sab));
+    padding-bottom: var(--sab);
+    background: rgba(17, 24, 39, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  [data-theme="light"] .bottom-nav {
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  .bottom-nav button {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 48px;
+    height: 48px;
+    padding: 4px 2px;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 650;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.1;
+  }
+
+  .bottom-nav button .bn-icon {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .bottom-nav button.active {
+    background: color-mix(in srgb, var(--accent-ai) 18%, transparent);
+    color: var(--accent-hover);
+  }
+
+  /* Alvos de toque de no mínimo 48×48px em toda a interface móvel */
+  button,
+  .bottom-nav button,
+  .tabs button,
+  .check,
+  .lesson button,
+  .focus-rail button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
+  select,
+  textarea {
+    min-height: 48px;
+  }
+
+  .check {
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .q label.check {
+    display: flex;
+  }
+}
+
+@media (min-width: 769px) {
+  .bottom-nav {
+    display: none;
+  }
+}
 
 /* ============================================================
    Responsive
@@ -2447,4 +2713,291 @@ code { font-family: var(--font-mono); font-size: 0.9em; }
   .reader-search input[type="search"] { min-width: 0; width: 100%; }
 
   .reader-stage { padding: 6px; }
+}
+
+/* ============================================================
+   FORGE 3.0 — Simuladores interativos (Trilhas 10, 11 e 12)
+   Componentes locais, sem dependências externas.
+   ============================================================ */
+
+.sim-shell {
+  --sim-accent: var(--accent);
+  margin-top: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  background: var(--bg-surface-elevated);
+  padding: clamp(14px, 3vw, 24px);
+}
+
+.trail-arch { --sim-accent: var(--accent-arch); }
+.trail-assembly { --sim-accent: var(--accent-assembly); }
+.trail-ai { --sim-accent: var(--accent-ai); }
+.trail-accent { border-top: 3px solid var(--sim-accent); }
+
+.sim-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.sim-head h2 { margin: 8px 0 4px; font-size: clamp(1.2rem, 3vw, 1.6rem); }
+.sim-head p { margin: 0; }
+.sim-counter {
+  background: var(--bg-surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.sim-counter b { color: var(--sim-accent); font-variant-numeric: tabular-nums; }
+
+.sim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.sim-panel { padding: clamp(14px, 2.5vw, 20px); overflow: hidden; }
+.sim-panel h3 { margin-top: 0; color: var(--sim-accent); }
+.sim-panel h4 { margin: 18px 0 8px; font-size: 0.95rem; }
+.sim-panel label { display: block; margin: 10px 0 6px; font-size: 0.9rem; }
+.sim-panel .field { width: 100%; }
+
+.sim-toolbar,
+.sim-inputs,
+.sim-sliders,
+.sim-checks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+.sim-toolbar button,
+.sim-inputs button { min-height: 48px; min-width: 48px; }
+.sim-inputs button[aria-pressed="true"] {
+  border-color: var(--sim-accent);
+  box-shadow: inset 0 0 0 2px var(--sim-accent);
+  font-weight: 800;
+}
+
+.sim-output {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 14px 0 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-card);
+  font-weight: 700;
+}
+.sim-output output {
+  min-width: 44px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: var(--sim-accent);
+  color: #0b0f19;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+[data-theme="light"] .sim-output output { color: #fff; }
+
+.sim-diagram,
+.sim-transistors,
+.sim-plot {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-surface-card);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+.sim-svg,
+.sim-sim-plot { display: block; width: 100%; min-width: 260px; height: auto; }
+.sim-svg-small { min-width: 200px; max-width: 260px; }
+.sim-wire { stroke: var(--text-muted); stroke-width: 2; fill: none; }
+.sim-gate-body { stroke: var(--sim-accent); stroke-width: 2; fill: var(--sim-accent); fill-opacity: 0.12; }
+.sim-svg-label { fill: var(--text-main); font-family: var(--font-mono); font-size: 13px; }
+.sim-svg-center { text-anchor: middle; font-weight: 800; }
+.sim-pmos { fill: var(--accent-network); }
+.sim-nmos { fill: var(--accent-assembly); }
+.sim-grid-lines { stroke: var(--border-strong); stroke-width: 1; }
+.sim-ai-line { stroke: var(--sim-accent); stroke-width: 3; fill: none; }
+.sim-ai-curve { stroke: var(--accent-arch); stroke-width: 2; stroke-dasharray: 4 3; fill: none; }
+.sim-ai-point { fill: var(--accent-arch); stroke: var(--bg-surface-card); stroke-width: 2; }
+
+.sim-table-wrap,
+.sim-kmap-scroll { width: 100%; overflow-x: auto; }
+.sim-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.sim-table th,
+.sim-table td {
+  border: 1px solid var(--border-subtle);
+  padding: 8px 10px;
+  text-align: left;
+}
+.sim-table thead th { background: var(--bg-surface-card); color: var(--text-main); }
+.sim-table tbody th { font-family: var(--font-mono); font-weight: 700; }
+.sim-table tr.sim-active { background: color-mix(in srgb, var(--sim-accent) 16%, transparent); }
+.sim-table code { font-size: 0.85em; }
+
+.sim-kmap { min-width: 320px; table-layout: fixed; }
+.sim-kmap-corner { font-size: 0.72rem; color: var(--text-muted); }
+.sim-kmap-cell {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  cursor: pointer;
+}
+.sim-kmap-cell:focus-visible,
+.sim-attn-cell:focus-visible { outline: 2px solid var(--sim-accent); outline-offset: 2px; }
+.sim-kmap-cell.is-one { background: color-mix(in srgb, var(--sim-accent) 30%, transparent); font-weight: 800; }
+.sim-kmap-cell.is-dont { background: var(--bg-surface-card); color: var(--text-muted); }
+.sim-kmap-cell.is-covered { box-shadow: inset 0 0 0 2px var(--sim-accent); }
+
+.sim-attn { min-width: 340px; table-layout: fixed; }
+.sim-attn-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  border-radius: 6px;
+  background: var(--bg-surface-card);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+/* A intensidade da atenção é mostrada por uma barra decorativa: manter o
+   fundo da célula neutro garante contraste AA do texto em qualquer tema. */
+.sim-attn-cell::after {
+  content: "";
+  position: absolute;
+  inset: auto 4px 3px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--sim-accent);
+  opacity: var(--attn-alpha, 0.3);
+  pointer-events: none;
+}
+.sim-attn-cell.is-masked { color: var(--text-subtle); }
+.sim-attn-cell.is-masked::after { opacity: 0.25; }
+
+.sim-code {
+  min-height: 180px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  resize: vertical;
+  white-space: pre;
+  overflow-x: auto;
+}
+.sim-program {
+  margin-top: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  overflow-x: auto;
+}
+/* Regiões roláveis precisam ser alcançáveis pelo teclado (axe: scrollable-region-focusable). */
+.sim-program:focus-visible,
+.sim-kmap-scroll:focus-visible,
+.sim-table-wrap:focus-visible,
+.sim-diagram:focus-visible,
+.sim-transistors:focus-visible,
+.sim-plot:focus-visible {
+  outline: 2px solid var(--sim-accent, var(--accent));
+  outline-offset: 2px;
+}
+.sim-line {
+  display: flex;
+  gap: 10px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+  white-space: pre;
+}
+.sim-line code { overflow: visible; white-space: pre; }
+.sim-line.is-current {
+  background: color-mix(in srgb, var(--sim-accent) 20%, transparent);
+  font-weight: 700;
+}
+.sim-line-no { color: var(--text-subtle); user-select: none; }
+[data-theme="light"] .sim-line-no { color: var(--text-muted); }
+
+.sim-registers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.sim-register {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--bg-surface-card);
+  min-width: 0;
+}
+.sim-register code { font-size: 0.8rem; overflow-wrap: anywhere; }
+.sim-register.is-pc { border-left-color: var(--accent-arch); }
+.sim-register.is-sp { border-left-color: var(--accent-network); }
+.sim-register.is-changed { box-shadow: 0 0 0 2px var(--sim-accent); }
+.sim-reg-name { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); }
+.sim-flags { display: flex; flex-wrap: wrap; gap: 8px; }
+.sim-flag {
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.sim-flag.is-set {
+  border-color: var(--sim-accent);
+  color: var(--text-main);
+  background: color-mix(in srgb, var(--sim-accent) 18%, transparent);
+  font-weight: 800;
+}
+
+.sim-stack { margin: 0; padding-left: 22px; }
+.sim-stack li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
+.sim-stack code { font-size: 0.82rem; }
+.sim-pipeline { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.sim-stage {
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.sim-stage.is-active {
+  background: var(--sim-accent);
+  color: #0b0f19;
+  font-weight: 800;
+}
+[data-theme="light"] .sim-stage.is-active { color: #fff; }
+.sim-trace { margin: 0; padding-left: 22px; max-height: 220px; overflow-y: auto; }
+.sim-trace li { font-family: var(--font-mono); font-size: 0.78rem; margin: 4px 0; overflow-wrap: anywhere; }
+
+.sim-sliders input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--sim-accent); }
+.sim-metrics { display: flex; flex-wrap: wrap; gap: 16px; margin: 10px 0; }
+.sim-metrics span { padding: 6px 12px; border-radius: 8px; background: var(--bg-surface-card); font-size: 0.85rem; }
+.sim-metrics b { color: var(--sim-accent); font-variant-numeric: tabular-nums; }
+.sim-checks .check { display: flex; align-items: center; gap: 8px; margin: 0; }
+.sim-checks input { min-width: 20px; min-height: 20px; accent-color: var(--sim-accent); }
+
+@media (max-width: 640px) {
+  .sim-shell { padding: 12px; }
+  .sim-grid { grid-template-columns: 1fr; }
+  .sim-counter { width: 100%; text-align: center; }
 }

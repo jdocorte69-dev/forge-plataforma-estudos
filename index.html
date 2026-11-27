@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#101827">
 <meta name="description" content="Forge: plataforma gratuita de estudos de Matemática, C, Linux, Sistemas, Redes, Banco de Dados e Engenharia de Software, com modo foco, laboratórios, avaliações e revisão espaçada.">
 <title>Forge — Plataforma de Estudos</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png" sizes="192x192">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<!-- KaTeX (CSS e JS) é injetado sob demanda por ForgeMath: o painel inicial
+     não contém fórmulas e trocar a folha em tempo ocioso invalidava o layout. -->
 </head>
 <body>
 <a class="skip-link" href="#main">Pular para o conteúdo principal</a>
@@ -42,50 +42,53 @@
 </aside>
 <main class="main" id="main" tabindex="-1">
 <header class="top"><div class="row"><button class="secondary mobilemenu" id="menuBtn" aria-label="Abrir menu de navegação" aria-expanded="false">☰</button><strong id="pageTitle">Painel geral</strong></div><div class="topright"><span class="pill hide-sm" id="today"></span><button class="secondary" id="searchBtn" aria-label="Buscar em todo o conteúdo (Ctrl+K)" title="Buscar (Ctrl+K)" onclick="if(window.GlobalSearch)GlobalSearch.open()">⌕ Buscar</button><button class="secondary" id="themeBtn" aria-label="Alternar tema claro e escuro" title="Alternar tema">☾</button></div></header>
-<div class="content" id="view" role="region" aria-label="Conteúdo da página" aria-live="polite"></div>
+<!-- FORGE 3.0: o cartão inicial é estático para que o LCP aconteça no
+     primeiro paint, sem esperar a execução dos módulos JavaScript. -->
+<div class="content" id="view" role="region" aria-label="Conteúdo da página" aria-live="polite">
+<div class="eyebrow">Seu espaço de aprendizagem</div>
+<h1 class="h1">Construa domínio, uma sessão por vez.</h1>
+<p class="sub">Estude com intenção, pratique, registre erros e revise. O progresso fica salvo neste navegador.</p>
+<div class="card section focus-hero">
+  <div>
+    <div class="eyebrow">Estudar com intenção</div>
+    <h2 style="margin:4px 0 6px">Modo foco: uma etapa por vez</h2>
+    <p class="muted">Oito passos curtos, timer de blocos, pausa quando precisar e retomada de onde parou. Ideal para sessões de 5 a 25 minutos.</p>
+  </div>
+  <div class="actions">
+    <button type="button" onclick="if(window.Focus)Focus.open(nextLessonId(),'dashboard')">▶ Iniciar modo foco</button>
+    <button type="button" class="secondary" onclick="if(window.Focus)Focus.openPicker()">Escolher aula</button>
+  </div>
+</div>
+</div>
 </main>
 </div>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+<nav class="bottom-nav" id="bottomNav" aria-label="Navegação principal (mobile)">
+  <button type="button" data-page="dashboard" aria-label="Início" onclick="ForgeNav.go('dashboard')"><span class="bn-icon" aria-hidden="true">⌂</span>Início</button>
+  <button type="button" data-page="tracks" aria-label="Trilhas" onclick="ForgeNav.go('tracks')"><span class="bn-icon" aria-hidden="true">▤</span>Trilhas</button>
+  <button type="button" data-page="focus" aria-label="Modo foco" onclick="ForgeNav.go('focus')"><span class="bn-icon" aria-hidden="true">◉</span>Foco</button>
+  <button type="button" data-page="lab" aria-label="Labs — Laboratórios" onclick="ForgeNav.go('lab')"><span class="bn-icon" aria-hidden="true">⌘</span>Labs</button>
+  <button type="button" data-page="more" aria-label="Mais páginas" aria-haspopup="dialog" onclick="ForgeNav.more()"><span class="bn-icon" aria-hidden="true">⚙</span>Mais</button>
+</nav>
+
+<!-- FORGE 3.0: apenas o necessário para o primeiro paint é carregado
+     antecipadamente. Os arquivos pesados (arquivos de dados avançados,
+     simuladores, PDF e KaTeX) são carregados em tempo ocioso por app.js. -->
 <script defer src="js/data.js"></script>
 <script defer src="js/data-linux.js"></script>
 <script defer src="js/data-c.js"></script>
 <script defer src="js/data-math.js"></script>
 <script defer src="js/data-math2.js"></script>
-<script defer src="js/data-math-a.js"></script>
-<script defer src="js/data-math-discrete.js"></script>
 <script defer src="js/data-software.js"></script>
-<script defer src="js/data-software-extra.js"></script>
-<script defer src="js/data-algorithms.js"></script>
-<script defer src="js/data-systems.js"></script>
-<script defer src="js/data-networks.js"></script>
-<script defer src="js/data-db.js"></script>
-<script defer src="js/data-networks-advanced.js"></script>
-<script defer src="js/data-linux-advanced.js"></script>
-<script defer src="js/data-security-systems.js"></script>
-<script defer src="js/data-math-advanced.js"></script>
-<script defer src="js/data-c-advanced.js"></script>
-<script defer src="js/data-labs-a.js"></script>
-<script defer src="js/data-labs-b.js"></script>
-<script defer src="js/data-library-extra.js"></script>
-<script defer src="js/data-books.js"></script>
-<script defer src="vendor/pdfjs/pdf.min.js"></script>
-<script defer src="js/data-books-meta.js"></script>
+<script defer src="js/data-forge3.js"></script>
+<script defer src="js/data-trilha10.js"></script>
+<script defer src="js/data-trilha11.js"></script>
+<script defer src="js/data-trilha12.js"></script>
 <script defer src="js/storage.js"></script>
 <script defer src="js/exercises.js"></script>
-<script defer src="js/app.js"></script>
 <script defer src="js/gamification.js"></script>
-<script defer src="js/mastery.js"></script>
-<script defer src="js/labs-catalog.js"></script>
-<script defer src="js/library-rich.js"></script>
-<script defer src="js/books.js"></script>
-<script defer src="js/books-store.js"></script>
-<script defer src="js/book-questions.js"></script>
-<script defer src="js/book-reader.js"></script>
-<script defer src="js/study.js"></script>
 <script defer src="js/features.js"></script>
-<script defer src="js/focus.js"></script>
-<script defer src="js/plan.js"></script>
-<script defer src="js/labs-extra.js"></script>
+<script defer src="js/app.js"></script>
 </body>
 </html>

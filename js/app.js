@@ -3,6 +3,13 @@
    Lógica principal da aplicação
    ============================================================ */
 
+// FORGE 3.0 (Fase 2): migração idempotente para o namespace v4 antes de
+// qualquer leitura de estado feita pelos renderizadores.
+if (typeof Storage !== "undefined" && typeof Storage.migrate === "function") {
+  Storage.migrate();
+  document.documentElement.dataset.theme = Storage.get().theme || "dark";
+}
+
 function buildAllLessons() {
   let a = [];
   Object.entries(CURRICULUM).forEach(([track, t]) => {
@@ -15,7 +22,7 @@ function buildAllLessons() {
   return a;
 }
 
-const lessons = buildAllLessons();
+let lessons = buildAllLessons();
 
 function trackProgress(k) {
   const ids = lessons.filter(x => x.track === k).map(x => x.id);
@@ -83,9 +90,66 @@ function openModal(html) {
 
 window.openModal = openModal;
 
+/* PDF.js é carregado apenas quando o usuário abre um PDF. Mantê-lo fora do
+   caminho crítico evita ~80ms de tarefa longa durante o carregamento inicial. */
+const ForgePDF = {
+  _promise: null,
+  ensure() {
+    if (window.pdfjsLib) return Promise.resolve();
+    if (!this._promise) {
+      this._promise = new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "vendor/pdfjs/pdf.min.js";
+        s.onload = () => resolve();
+        s.onerror = () => { ForgePDF._promise = null; reject(new Error("Falha ao carregar o leitor de PDF.")); };
+        (document.head || document.body || document.documentElement).appendChild(s);
+      });
+    }
+    return this._promise;
+  }
+};
+window.ForgePDF = ForgePDF;
+
+/* KaTeX entra na rede somente quando a página exibe fórmulas. Carregar a CSS
+   no carregamento inicial invalida o layout de todo o documento. */
+const ForgeMath = {
+  _promise: null,
+  ensure() {
+    if (typeof renderMathInElement === "function") return Promise.resolve();
+    if (!this._promise) {
+      this._promise = (async () => {
+        if (!document.querySelector('link[data-forge-katex]')) {
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = "vendor/katex/katex.min.css";
+          link.dataset.forgeKatex = "1";
+          (document.head || document.documentElement).appendChild(link);
+        }
+        const load = src => new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = reject;
+          (document.head || document.body || document.documentElement).appendChild(s);
+        });
+        await load("vendor/katex/katex.min.js");
+        await load("vendor/katex/contrib/auto-render.min.js");
+      })().catch(err => { ForgeMath._promise = null; throw err; });
+    }
+    return this._promise;
+  }
+};
+window.ForgeMath = ForgeMath;
+
 function renderMath() {
   const el = document.getElementById("view");
-  if (!el || typeof renderMathInElement !== "function") return;
+  if (!el) return;
+  if (typeof renderMathInElement !== "function") {
+    if (/\$|\\\(|\\\[/.test(el.textContent || "")) {
+      ForgeMath.ensure().then(() => renderMath()).catch(() => {});
+    }
+    return;
+  }
   try {
     renderMathInElement(el, {
       delimiters: [
@@ -162,9 +226,12 @@ function render() {
     if (isCurrent) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
   });
+  if (typeof ForgeNav !== "undefined") ForgeNav.sync();
 
   const v = document.getElementById("view");
   if (!v) return;
+  /* Permite estilos e otimizações específicos da página sem afetar as demais. */
+  v.dataset.page = page;
 
   const renderers = {
     dashboard: dashboardPage,
@@ -191,6 +258,11 @@ function render() {
   };
 
   if (renderers[page]) renderers[page](v);
+  if (page === "lab") {
+    if (typeof LogicSim !== "undefined") LogicSim.mount();
+    if (typeof CpuSim !== "undefined") CpuSim.mount();
+    if (typeof AiSim !== "undefined") AiSim.mount();
+  }
   renderMath();
   if (typeof Gamification !== "undefined") Gamification.afterRender();
   if (typeof Focus !== "undefined") Focus.afterRender();
@@ -215,7 +287,11 @@ function dashboardPage(v) {
     .filter(([d]) => d >= startStr)
     .reduce((acc, [, h]) => acc + h, 0);
 
-  v.innerHTML = `
+  /* O cartão herói já vem no HTML inicial, o que permite pintá-lo antes de
+     qualquer módulo JavaScript (LCP no primeiro paint). Em navegações
+     posteriores ele é recriado junto com o restante da página. */
+  if (!v.querySelector(".focus-hero")) {
+    v.innerHTML = `
 <div class="eyebrow">Seu espaço de aprendizagem</div>
 <h1 class="h1">Construa domínio, uma sessão por vez.</h1>
 <p class="sub">Estude com intenção, pratique, registre erros e revise. O progresso fica salvo neste navegador.</p>
@@ -227,11 +303,12 @@ function dashboardPage(v) {
     <p class="muted">Oito passos curtos, timer de blocos, pausa quando precisar e retomada de onde parou. Ideal para sessões de 5 a 25 minutos.</p>
   </div>
   <div class="actions">
-    <button onclick="Focus.open(nextLessonId(),'dashboard')">▶ Iniciar modo foco</button>
-    <button class="secondary" onclick="Focus.openPicker()">Escolher aula</button>
+    <button type="button" onclick="if(window.Focus)Focus.open(nextLessonId(),'dashboard')">▶ Iniciar modo foco</button>
+    <button type="button" class="secondary" onclick="if(window.Focus)Focus.openPicker()">Escolher aula</button>
   </div>
-</div>
-
+</div>`;
+  }
+  v.insertAdjacentHTML("beforeend", `
 ${typeof Gamification !== "undefined" ? Gamification.dashboardWidgets() : ""}
 
 ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
@@ -245,7 +322,7 @@ ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
 </div>
 
 <div class="grid2">
-  ${Features.timerWidget()}
+  ${typeof Features !== "undefined" ? Features.timerWidget() : ""}
   <div class="card">
     <h2>Seu ritmo</h2>
     <p class="muted">Use o cronômetro para registrar sessões de estudo. O tempo aparece nas estatísticas abaixo.</p>
@@ -256,8 +333,8 @@ ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
 <div class="grid">
   <div class="card">
     <div class="muted small">Aulas concluídas</div>
-    <div class="stat">${totalDone()} <span class="muted small">/ ${lessons.length}</span></div>
-    <div class="bar"><i style="width:${totalDone() / lessons.length * 100}%"></i></div>
+    <div class="stat"><span data-dash="done">${totalDone()}</span> <span class="muted small">/ <span data-dash="total">${lessons.length}</span></span></div>
+    <div class="bar"><i data-dash="done-bar" style="width:${totalDone() / lessons.length * 100}%"></i></div>
   </div>
   <div class="card">
     <div class="muted small">Sequência atual</div>
@@ -280,12 +357,12 @@ ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
   <h2>Progresso por matéria</h2>
   <div class="grid">
     ${Object.entries(CURRICULUM).map(([k, t]) => `
-      <div class="card">
+      <div class="card" data-track="${k}">
         <div class="row">
-          <strong>${t.icon} ${t.name}</strong><span class="pill">${trackProgress(k)}%</span>
+          <strong>${t.icon} ${t.name}</strong><span class="pill" data-dash="pct">${trackProgress(k)}%</span>
         </div>
-        <div class="bar"><i style="width:${trackProgress(k)}%"></i></div>
-        <div class="small muted">${lessons.filter(x => x.track === k && s.done.includes(x.id)).length} de ${lessons.filter(x => x.track === k).length} aulas concluídas</div>
+        <div class="bar"><i data-dash="bar" style="width:${trackProgress(k)}%"></i></div>
+        <div class="small muted" data-dash="count">${lessons.filter(x => x.track === k && s.done.includes(x.id)).length} de ${lessons.filter(x => x.track === k).length} aulas concluídas</div>
         <button class="secondary" style="margin-top:12px" onclick="openTrack('${k}')">Continuar trilha</button>
       </div>
     `).join("")}
@@ -309,8 +386,37 @@ ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
 <div class="card section">
   <h2>Progresso por trilha</h2>
   <canvas id="progressChart" role="img" aria-label="Gráfico de progresso percentual por trilha" style="width:100%;height:260px"></canvas>
-</div>`;
-  setTimeout(refreshCharts, 0);
+</div>`);
+  if (typeof refreshCharts === "function") setTimeout(refreshCharts, 0);
+}
+
+/* Atualiza apenas os contadores do painel depois que os módulos avançados
+   terminam de carregar. Evita um segundo render completo (tarefa longa). */
+function refreshDashboardCounts() {
+  if (page !== "dashboard") return;
+  const v = document.getElementById("view");
+  if (!v) return;
+  const done = totalDone(), total = lessons.length;
+  const setText = (sel, value) => {
+    const el = v.querySelector(sel);
+    if (el) el.textContent = value;
+  };
+  setText('[data-dash="done"]', String(done));
+  setText('[data-dash="total"]', String(total));
+  const doneBar = v.querySelector('[data-dash="done-bar"]');
+  if (doneBar) doneBar.style.width = `${total ? done / total * 100 : 0}%`;
+  const doneIds = Storage.get().done;
+  Object.keys(CURRICULUM).forEach(k => {
+    const card = v.querySelector(`[data-track="${k}"]`);
+    if (!card) return;
+    const pct = trackProgress(k);
+    const pctEl = card.querySelector('[data-dash="pct"]');
+    if (pctEl) pctEl.textContent = `${pct}%`;
+    const bar = card.querySelector('[data-dash="bar"]');
+    if (bar) bar.style.width = `${pct}%`;
+    const countEl = card.querySelector('[data-dash="count"]');
+    if (countEl) countEl.textContent = `${lessons.filter(x => x.track === k && doneIds.includes(x.id)).length} de ${lessons.filter(x => x.track === k).length} aulas concluídas`;
+  });
 }
 
 function nextLessonId() {
@@ -473,6 +579,20 @@ function renderLesson() {
   <div class="card"><b>Pré-requisitos</b><p>${l.prereq}</p></div>
 </div>
 
+${l.genesis ? `
+<div class="section card prose genesis" aria-label="Pedagogia das 5 Camadas da Gênese">
+  <p class="eyebrow">Pedagogia das 5 Camadas da Gênese</p>
+  ${l.genesis.map(g => `<section class="genesis-step" data-step="${g.step}">
+    <h2>${g.step}. ${g.label}</h2>
+    <p>${escHtml(g.text).replace(/\n/g, "<br>")}</p>
+  </section>`).join("")}
+  <section class="genesis-step" data-step="6">
+    <h2>6. Erros comuns e laboratório</h2>
+    <ul>${l.errors.map(e => `<li>${escHtml(e)}</li>`).join("") || "<li>Não há erros registrados para esta aula.</li>"}</ul>
+    <div class="callout">${escHtml(l.lab)}</div>
+    <p class="small muted">${escHtml(l.reference)}</p>
+  </section>
+</div>` : `
 <div class="section card prose">
   <h2>1. Intuição</h2><p>${l.intuition}</p>
   <h2>2. Explicação conceitual</h2><p>${l.explain}</p>
@@ -482,7 +602,7 @@ function renderLesson() {
   <ul>${l.errors.map(e => `<li>${e}</li>`).join("")}</ul>
   <h2>5. Mini-laboratório</h2><div class="callout">${l.lab}</div>
   <h2>6. Referência</h2><p>${l.reference}</p>
-</div>
+</div>`}
 
 <div class="card section">
   <h2>7. Exercícios — 10 questões</h2>
@@ -645,6 +765,37 @@ function goToPage(nextPage) {
 }
 window.goToPage = goToPage;
 
+/* Navegação inferior mobile-first (Fase 1). Usa o mesmo roteador da sidebar. */
+const ForgeNav = {
+  go(nextPage) {
+    goToPage(nextPage);
+    ForgeNav.sync();
+  },
+  more() {
+    const pages = [
+      ["review", "◷ Revisão espaçada"], ["mistakes", "✎ Caderno de erros"],
+      ["feynman", "◎ Técnica Feynman"], ["study", "✦ Aprenda a estudar"],
+      ["domain", "◈ Mapa de domínio"], ["library", "▣ Biblioteca"],
+      ["books", "▤ Livros em PDF"], ["glossary", "◬ Glossário"],
+      ["projects", "⚒ Projetos integradores"], ["catalog", "⌗ Catálogo de labs"],
+      ["settings", "⚙ Progresso e backup"]
+    ];
+    openModal(`<h2>Mais páginas</h2><p class="muted small">Acesso rápido ao restante da plataforma.</p>
+      <div class="grid" style="grid-template-columns:1fr">
+        ${pages.map(([key, label]) => `<button class="secondary" onclick="ForgeNav.go('${key}');closeModal(document.querySelector('.modal-overlay'))">${label}</button>`).join("")}
+      </div>`);
+  },
+  sync() {
+    document.querySelectorAll("#bottomNav button[data-page]").forEach(b => {
+      const current = b.dataset.page === page;
+      b.classList.toggle("active", current);
+      if (current) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
+  }
+};
+window.ForgeNav = ForgeNav;
+
 // Navigation handlers
 document.getElementById("nav").addEventListener("click", e => {
   const b = e.target.closest("button[data-page]");
@@ -678,8 +829,12 @@ function labPage(v) {
   <button class="${labTab === "eng" ? "active" : ""}" onclick="labTab='eng';render()">⚙ Engenharia</button>
   <button class="${labTab === "net" ? "active" : ""}" onclick="labTab='net';render()">🌐 Redes</button>
   <button class="${labTab === "db" ? "active" : ""}" onclick="labTab='db';render()">🗄️ Banco de dados</button>
+   <button class="${labTab === "logic" ? "active" : ""}" onclick="labTab='logic';render()">🏗️ Lógica (T10)</button>
+   <button class="${labTab === "cpu" ? "active" : ""}" onclick="labTab='cpu';render()">⚙️ CPU (T11)</button>
+   <button class="${labTab === "ai" ? "active" : ""}" onclick="labTab='ai';render()">🧠 IA (T12)</button>
   <button class="${labTab === "cat" ? "active" : ""}" onclick="labTab='cat';render()">📚 Catálogo (${typeof LabCatalog !== "undefined" ? LabCatalog.stats().total : 0})</button>
 </div>
+<div id="logicSimRoot"></div><div id="cpuSimRoot"></div><div id="aiSimRoot"></div>
 ${labTab === "cat" && typeof LabCatalog !== "undefined" ? LabCatalog.pageHTML()
   : labTab === "linux" ? linuxLab()
   : labTab === "c" ? cLab()
@@ -687,6 +842,7 @@ ${labTab === "cat" && typeof LabCatalog !== "undefined" ? LabCatalog.pageHTML()
   : labTab === "eng" ? engLab()
   : labTab === "net" && typeof ExtraLabs !== "undefined" ? ExtraLabs.networkLab()
   : labTab === "db" && typeof ExtraLabs !== "undefined" ? ExtraLabs.dbLab()
+  : labTab === "logic" || labTab === "cpu" || labTab === "ai" ? ""
   : engLab()}`;
 }
 
@@ -1539,10 +1695,90 @@ document.addEventListener("keydown", e => {
   }
 });
 
-window.onload = () => {
-  Storage.load();
-  render();
-};
+/* Renderiza assim que o último script defer termina de executar. Esperar
+   window.onload atrasava o LCP porque o navegador aguarda todas as fontes,
+   imagens e o service worker antes de disparar esse evento. */
+Storage.migrate();
+render();
+
+/* FORGE 3.0 — carregamento diferido em tempo ocioso.
+   Os módulos abaixo não participam do primeiro paint: arquivos de currículo
+   avançado, simuladores, leitor de PDF e KaTeX. A ordem é preservada porque
+   alguns arquivos estendem estruturas criadas pelos anteriores. */
+/* Sinal determinístico de que todos os módulos diferidos terminaram de
+   carregar. Ferramentas de teste e integrações podem aguardar forgeReady em
+   vez de depender de um intervalo fixo. */
+let resolveForgeReady;
+window.forgeReady = new Promise(resolve => { resolveForgeReady = resolve; });
+
+const DEFERRED_SCRIPTS = [
+  "js/mastery.js",
+  "js/focus.js",
+  "js/plan.js",
+  "js/labs-catalog.js",
+  "js/library-rich.js",
+  /* books.js captura BOOKS no carregamento, então os dados vêm antes. */
+  "js/data-books.js",
+  "js/data-books-meta.js",
+  "js/books.js",
+  "js/books-store.js",
+  "js/book-questions.js",
+  "js/book-reader.js",
+  "js/labs-extra.js",
+  "js/study.js",
+  "js/data-math-a.js",
+  "js/data-math-discrete.js",
+  "js/data-software-extra.js",
+  "js/data-algorithms.js",
+  "js/data-systems.js",
+  "js/data-networks.js",
+  "js/data-db.js",
+  "js/data-labs-a.js",
+  "js/data-labs-b.js",
+  "js/data-library-extra.js",
+  "js/data-linux-advanced.js",
+  "js/data-security-systems.js",
+  "js/data-math-advanced.js",
+  "js/data-networks-advanced.js",
+  "js/data-c-advanced.js",
+  "js/sim-logic.js",
+  "js/sim-cpu.js",
+  "js/sim-ai.js"
+];
+
+function loadDeferredScripts(list, index = 0) {
+  if (index >= list.length) {
+    /* O currículo principal já foi carregado antes do app.js. Apenas os
+       módulos avançados chegaram agora, atualizamos os contadores sem
+       reconstruir a página (isso geraria outra tarefa longa). */
+    lessons = buildAllLessons();
+    refreshDashboardCounts();
+    if (typeof Gamification !== "undefined") Gamification.afterRender();
+    if (typeof Features !== "undefined") Features.updateTimerUI();
+    renderMath();
+    window.__forgeReady = true;
+    resolveForgeReady();
+    return Promise.resolve();
+  }
+  return new Promise(resolve => {
+    const script = document.createElement("script");
+    script.src = list[index];
+    script.async = false;
+    script.onload = script.onerror = () => {
+      /* Cada módulo executa em uma tarefa separada. Sem esse intervalo, os
+         scripts vindos do cache encadeiam todos em uma única tarefa longa de
+         ~180ms, o que penaliza o Total Blocking Time. */
+      setTimeout(() => loadDeferredScripts(list, index + 1).then(resolve), 0);
+    };
+    (document.head || document.body || document.documentElement).appendChild(script);
+  });
+}
+
+if ("requestIdleCallback" in window) {
+  requestIdleCallback(() => loadDeferredScripts(DEFERRED_SCRIPTS), { timeout: 2000 });
+} else {
+  setTimeout(() => loadDeferredScripts(DEFERRED_SCRIPTS), 300);
+}
 
 /* Habilita uso offline quando servido por HTTP(S). Em file:// o navegador
    bloqueia service workers, então a aplicação segue funcionando normalmente. */

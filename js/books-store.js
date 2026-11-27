@@ -205,6 +205,7 @@
     const opts = options || {};
     const record = await getPdf(id);
     if (!record) throw new Error("Baixe ou importe o PDF antes de extrair texto.");
+    if (global.ForgePDF && typeof global.ForgePDF.ensure === "function") await global.ForgePDF.ensure();
     if (!global.pdfjsLib) throw new Error("PDF.js indisponível.");
     if (global.pdfjsLib.GlobalWorkerOptions) global.pdfjsLib.GlobalWorkerOptions.workerSrc = "./vendor/pdfjs/pdf.worker.min.js";
     const bytes = new Uint8Array(await record.blob.arrayBuffer());

@@ -1,6 +1,6 @@
 # FORGE — Plataforma de Estudos
 
-Uma plataforma **100% frontal** (sem backend, sem login, sem servidor) para estudar com evidência: 9 trilhas, 71 módulos, 385 aulas, 3.850 questões, 56 laboratórios, 110 recursos verificados, 24 PDFs de fonte aberta e 34 termos de glossário. Funciona offline depois do primeiro carregamento.
+Uma plataforma **100% frontal** (sem backend, sem login, sem servidor) para estudar com evidência: 12 trilhas, 92 módulos, 515 aulas, 5.702 questões, 56 laboratórios, 110 recursos verificados, 24 PDFs de fonte aberta, 34 termos de glossário e 3 simuladores interativos (lógica, CPU e IA). Funciona offline depois do primeiro carregamento.
 
 **🌐 Acessar online:** https://jdocorte69-dev.github.io/forge-plataforma-estudos/
 
@@ -17,7 +17,11 @@ python -m http.server 8765
 # abra http://localhost:8765/index.html
 ```
 
-O service worker `sw.js` (cache `forge-v5`) guarda o shell da aplicação para uso sem internet. Em `file://` o navegador bloqueia service workers, mas a aplicação continua funcional.
+O service worker `sw.js` (cache `forge-v6`) guarda o shell da aplicação para uso sem internet. Em `file://` o navegador bloqueia service workers, mas a aplicação continua funcional. Novos usuários iniciam no tema escuro OLED; o layout é mobile-first com navegação inferior em telas pequenas.
+
+## Ecossistema de estudos consolidado
+
+O material didático autoral produzido a partir do corpus local está em [`saida/LEIA-ME.md`](saida/LEIA-ME.md) — o painel central com atalhos, números e status das fases. O inventário completo e auditável está em [`saida/RELATORIO.md`](saida/RELATORIO.md): 220 capítulos extraídos, 220 resumos de 9 seções, compêndio com 20 temas, folha de fórmulas, 300 exercícios verificados, baralho Anki, 3 simulados, ciência do estudo, planos cronológicos e códigos compilados sem avisos.
 
 ## O que há dentro
 
@@ -37,12 +41,14 @@ O service worker `sw.js` (cache `forge-v5`) guarda o shell da aplicação para u
 | Meu plano | Metas, ritmo, prazo, marcos e aulas personalizadas | Página "Meu plano" |
 | Gamificação | XP, sequência, conquistas e erros E1–E4 | Painel |
 | Conforto | Tamanho de fonte A−/A/A+ (13–19 px), alto contraste, tema claro/escuro | Progresso e backup |
+| Simuladores | Circuitos lógicos, CPU didática e inferência de IA, com logs locais | Página "Labs" → abas Lógica / CPU / IA |
+| Storage v4 | `userId` estável, migração idempotente e backup antes de resetar dados corrompidos | Automático no carregamento |
 
 ### Trilhas
 
-Linux · C e Algoritmos · Matemática · Matemática — Fundamentos · Engenharia de Software · Sistemas e Arquitetura · Redes · Banco de Dados · Segurança.
+Linux · C e Algoritmos · Matemática · Matemática — Fundamentos · Engenharia de Software · Sistemas e Arquitetura · Redes · Banco de Dados · Segurança · Arquitetura de Computadores · Assembly e Engenharia Reversa · Inteligência Artificial e LLMs.
 
-O detalhamento por módulo/aula está em [`AUDITORIA.md`](AUDITORIA.md). O inventário completo do painel, das funcionalidades implementadas e do material didático está em [`RELATORIO_COMPLETO.md`](RELATORIO_COMPLETO.md).
+O detalhamento por módulo/aula está em [`AUDITORIA.md`](AUDITORIA.md). O inventário completo do painel, das funcionalidades implementadas e do material didático está em [`RELATORIO_COMPLETO.md`](RELATORIO_COMPLETO.md). Os números e as evidências da versão 3.0 estão em [`FORGE_3.0_RELATORIO_FINAL.md`](FORGE_3.0_RELATORIO_FINAL.md).
 
 ## Plano de estudo
 
