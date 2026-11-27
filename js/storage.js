@@ -3,13 +3,64 @@
    Gerenciamento de estado, localStorage, export/import
    ============================================================ */
 
-// FORGE 3.0 — namespace v4. As chaves v2/v3 continuam legíveis e são
+// FORGE 4.0 — namespace v5. As chaves v2/v3/v4 continuam legíveis e são
 // preservadas (nunca apagadas) para garantir retrocompatibilidade total.
-const STORE_KEY = "forge.study.v4";
-const LEGACY_KEYS = ["forge.study.v2", "forge.study.v3"];
-const CURRENT_VERSION = 4;
+const STORE_KEY = "forge.study.v5";
+const V4_KEY = "forge.study.v4";
+const LEGACY_KEYS = ["forge.study.v2", "forge.study.v3", V4_KEY];
+const CURRENT_VERSION = 5;
 // Cópia de segurança automática antes de qualquer migração/importação.
+// A chave antiga é mantida por compatibilidade com backups já existentes;
+// cada migração v4→v5 additionally grava forge.study.v4.bak_[TIMESTAMP].
 const BACKUP_KEY = "forge.study.v2.lastBackup";
+const V4_BACKUP_PREFIX = "forge.study.v4.bak_";
+const MIGRATION_KEY = "forge.study.v5.migration";
+
+// FNV-1a 32-bit: usa a implementação compartilhada quando disponível e mantém
+// uma cópia idêntica como fallback (storage.js também roda isolado em Node/vm).
+function fnv1a32(value) {
+  if (typeof window !== "undefined" && window.ForgeMathUtils?.fnv1a32) {
+    return window.ForgeMathUtils.fnv1a32(value) >>> 0;
+  }
+  let h = 2166136261 >>> 0;
+  const str = String(value == null ? "" : value);
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return h >>> 0;
+}
+
+// Serialização canônica: o checksum não depende da ordem das chaves do JSON.
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") {
+    const raw = JSON.stringify(value);
+    return raw === undefined ? "null" : raw;
+  }
+  if (Array.isArray(value)) return "[" + value.map(stableStringify).join(",") + "]";
+  return "{" + Object.keys(value).sort().map(k =>
+    JSON.stringify(k) + ":" + stableStringify(value[k])
+  ).join(",") + "}";
+}
+
+function checksumState(value) {
+  return fnv1a32(stableStringify(value)).toString(16).padStart(8, "0");
+}
+
+function backupTimestamp() {
+  return new Date().toISOString().replace(/[-:.TZ]/g, "");
+}
+
+// Critério invariante de domínio (schema v5): nota ≥ 8.0 e Feynman ≥ 30 chars.
+function isLessonMastered(score, feynman) {
+  const n = Number(score);
+  return Number.isFinite(n) && n >= 8 && String(feynman || "").trim().length >= 30;
+}
+
+// Chave determinística do usuário: alimenta os embaralhamentos (FNV-1a + LCG).
+function userSeed(userId) {
+  return fnv1a32(`forge-v5|${String(userId || "")}`) >>> 0;
+}
 
 // Identificador local estável: usado como semente do embaralhamento
 // determinístico (FNV-1a + LCG) junto com o ID da aula. Não é dado pessoal
@@ -26,7 +77,21 @@ function makeUserId() {
 function defaultState() {
   return {
     version: CURRENT_VERSION,
+    versionString: "5.0.0",
     userId: makeUserId(),
+    created_at: Date.now(),
+    updated_at: Date.now(),
+    user_profile: {
+      name: "Estudante Mestre",
+      target_pace: "intensive",
+      daily_goal_minutes: 240
+    },
+    // Projeção didática do schema v5. Os arrays/objetos planos (done, mastery,
+    // cards, feynman...) permanecem intactos: progress é espelho aditivo.
+    progress: { tracks: {}, lessons: {} },
+    oral_exam_history: [],
+    bug_hunt_history: [],
+    crypto_lab_state: {},
     done: [],
     // Conclusão sem evidência: guardada separadamente, sem selo de domínio.
     declared: [],
@@ -107,6 +172,18 @@ function defaultState() {
       pwaVersion: 6,
       migratedAt: null
     },
+    // FORGE 4.0 — espaços aditivos do schema v5. Nada do v4 é reestruturado.
+    forge4: {
+      migratedAt: null,
+      sourceVersion: null,
+      sourceChecksum: null,
+      userSeed: null,
+      pwaVersion: 7,
+      pedagogy: "7-degraus",
+      masteryInvariant: { minScore: 8, minFeynmanChars: 30 },
+      cryptoVersion: 1,
+      booksIndex: null
+    },
     simLogs: []
   };
 }
@@ -162,6 +239,27 @@ function normalizeState(raw) {
   const future = Number(raw && raw.version) > CURRENT_VERSION;
   const out = { ...fresh, ...(raw || {}), version: future ? Number(raw.version) : CURRENT_VERSION };
   if (typeof out.userId !== "string" || !out.userId) out.userId = fresh.userId;
+  // FORGE 4.0: normalização aditiva — nenhum campo v4 é sobrescrito.
+  if (!Number.isFinite(Number(out.created_at))) out.created_at = fresh.created_at;
+  if (!Number.isFinite(Number(out.updated_at))) out.updated_at = Date.now();
+  out.versionString = "5.0.0";
+  const profileRaw = out.user_profile && typeof out.user_profile === "object" && !Array.isArray(out.user_profile) ? out.user_profile : {};
+  out.user_profile = { ...fresh.user_profile, ...profileRaw };
+  const progressRaw = out.progress && typeof out.progress === "object" && !Array.isArray(out.progress) ? out.progress : {};
+  out.progress = { ...fresh.progress, ...progressRaw };
+  for (const key of ["tracks", "lessons"]) {
+    const bucket = out.progress[key];
+    out.progress[key] = bucket && typeof bucket === "object" && !Array.isArray(bucket) ? bucket : {};
+  }
+  for (const key of ["oral_exam_history", "bug_hunt_history"]) {
+    out[key] = Array.isArray(out[key]) ? out[key].slice(-200) : [];
+  }
+  const cryptoRaw = out.crypto_lab_state && typeof out.crypto_lab_state === "object" && !Array.isArray(out.crypto_lab_state) ? out.crypto_lab_state : {};
+  out.crypto_lab_state = cryptoRaw;
+  const forge4Raw = out.forge4 && typeof out.forge4 === "object" && !Array.isArray(out.forge4) ? out.forge4 : {};
+  out.forge4 = { ...fresh.forge4, ...forge4Raw };
+  out.forge4.masteryInvariant = { ...fresh.forge4.masteryInvariant, ...(forge4Raw.masteryInvariant || {}) };
+  if (!Number.isFinite(Number(out.forge4.userSeed))) out.forge4.userSeed = userSeed(out.userId);
   out.settings = { ...fresh.settings, ...((raw && raw.settings) || {}) };
   out.focus = { ...fresh.focus, ...((raw && raw.focus) || {}) };
   out.plan = { ...fresh.plan, ...((raw && raw.plan) || {}) };
@@ -221,26 +319,30 @@ function normalizeState(raw) {
 
 function loadState() {
   let stored = null;
+  let storedKey = null;
   try {
+    // v5 é a fonte canônica. Se ainda não existir, as chaves v4/v3/v2 são
+    // lidas em ordem e migradas — nenhuma delas é apagada.
     stored = localStorage.getItem(STORE_KEY);
+    if (stored) storedKey = STORE_KEY;
     if (!stored) {
-      // Primeira execução do FORGE 3.0: procura estados v2/v3 antes de criar um
-      // estado novo. As chaves antigas nunca são apagadas — apenas copiadas.
       for (const legacyKey of LEGACY_KEYS) {
         const legacyRaw = localStorage.getItem(legacyKey);
         if (legacyRaw) {
           stored = legacyRaw;
+          storedKey = legacyKey;
           break;
         }
       }
     }
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Number(parsed.version) > CURRENT_VERSION) {
+      const version = Number(parsed.version);
+      if (version > CURRENT_VERSION) {
         // Estado de versão futura: usar sem rebaixar nem sobrescrever.
         state = normalizeState(parsed);
-      } else if (parsed.version !== CURRENT_VERSION) {
-        state = migrateState(parsed);
+      } else if (version !== CURRENT_VERSION) {
+        state = migrateState(parsed, false, stored, storedKey);
       } else {
         state = normalizeState(parsed);
       }
@@ -251,10 +353,38 @@ function loadState() {
     console.error("Erro ao carregar estado:", e);
     // Preserva a string corrompida antes de qualquer substituição em memória.
     backupState(stored);
+    backupRawSnapshot(stored, storedKey);
     state = defaultState();
   }
   updateStreak();
   return state;
+}
+
+// Backup com timestamp por versão de origem (v4→v5 conforme a especificação).
+function backupRawSnapshot(raw, sourceKey = V4_KEY) {
+  if (!raw) return null;
+  const version = sourceKey === V4_KEY ? 4 : CURRENT_VERSION;
+  const key = `${V4_BACKUP_PREFIX}${backupTimestamp()}`;
+  const parsed = safeParse(raw);
+  try {
+    localStorage.setItem(key, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      from: `forge.study.v${version}`,
+      to: STORE_KEY,
+      version,
+      checksum: checksumState(parsed),
+      algorithm: "FNV-1a-32",
+      state: typeof parsed === "string" ? raw : parsed
+    }));
+    return key;
+  } catch (e) {
+    console.warn("Não foi possível criar backup versionado:", e);
+    return null;
+  }
+}
+
+function safeParse(raw) {
+  try { return JSON.parse(raw); } catch (e) { return raw; }
 }
 
 // Guarda o estado original antes de qualquer migração. Nunca apaga um backup anterior
@@ -276,8 +406,26 @@ function backupState(raw) {
   }
 }
 
-function migrateState(oldState, skipBackup = false) {
-  if (!skipBackup) backupState(oldState);
+// v4 → v5: transformação aditiva, com backup antes de qualquer mutação e
+// verificação da gravação. Retorna o estado migrado; em caso de falha de
+// integridade, o payload original é restaurado e o erro é sinalizado.
+function migrateV4ToV5(oldState, rawText = null, skipBackup = false) {
+  const sourceVersion = Number(oldState?.version) || 4;
+  const raw = rawText || JSON.stringify(oldState);
+  const checksum = checksumState(oldState);
+  const declared = oldState?.forge4?.sourceChecksum || oldState?.forge4?.migration?.sourceChecksum || null;
+  if (declared && declared !== checksum) {
+    const err = new Error(`Checksum divergente (${declared} ≠ ${checksum}): migração abortada`);
+    err.code = "CHECKSUM_MISMATCH";
+    err.declared = declared;
+    err.checksum = checksum;
+    throw err;
+  }
+  let backupKey = null;
+  if (!skipBackup) {
+    backupState(oldState);
+    backupKey = backupRawSnapshot(raw, V4_KEY);
+  }
   const migrated = normalizeState(oldState);
   if (!migrated.placementDone) migrated.placementDone = false;
   if (!Array.isArray(migrated.plan.enrolled)) migrated.plan.enrolled = [];
@@ -286,22 +434,156 @@ function migrateState(oldState, skipBackup = false) {
   if (!migrated.assessments || typeof migrated.assessments !== "object") migrated.assessments = {};
   if (!migrated.focus || typeof migrated.focus !== "object") migrated.focus = defaultState().focus;
   if (!migrated.focus.goals || typeof migrated.focus.goals !== "object") migrated.focus.goals = defaultState().focus.goals;
-  // v2/v3 → v4: mudanças aditivas (forge3, simLogs, tema escuro padrão).
-  // Todos os dados antigos (done, mistakes, xp, labDone, plan, focus...) são mantidos.
   if (!migrated.forge3.migratedAt) migrated.forge3.migratedAt = new Date().toISOString();
+
+  migrated.version = 5;
+  migrated.versionString = "5.0.0";
+  migrated.updated_at = Date.now();
+  migrated.forge4 = {
+    ...migrated.forge4,
+    migratedAt: new Date().toISOString(),
+    sourceVersion,
+    sourceChecksum: checksum,
+    userSeed: userSeed(migrated.userId),
+    pwaVersion: 7
+  };
+  rebuildProgress(migrated);
+
+  // Atomicidade: backup já gravado; a escrita v5 só é confirmada após leitura.
+  const written = saveState(migrated);
+  let verified = false;
+  if (written) {
+    try {
+      const check = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      verified = Boolean(check && check.version === 5 && check.userId === migrated.userId &&
+        check.forge4?.sourceChecksum === checksum && check.done?.length === (migrated.done || []).length);
+    } catch (e) { verified = false; }
+  }
+  if (!verified) {
+    // Rollback: devolve o payload v4 original e mantém o backup intacto.
+    try { localStorage.setItem(V4_KEY, raw); } catch (e) { /* sem espaço: backup preservado */ }
+    state = normalizeState(safeParse(raw));
+    const err = new Error("Falha na verificação pós-gravação da migração v5");
+    err.code = "MIGRATION_WRITE_FAILED";
+    throw err;
+  }
+  try {
+    localStorage.setItem(MIGRATION_KEY, JSON.stringify({
+      at: migrated.forge4.migratedAt,
+      from: sourceVersion,
+      to: 5,
+      backupKey,
+      checksum,
+      userId: migrated.userId,
+      status: "complete"
+    }));
+  } catch (e) { console.warn("Marcador de migração não gravado:", e); }
+  return migrated;
+}
+
+// v2/v3 → v5: mesma filosofia aditiva; nenhum campo antigo é removido.
+function migrateState(oldState, skipBackup = false, rawText = null, sourceKey = null) {
+  const sourceVersion = Number(oldState?.version) || 1;
+  if (sourceVersion === 4) return migrateV4ToV5(oldState, rawText, skipBackup);
+  if (!skipBackup) {
+    backupState(oldState);
+    backupRawSnapshot(rawText || JSON.stringify(oldState), sourceKey || `forge.study.v${sourceVersion}`);
+  }
+  const migrated = normalizeState(oldState);
+  if (!migrated.placementDone) migrated.placementDone = false;
+  if (!Array.isArray(migrated.plan.enrolled)) migrated.plan.enrolled = [];
+  if (!Array.isArray(migrated.plan.custom)) migrated.plan.custom = [];
+  if (!migrated.plan.milestones || typeof migrated.plan.milestones !== "object") migrated.plan.milestones = {};
+  if (!migrated.assessments || typeof migrated.assessments !== "object") migrated.assessments = {};
+  if (!migrated.focus || typeof migrated.focus !== "object") migrated.focus = defaultState().focus;
+  if (!migrated.focus.goals || typeof migrated.focus.goals !== "object") migrated.focus.goals = defaultState().focus.goals;
+  if (!migrated.forge3.migratedAt) migrated.forge3.migratedAt = new Date().toISOString();
+  migrated.version = 5;
+  migrated.versionString = "5.0.0";
+  migrated.updated_at = Date.now();
+  migrated.forge4 = {
+    ...migrated.forge4,
+    migratedAt: new Date().toISOString(),
+    sourceVersion,
+    sourceChecksum: checksumState(oldState),
+    userSeed: userSeed(migrated.userId),
+    pwaVersion: 7
+  };
+  rebuildProgress(migrated);
   saveState(migrated);
   return migrated;
 }
 
-// Idempotente: garante que o namespace v4 exista e esteja normalizado mesmo
+// Projeta o progresso plano (v4) no formato didático do schema v5 sem apagar
+// nenhum dado: mastery/done/cards/feynman continuam sendo a fonte canônica.
+function rebuildProgress(target = state) {
+  if (!target || typeof target !== "object") return null;
+  const tracks = target.progress?.tracks && typeof target.progress.tracks === "object" ? { ...target.progress.tracks } : {};
+  const lessons = target.progress?.lessons && typeof target.progress.lessons === "object" ? { ...target.progress.lessons } : {};
+  const mastery = target.mastery && typeof target.mastery === "object" ? target.mastery : {};
+
+  for (const [id, raw] of Object.entries(mastery)) {
+    const m = raw && typeof raw === "object" ? raw : { mastered: Boolean(raw) };
+    const entry = { ...(lessons[id] || {}) };
+    const score = Number(m.score ?? m.grade ?? m.nota ?? entry.score);
+    const feynman = String(m.feynman_synthesis ?? m.feynman ?? target.feynman?.[id] ?? entry.feynman_synthesis ?? "");
+    if (Number.isFinite(score)) entry.score = score;
+    if (feynman) entry.feynman_synthesis = feynman;
+    if (m.last_reviewed_at) entry.last_reviewed_at = m.last_reviewed_at;
+    const card = m.sm2_card || target.cards?.[id] || entry.sm2_card;
+    if (card && typeof card === "object") {
+      entry.sm2_card = {
+        interval: Number(card.interval) || 0,
+        repetition: Number(card.repetition) || 0,
+        efactor: Number(card.efactor) || 2.5,
+        next_review: Number(card.next_review) || 0
+      };
+    }
+    const invariant = Number.isFinite(score) ? isLessonMastered(score, feynman) : false;
+    entry.mastered = Boolean(m.mastered || m.dominada || entry.mastered || invariant);
+    lessons[id] = entry;
+  }
+
+  const ids = new Set([...Object.keys(lessons), ...(Array.isArray(target.done) ? target.done : []), ...Object.keys(target.cards || {})]);
+  for (const id of ids) {
+    const entry = { ...(lessons[id] || {}) };
+    const card = target.cards?.[id];
+    if (card && typeof card === "object" && !entry.sm2_card) {
+      entry.sm2_card = {
+        interval: Number(card.interval) || 0,
+        repetition: Number(card.repetition) || 0,
+        efactor: Number(card.efactor) || 2.5,
+        next_review: Number(card.next_review) || 0
+      };
+    }
+    const feynman = String(target.feynman?.[id] ?? entry.feynman_synthesis ?? "");
+    if (feynman && !entry.feynman_synthesis) entry.feynman_synthesis = feynman;
+    if (!("mastered" in entry)) entry.mastered = false;
+    lessons[id] = entry;
+  }
+
+  const trails = target.forge3?.trails && typeof target.forge3.trails === "object" ? target.forge3.trails : {};
+  for (const [key, val] of Object.entries(trails)) {
+    if (!tracks[key]) {
+      tracks[key] = {
+        status: (val && val.status) || "in_progress",
+        mastery_percentage: Number(val?.mastery_percentage) || 0
+      };
+    }
+  }
+  target.progress = { ...(target.progress || {}), tracks, lessons };
+  return target.progress;
+}
+
+// Idempotente: garante que o namespace v5 exista e esteja normalizado mesmo
 // quando o app.js é carregado depois do storage.js. Retorna o estado atual.
-function ensureV4() {
+function ensureV5() {
   if (!state) return loadState();
   // Verifica o que já estava persistido antes de normalizar: um userId recém
   // gerado precisa ser gravado uma única vez para que a semente seja estável.
   let persistedUserId = null;
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    const raw = localStorage.getItem(STORE_KEY) || localStorage.getItem(V4_KEY);
     if (raw) persistedUserId = JSON.parse(raw).userId;
   } catch (e) { persistedUserId = null; }
   if (Number(state.version) !== CURRENT_VERSION) {
@@ -309,13 +591,24 @@ function ensureV4() {
   } else {
     state = normalizeState(state);
   }
+  if (!state.forge4?.userSeed) state.forge4 = { ...(state.forge4 || {}), userSeed: userSeed(state.userId) };
   if (!persistedUserId) saveState(state);
   return state;
 }
 
+// Alias histórico: módulos externos que chamavam ensureV4 continuam funcionando.
+const ensureV4 = ensureV5;
+
 // Ponto de entrada público usado no topo de app.js (Fase 2).
 function migrateStorage() {
-  return ensureV4();
+  return ensureV5();
+}
+
+function getMigrationInfo() {
+  try {
+    const raw = localStorage.getItem(MIGRATION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
 }
 
 function saveState(newState = state) {
@@ -609,6 +902,55 @@ function getPlacementResult() {
   return state.placementResult;
 }
 
+/* ---------- FORGE 4.0 — históricos e estado dos novos módulos ---------- */
+
+function recordOralExam(entry) {
+  const s = getState();
+  if (!Array.isArray(s.oral_exam_history)) s.oral_exam_history = [];
+  const record = { at: new Date().toISOString(), ...(entry || {}) };
+  s.oral_exam_history.push(record);
+  s.oral_exam_history = s.oral_exam_history.slice(-200);
+  s.updated_at = Date.now();
+  saveState(s);
+  return record;
+}
+
+function getOralExamStats() {
+  const history = getState().oral_exam_history || [];
+  const scored = history.filter(h => Number.isFinite(Number(h.score)));
+  const avg = scored.length
+    ? scored.reduce((sum, h) => sum + Number(h.score), 0) / scored.length
+    : 0;
+  return { total: history.length, scored: scored.length, avg: Number(avg.toFixed(2)), consecutivePasses: (() => {
+    let n = 0;
+    for (let i = scored.length - 1; i >= 0 && Number(scored[i].score) >= 8; i--) n++;
+    return n;
+  })() };
+}
+
+function recordBugHunt(entry) {
+  const s = getState();
+  if (!Array.isArray(s.bug_hunt_history)) s.bug_hunt_history = [];
+  const record = { at: new Date().toISOString(), ...(entry || {}) };
+  s.bug_hunt_history.push(record);
+  s.bug_hunt_history = s.bug_hunt_history.slice(-200);
+  s.updated_at = Date.now();
+  saveState(s);
+  return record;
+}
+
+function updateCryptoLabState(patch) {
+  const s = getState();
+  s.crypto_lab_state = { ...(s.crypto_lab_state || {}), ...(patch || {}) };
+  s.updated_at = Date.now();
+  saveState(s);
+  return s.crypto_lab_state;
+}
+
+function getCryptoLabState() {
+  return getState().crypto_lab_state || {};
+}
+
 /* ---------- Espaço de estudo guiado (schema v3, aditivo) ---------- */
 
 function getStudyState() {
@@ -675,6 +1017,15 @@ window.Storage = {
   logSimulator,
   migrate: migrateStorage,
   ensureV4,
+  ensureV5,
+  fnv1a32,
+  stableStringify,
+  checksumState,
+  userSeed,
+  isLessonMastered,
+  rebuildProgress,
+  migrateV4ToV5,
+  getMigrationInfo,
   save: saveState,
   updateStreak,
   get: getState,
@@ -707,6 +1058,11 @@ window.Storage = {
   getMentalMathStats,
   setPlacementResult,
   getPlacementResult,
+  recordOralExam,
+  getOralExamStats,
+  recordBugHunt,
+  updateCryptoLabState,
+  getCryptoLabState,
   getStudyState,
   getStudySession,
   saveStudySession,

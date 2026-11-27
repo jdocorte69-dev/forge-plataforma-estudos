@@ -207,6 +207,10 @@ function render() {
     library: "Biblioteca",
     richlib: "Biblioteca rica",
     books: "Livros em PDF",
+    summaries: "Livros & Resumos",
+    oral: "Prova oral",
+    bugs: "Caça-bugs",
+    crypto: "Laboratório crypto",
     book: "Biblioteca · Detalhe do livro",
     reader: "Leitor PDF interno",
     questions: "Questões do livro",
@@ -248,6 +252,17 @@ function render() {
     library: libraryPage,
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
     books: v => { if (typeof BooksPage !== "undefined") BooksPage.renderPage(v); },
+    summaries: v => { if (typeof SummariesPage !== "undefined") SummariesPage.renderPage(v); else v.innerHTML = '<p class="muted">Resumos indisponíveis.</p>'; },
+    oral: v => { if (typeof OralSim !== "undefined") OralSim.renderPage(v); else v.innerHTML = '<p class="muted">Módulo de prova oral indisponível.</p>'; },
+    bugs: v => {
+      v.innerHTML = `<div class="eyebrow">Depuração deliberada</div><h1 class="h1">Caça-bugs diário</h1>
+        <p class="sub">Um defeito por dia. Reproduza, hipotetize e só depois abra a autópsia.</p><div id="bugsRoot"></div>`;
+      const holder = document.getElementById("bugsRoot");
+      if (holder && typeof ForgeWidgets4 !== "undefined") {
+        holder.innerHTML = ForgeWidgets4.bugHuntHTML();
+      }
+    },
+    crypto: v => { if (typeof CryptoSim !== "undefined") CryptoSim.renderPage(v); else v.innerHTML = '<p class="muted">Módulo de criptografia indisponível.</p>'; },
     book: v => { if (typeof BookReader !== "undefined") BookReader.renderDetail(v); else v.innerHTML = '<p class="muted">Biblioteca indisponível.</p>'; },
     reader: v => { if (typeof BookReader !== "undefined") BookReader.renderReader(v); else v.innerHTML = '<p class="muted">Leitor indisponível.</p>'; },
     questions: v => { if (typeof BookReader !== "undefined") BookReader.renderQuestions(v); else v.innerHTML = '<p class="muted">Questões indisponíveis.</p>'; },
@@ -258,6 +273,8 @@ function render() {
   };
 
   if (renderers[page]) renderers[page](v);
+  if (page !== "oral" && typeof OralSim !== "undefined") OralSim.stop();
+  if (page === "crypto" && typeof CryptoSim !== "undefined") CryptoSim.refresh();
   if (page === "lab") {
     if (typeof LogicSim !== "undefined") LogicSim.mount();
     if (typeof CpuSim !== "undefined") CpuSim.mount();
@@ -388,6 +405,7 @@ ${typeof Mastery !== "undefined" ? Mastery.panelHTML() : ""}
   <canvas id="progressChart" role="img" aria-label="Gráfico de progresso percentual por trilha" style="width:100%;height:260px"></canvas>
 </div>`);
   if (typeof refreshCharts === "function") setTimeout(refreshCharts, 0);
+  if (typeof ForgeWidgets4 !== "undefined") ForgeWidgets4.mount(v);
 }
 
 /* Atualiza apenas os contadores do painel depois que os módulos avançados
@@ -773,6 +791,8 @@ const ForgeNav = {
   },
   more() {
     const pages = [
+      ["oral", "Prova oral"], ["bugs", "Caça-bugs"], ["crypto", "Laboratório crypto"],
+      ["summaries", "Livros & Resumos"],
       ["review", "◷ Revisão espaçada"], ["mistakes", "✎ Caderno de erros"],
       ["feynman", "◎ Técnica Feynman"], ["study", "✦ Aprenda a estudar"],
       ["domain", "◈ Mapa de domínio"], ["library", "▣ Biblioteca"],
@@ -1743,7 +1763,15 @@ const DEFERRED_SCRIPTS = [
   "js/data-c-advanced.js",
   "js/sim-logic.js",
   "js/sim-cpu.js",
-  "js/sim-ai.js"
+  "js/sim-ai.js",
+  /* FORGE 4.0 — widgets e novos simuladores (fora do caminho crítico). */
+  "js/dashboard-widgets.js",
+  "js/sim-oral.js",
+  "js/sim-crypto.js",
+  /* ETAPA 4 — acervo: dados gerados, índice de busca e leitor. */
+  "js/data-summaries-index.js",
+  "js/books-summaries-index.js",
+  "js/summaries-page.js"
 ];
 
 function loadDeferredScripts(list, index = 0) {
@@ -1753,6 +1781,9 @@ function loadDeferredScripts(list, index = 0) {
        reconstruir a página (isso geraria outra tarefa longa). */
     lessons = buildAllLessons();
     refreshDashboardCounts();
+    if (page === "dashboard" && typeof ForgeWidgets4 !== "undefined") {
+      ForgeWidgets4.mount(document.getElementById("view"));
+    }
     if (typeof Gamification !== "undefined") Gamification.afterRender();
     if (typeof Features !== "undefined") Features.updateTimerUI();
     renderMath();

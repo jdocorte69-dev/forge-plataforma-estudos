@@ -1,6 +1,8 @@
 /* Forge — service worker para uso offline */
-/* FORGE 3.0: versão alinhada à especificação do PWA v6. */
-const VERSION = "forge-v6";
+/* FORGE 4.0: cache-first + stale-while-revalidate, manifesto completo. */
+importScripts("./sw-summaries.js");
+
+const VERSION = "forge-v7";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -48,6 +50,7 @@ const APP_SHELL = [
   "./js/sim-cpu.js",
   "./js/sim-ai.js",
   "./js/storage.js",
+  "./js/utils-math.js",
   "./js/exercises.js",
   "./js/app.js",
   "./js/gamification.js",
@@ -63,15 +66,28 @@ const APP_SHELL = [
   "./js/focus.js",
   "./js/plan.js",
   "./js/labs-extra.js",
+  /* FORGE 4.0 — command center e novos simuladores. */
+  "./js/dashboard-widgets.js",
+  "./js/sim-oral.js",
+  "./js/sim-crypto.js",
+  /* ETAPA 4 — acervo de resumos: índice gerado, busca e leitor. */
+  "./js/data-summaries-index.js",
+  "./js/books-summaries-index.js",
+  "./js/summaries-page.js",
+  /* KaTeX permanece local e no caminho de precache (zero CDN). */
   "./vendor/katex/katex.min.css",
   "./vendor/katex/katex.min.js",
   "./vendor/katex/contrib/auto-render.min.js"
 ];
 
+const PRECACHE = APP_SHELL.concat(
+  Array.isArray(SUMMARY_MANIFEST) ? SUMMARY_MANIFEST : []
+);
+
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE).then(cache =>
-      Promise.allSettled(APP_SHELL.map(url => cache.add(url)))
+      Promise.allSettled(PRECACHE.map(url => cache.add(url)))
     ).then(() => self.skipWaiting())
   );
 });
@@ -88,40 +104,42 @@ self.addEventListener("message", event => {
   if (event.data === "skipWaiting") self.skipWaiting();
 });
 
+/* Cache-first com stale-while-revalidate: a resposta em cache responde
+   imediatamente; a rede atualiza o cache em segundo plano. Sempre local,
+   sem serviços externos e sem bloquear o primeiro paint. */
+function revalidate(req, cached, cacheKey) {
+  return fetch(req).then(res => {
+    if (res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then(cache => cache.put(cacheKey || req, copy));
+    }
+    return res;
+  }).catch(() => cached);
+}
+
+function swr(req, event, cacheKey) {
+  return caches.match(cacheKey || req).then(cached => {
+    const network = revalidate(req, cached, cacheKey);
+    if (event && typeof event.waitUntil === "function") {
+      event.waitUntil(network.then(() => undefined).catch(() => undefined));
+    }
+    return cached || network;
+  });
+}
+
 self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
 
   const url = new URL(req.url);
-  // FORGE 3.0 funciona sem serviços externos: apenas arquivos da própria origem.
+  /* FORGE 4.0 funciona sem serviços externos: apenas arquivos da própria origem. */
   if (url.origin !== self.location.origin) return;
 
-  // Navegação: rede primeiro, fallback para o shell em cache.
+  /* Navegação: cache-first, revalidando o shell em segundo plano. */
   if (req.mode === "navigate") {
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then(c => c.put("./index.html", copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match("./index.html"))
-    );
+    event.respondWith(swr(req, event, "./index.html"));
     return;
   }
 
-  // Arquivos locais: rede primeiro para refletir edições, fallback offline.
-  event.respondWith(
-    fetch(req)
-      .then(res => {
-        if (res.ok) {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
-        }
-        return res;
-      })
-      .catch(() => caches.match(req))
-  );
+  event.respondWith(swr(req, event));
 });

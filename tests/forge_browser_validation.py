@@ -98,10 +98,10 @@ with sync_playwright() as pw:
 
     def c_initial():
         n = page.locator("#nav button[data-page]").count()
-        assert n == 17, f"nav={n}"
+        assert n == 21, f"nav={n}"
         return f"nav={n}"
 
-    check("carregamento inicial e 17 páginas na navegação", c_initial)
+    check("carregamento inicial e 21 páginas na navegação", c_initial)
 
     def c_study():
         page.evaluate("goToPage('study')")
@@ -418,12 +418,12 @@ with sync_playwright() as pw:
 
     def c_router():
         keys = page.evaluate("Array.from(document.querySelectorAll('#nav button[data-page]')).map(b=>b.dataset.page)")
-        assert len(keys) == 17, keys
+        assert len(keys) == 21, keys
         for key in keys:
             page.evaluate("k => goToPage(k)", key)
             title = page.locator("#pageTitle").inner_text().strip()
             assert title, f"página sem título: {key}"
-        return "17/17 páginas renderizaram"
+        return "21/21 páginas renderizaram"
 
     check("roteador: todas as páginas existentes", c_router)
 
@@ -634,7 +634,7 @@ with sync_playwright() as pw:
         p2 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
         p2.goto(BASE, wait_until="domcontentloaded")
         wait_ready(p2)
-        p2.evaluate("localStorage.setItem('forge.study.v4', '{broken')")
+        p2.evaluate("localStorage.setItem('forge.study.v5', '{broken')")
         p2.reload(wait_until="domcontentloaded")
         wait_ready(p2)
         backup = p2.evaluate("localStorage.getItem('forge.study.v2.lastBackup')")
@@ -679,12 +679,257 @@ with sync_playwright() as pw:
             backup: !!localStorage.getItem('forge.study.v2.lastBackup')
           };
         }""")
-        assert r["version"] == 4 and r["done"] == ["importado"] and r["xp"] == 555, r
+        assert r["version"] == 5 and r["done"] == ["importado"] and r["xp"] == 555, r
         assert r["goal"] == "meta" and r["backup"] is True, r
-        assert "v2 → v4" in r["toast"], r
-        return "v2 migrada para v4 com backup e aviso"
+        assert "v2 → v5" in r["toast"], r
+        return "v2 migrada para v5 com backup e aviso"
 
     check("IMPORTAÇÃO: versão compatível ainda migra com backup", c_import_valid_migration)
+
+    def c_v4_to_v5_migration():
+        p3 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
+        p3.goto(BASE, wait_until="domcontentloaded")
+        wait_ready(p3)
+        p3.evaluate("""() => {
+          localStorage.clear();
+          localStorage.setItem('forge.study.v4', JSON.stringify({
+            version: 4, userId: 'usr_teste_v4', done: ['aula-1'], xp: 321,
+            mastery: { 'aula-1': { score: 9, mastered: true } },
+            feynman: { 'aula-1': 'Sintese com mais de trinta caracteres validos nesta frase.' },
+            cards: { 'aula-1': { interval: 6, repetition: 2, efactor: 2.5, next_review: 1709718400000 } }
+          }));
+        }""")
+        p3.reload(wait_until="domcontentloaded")
+        wait_ready(p3)
+        r = p3.evaluate("""() => {
+          const s = Storage.get();
+          const keys = Object.keys(localStorage).filter(k => k.startsWith('forge.study.v4.bak_'));
+          const marker = JSON.parse(localStorage.getItem('forge.study.v5.migration') || 'null');
+          const backup = keys.length ? JSON.parse(localStorage.getItem(keys[0])) : null;
+          return {
+            version: s.version, userId: s.userId, done: s.done, xp: s.xp,
+            sourceVersion: s.forge4 && s.forge4.sourceVersion,
+            checksum: s.forge4 && s.forge4.sourceChecksum,
+            lessonScore: s.progress.lessons['aula-1'] && s.progress.lessons['aula-1'].score,
+            backupCount: keys.length,
+            backupChecksum: backup && backup.checksum,
+            backupAlgorithm: backup && backup.algorithm,
+            markerStatus: marker && marker.status,
+            v4Preserved: !!localStorage.getItem('forge.study.v4')
+          };
+        }""")
+        assert r["version"] == 5 and r["userId"] == "usr_teste_v4", r
+        assert r["done"] == ["aula-1"] and r["xp"] == 321 and r["lessonScore"] == 9, r
+        assert r["sourceVersion"] == 4 and r["checksum"] == r["backupChecksum"], r
+        assert r["backupAlgorithm"] == "FNV-1a-32" and r["backupCount"] == 1, r
+        assert r["markerStatus"] == "complete" and r["v4Preserved"] is True, r
+        p3.context.close()
+        return "v4→v5 atômica: backup, checksum, userId e progresso preservados"
+
+    check("MIGRAÇÃO: v4→v5 atômica com backup e checksum", c_v4_to_v5_migration)
+
+    def c_forge4_widgets():
+        page.evaluate("goToPage('dashboard')")
+        r = page.evaluate("""() => ({
+          heroes: document.querySelectorAll('#forge4Widgets .forge-hero').length,
+          radar: document.querySelectorAll('#forge4Widgets .radar-row').length,
+          nodes: document.querySelectorAll('#forge4Widgets .constellation svg circle').length,
+          cells: document.querySelectorAll('#forge4Widgets .heatmap svg rect').length,
+          bugs: document.querySelectorAll('#forge4Widgets #bugHuntCard').length,
+          cta: (document.querySelector('#forge4Widgets .forge-hero__actions button') || {}).textContent || '',
+          progress: document.querySelector('#forge4Widgets [role=progressbar]')?.getAttribute('aria-valuenow')
+        })""")
+        assert r["heroes"] == 1 and r["bugs"] == 1, r
+        assert r["cells"] == 364 and r["nodes"] > 0 and r["radar"] >= 0, r
+        assert r["cta"].strip() and r["progress"] is not None, r
+        return f"hero, radar, {r['nodes']} nós, 364 células e caça-bugs presentes"
+
+    check("FORGE 4.0: widgets do command center no painel", c_forge4_widgets)
+
+    def c_forge4_oral():
+        page.evaluate("goToPage('oral')")
+        n = page.locator("#oralRoot .oral-topic").count()
+        assert 3 <= n <= 5, n
+        page.get_by_role("button", name="Iniciar prova").click()
+        assert page.locator("#oralTimer").count() == 1
+        texto = ("Define o conceito central e apresenta um exemplo concreto. "
+                 "Justifica cada passo da derivação com rigor e trata um limite conhecido. "
+                 "Conclui com uma síntese curta, usando notação consistente em toda a resposta.")
+        page.locator("#oralAnswer").fill(texto)
+        for ident in ["exposicao-0", "exposicao-1", "exposicao-2", "raciocinio-0",
+                      "raciocinio-1", "raciocinio-2", "comunicacao-0", "comunicacao-1"]:
+            page.locator(f"#oral-{ident}").check()
+        page.get_by_role("button", name="Finalizar e avaliar").click()
+        r = page.evaluate("""() => ({
+          total: Storage.get().oral_exam_history.length,
+          last: Storage.get().oral_exam_history.slice(-1)[0] || {},
+          shown: document.querySelector('#oralResultTitle')?.textContent || ''
+        })""")
+        assert r["total"] >= 1 and r["last"]["score"] >= 8.0 and r["last"]["passed"] is True, r
+        assert "Aprovado" in r["shown"] and len(r["last"]["topics"]) >= 3, r
+        return f"prova oral: nota {r['last']['score']}, {len(r['last']['topics'])} tópicos registrados"
+
+    check("FORGE 4.0: prova oral com rubrica e histórico persistido", c_forge4_oral)
+
+    def c_forge4_crypto():
+        page.evaluate("goToPage('crypto')")
+        assert page.locator("#cryptoCanvas").count() == 1
+        page.evaluate("CryptoSim.setMode('lcg')")
+        page.evaluate("CryptoSim.setParam('memoryKiB',1024); CryptoSim.setParam('iterations',3)")
+        r = page.evaluate("""() => ({
+          source: (CryptoSim.state.lastRun || {}).source || '',
+          unique: Number(document.getElementById('cryptoUnique').textContent),
+          entropy: Number(document.getElementById('cryptoEntropy').textContent),
+          fields: document.querySelectorAll('#cryptoVault .crypto-byte').length,
+          total: document.getElementById('cryptoTotal').textContent,
+          saved: Storage.get().crypto_lab_state.mode,
+          mem: Storage.get().crypto_lab_state.memoryKiB
+        })""")
+        assert "LCG" in r["source"] and 1 < r["unique"] <= 64, r
+        assert r["entropy"] > 0 and r["fields"] == 6 and "Total:" in r["total"], r
+        assert r["saved"] == "lcg" and r["mem"] == 1024, r
+        return f"crypto: {r['unique']} bytes distintos, H={r['entropy']}, 6 campos no cofre"
+
+    check("FORGE 4.0: laboratório crypto com entropia e cofre", c_forge4_crypto)
+
+    def c_forge4_bugs():
+        page.evaluate("goToPage('bugs')")
+        fault = page.evaluate("ForgeWidgets4.dailyBug().fault")
+        page.locator(f'input[name="bugLine"][value="{fault}"]').check()
+        page.locator("#bugJustify").fill("A linha indicada não valida o limite e produz comportamento indefinido.")
+        page.locator("#bugHuntCard button[type=submit]").click()
+        r = page.evaluate("""() => ({
+          history: Storage.get().bug_hunt_history.length,
+          last: Storage.get().bug_hunt_history.slice(-1)[0] || {},
+          autopsy: !document.getElementById('bugAutopsy').hidden,
+          faultMarked: document.querySelectorAll('#bugAutopsy [data-line=fault]').length
+        })""")
+        assert r["history"] >= 1 and r["last"]["correct"] is True, r
+        assert r["autopsy"] and r["faultMarked"] == 1, r
+        return "caça-bugs: diagnóstico correto, autópsia e histórico persistidos"
+
+    check("FORGE 4.0: caça-bugs diário com autópsia", c_forge4_bugs)
+
+    def c_forge4_summaries_index():
+        page.set_viewport_size({"width": 1440, "height": 900})
+        page.evaluate("goToPage('summaries')")
+        r = page.evaluate("""() => ({
+          title: document.getElementById('pageTitle').textContent.trim(),
+          total: BooksSummariesIndex.stats().summaries,
+          books: document.querySelectorAll('#summaryIndex .summary-group').length,
+          links: document.querySelectorAll('#summaryIndex .summary-link').length,
+          status: document.querySelector('[role=status]')?.textContent || ''
+        })""")
+        assert r["title"] == "Livros & Resumos", r
+        assert r["total"] == 233 and 1 <= r["books"] <= 13 and r["links"] == 40, r
+        assert "233 resultados" in r["status"], r
+        page.evaluate("SummariesPage.setQuery('combinatoria')")
+        filtrado = page.evaluate("""() => ({
+          status: document.querySelector('[role=status]')?.textContent || '',
+          groups: document.querySelectorAll('#summaryIndex .summary-group').length
+        })""")
+        assert "resultado" in filtrado["status"] and filtrado["groups"] >= 1, filtrado
+        page.evaluate("SummariesPage.setQuery('')")
+        page.set_viewport_size({"width": 390, "height": 900})
+        page.wait_for_timeout(120)
+        overflow = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+        assert overflow <= 1, overflow
+        page.set_viewport_size({"width": 1440, "height": 900})
+        return f"233 resumos, 13 livros, filtro por busca e 390px sem overflow"
+
+    check("FORGE 4.0: aba Livros & Resumos com índice e filtros", c_forge4_summaries_index)
+
+    def c_forge4_summaries_reader():
+        page.evaluate("SummariesPage.open('FME_1/cap01')")
+        page.wait_for_selector("#summaryArticle h3", timeout=8000)
+        r = page.evaluate("""() => ({
+          toc: document.querySelectorAll('.summary-toc a').length,
+          headings: document.querySelectorAll('#summaryArticle h3').length,
+          unicode: document.getElementById('summaryArticle').textContent.includes('ℕ'),
+          scripts: document.querySelectorAll('#summaryArticle script').length,
+          font: getComputedStyle(document.getElementById('summaryArticle')).fontSize,
+          id: SummariesPage.state.currentId
+        })""")
+        assert r["toc"] >= 6 and r["headings"] >= 6 and r["unicode"], r
+        assert r["scripts"] == 0 and r["id"] == "FME_1/cap01", r
+        page.evaluate("SummariesPage.setFontSize(2)")
+        r2 = page.evaluate("getComputedStyle(document.getElementById('summaryArticle')).fontSize")
+        assert float(r2.replace("px", "")) > float(r["font"].replace("px", "")), r2
+        page.get_by_role("button", name="Marcar como lido").click()
+        saved = page.evaluate("Storage.get().forge4.summaryProgress['FME_1/cap01'] || {}")
+        assert saved.get("read") is True, saved
+        page.keyboard.press("ArrowRight")
+        nxt = page.evaluate("SummariesPage.state.currentId")
+        assert nxt == "FME_1/cap02", nxt
+        page.keyboard.press("Escape")
+        voltou = page.evaluate("""() => ({
+          id: SummariesPage.state.currentId,
+          index: document.querySelectorAll('#summaryIndex .summary-link').length
+        })""")
+        assert voltou["id"] is None and voltou["index"] == 40, voltou
+        return f"leitor com {r['toc']} seções, Unicode, teclado e progresso persistido"
+
+    check("FORGE 4.0: leitor de resumo com TOC, teclado e progresso", c_forge4_summaries_reader)
+
+    def c_forge4_offline_summaries():
+        page.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=20000)
+        cached = page.evaluate("""async () => {
+          const keys = await caches.keys();
+          const key = keys.find(k => k.startsWith('forge-v7'));
+          if (!key) return { keys, key: null, found: false, total: 0 };
+          const cache = await caches.open(key);
+          const found = Boolean(await cache.match('./saida/02_resumos_por_livro/FME_1/cap01.md'));
+          return { keys, key, found, total: (await cache.keys()).length };
+        }""")
+        assert cached["key"], cached
+        assert cached["found"] and cached["total"] >= 233, cached
+        assert all(k.startswith("forge-v7") for k in cached["keys"]), cached
+        context.set_offline(True)
+        try:
+            page.evaluate("SummariesPage.open('FME_1/cap01')")
+            page.wait_for_selector("#summaryArticle h3", timeout=10000)
+            offline = page.evaluate("""() => ({
+              headings: document.querySelectorAll('#summaryArticle h3').length,
+              unicode: document.getElementById('summaryArticle').textContent.includes('ℕ')
+            })""")
+            assert offline["headings"] >= 6 and offline["unicode"], offline
+        finally:
+            context.set_offline(False)
+            page.evaluate("SummariesPage.back()")
+        return f"cache forge-v7 com {cached['total']} entradas; resumo lido offline"
+
+    check("PWA/offline: resumo do acervo no cache forge-v7", c_forge4_offline_summaries)
+
+    def c_forge4_plan_six_phases():
+        page.evaluate("goToPage('plan')")
+        page.wait_for_selector("#planPhases .plan-phase", timeout=10000)
+        info = page.evaluate("""() => {
+          const nodes = [...document.querySelectorAll('#planPhases .plan-phase')];
+          const evidence = Plan.phaseEvidence();
+          return {
+            count: nodes.length,
+            keys: Plan.phases.map(p => p.key),
+            evidenceKeys: Object.keys(evidence),
+            labels: nodes.map(n => n.querySelector('h3').textContent.trim()),
+            checkboxes: nodes.filter(n => n.querySelector('input[type=checkbox][aria-label]')).length,
+            ctas: nodes.filter(n => n.querySelector('button')).length
+          };
+        }""")
+        assert info["count"] == 6, info
+        assert info["keys"] == ["diagnostico", "fundamentos", "pratica", "recuperacao", "exposicao", "dominio"], info
+        assert all(k in info["evidenceKeys"] for k in info["keys"]), info
+        assert info["checkboxes"] == 6 and info["ctas"] == 6, info
+        # Marcação manual persiste sem apagar evidência das aulas.
+        page.evaluate("Plan.togglePhase('fundamentos', true)")
+        persisted = page.evaluate("""() => {
+          const s = Storage.get();
+          return { flag: !!s.plan.phases.fundamentos, done: Array.isArray(s.done) ? s.done.length : 0 };
+        }""")
+        assert persisted["flag"] and persisted["done"] >= 0, persisted
+        page.evaluate("Plan.togglePhase('fundamentos', false)")
+        return f"6 fases com evidência local; marcação persistida (done={persisted['done']})"
+
+    check("FORGE 4.0: plano de estudo em 6 fases com evidência local", c_forge4_plan_six_phases)
 
     browser.close()
 

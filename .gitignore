@@ -1,12 +1,30 @@
 # Memória/sessão do agente — nunca publicar
 .curion/
 
+# Dados locais, dumps e backups de runtime (FORGE 4.0)
+/backup/
+/.bak
+/.sqlite
+/localStorage_dump.json
+
+# Processamento de livros binários e acervo bruto
+/livros/*.pdf
+/livros/*.epub
+/livros/_ocr/
+!/livros/README.md
+
+# Processamento intermediário de extração OCR/Text
+/temp_processing/
+/ocr_raw/
+
 # Arquivos de sistema e editores
 .DS_Store
 Thumbs.db
 desktop.ini
 *.swp
 *.tmp
+*.log
+.env.local
 .vscode/
 .idea/
 

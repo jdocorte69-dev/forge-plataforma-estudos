@@ -16,6 +16,24 @@
     { key: "livre", name: "Plano livre", desc: "Monte sua trilha adicionando aulas manualmente.", tracks: [] }
   ];
 
+  /* Roadmap em 6 fases: cada fase exige uma evidência verificável nos dados
+     locais. Nada é inferido de serviços externos e a marcação manual nunca
+     apaga o progresso real das aulas. */
+  const PHASES = [
+    { key: "diagnostico", name: "Diagnóstico", desc: "Descubra onde você está antes de escolher o ritmo.",
+      page: "domain", cta: "Abrir mapa de domínio" },
+    { key: "fundamentos", name: "Fundamentos", desc: "Percorra as aulas-base da trilha escolhida.",
+      page: "tracks", cta: "Abrir trilhas" },
+    { key: "pratica", name: "Prática deliberada", desc: "Exerça com laboratórios e simuladores, com erro explicado.",
+      page: "lab", cta: "Abrir laboratórios" },
+    { key: "recuperacao", name: "Recuperação espaçada", desc: "Revise no momento certo com cartões SM-2 e caderno de erros.",
+      page: "review", cta: "Abrir revisões" },
+    { key: "exposicao", name: "Exposição oral", desc: "Explique em voz alta e receba uma rubrica explícita.",
+      page: "oral", cta: "Abrir prova oral" },
+    { key: "dominio", name: "Domínio e manutenção", desc: "Sustente o nível com notas altas, constância e caça-bugs.",
+      page: "bugs", cta: "Abrir caça-bugs" }
+  ];
+
   function esc(s) {
     return String(s == null ? "" : s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -30,6 +48,7 @@
     if (!Array.isArray(s.plan.enrolled)) s.plan.enrolled = [];
     if (!Array.isArray(s.plan.custom)) s.plan.custom = [];
     if (!s.plan.milestones || typeof s.plan.milestones !== "object") s.plan.milestones = {};
+    if (!s.plan.phases || typeof s.plan.phases !== "object") s.plan.phases = {};
     return s.plan;
   }
 
@@ -182,6 +201,64 @@
     }).join("");
   }
 
+  function phaseEvidence() {
+    const s = Storage.get();
+    const assessments = (s.assessments && typeof s.assessments === "object") ? s.assessments : {};
+    const scored = Object.values(assessments).filter(a => Number(a && a.best) > 0).length;
+    const mastered = Object.values(assessments).filter(a => Number(a && a.best) >= 8).length;
+    const diagnostics = Object.keys(assessments).length
+      + (Array.isArray(s.mistakes) ? s.mistakes.length : 0)
+      + (Array.isArray(s.assessmentLog) ? s.assessmentLog.length : 0);
+    const done = Array.isArray(s.done) ? s.done.length : 0;
+    const practice = (Array.isArray(s.simLogs) ? s.simLogs.length : 0)
+      + Object.keys(s.labEvidence && typeof s.labEvidence === "object" ? s.labEvidence : {}).length;
+    const cards = Object.keys(s.cards && typeof s.cards === "object" ? s.cards : {}).length;
+    const oral = (s.forge4 && Array.isArray(s.forge4.oral_exam_history)) ? s.forge4.oral_exam_history.length : 0;
+    const feynman = Object.keys(s.feynman && typeof s.feynman === "object" ? s.feynman : {})
+      .filter(id => String(s.feynman[id] || "").trim().length >= 30).length;
+    const bugs = (s.forge4 && Array.isArray(s.forge4.bug_hunt_history)) ? s.forge4.bug_hunt_history.length : 0;
+    return {
+      diagnostico: { ok: diagnostics > 0, text: `${diagnostics} avaliação(ões) ou erro(s) registrado(s)` },
+      fundamentos: { ok: done >= 5, text: `${done} aula(s) concluída(s)` },
+      pratica: { ok: practice > 0, text: `${practice} execução(ões) de laboratório ou simulador` },
+      recuperacao: { ok: cards > 0, text: `${cards} cartão(ões) SM-2 agendado(s)` },
+      exposicao: { ok: oral + feynman > 0, text: `${oral} prova(s) oral(is) · ${feynman} explicação(ões) Feynman` },
+      dominio: { ok: mastered >= 3, text: `${mastered} aula(s) com nota ≥ 8 · ${scored} avaliada(s) · ${bugs} caça-bugs` }
+    };
+  }
+
+  function phaseCards() {
+    const p = planState();
+    const evidence = phaseEvidence();
+    return PHASES.map((phase, i) => {
+      const checked = !!p.phases[phase.key];
+      const ev = evidence[phase.key];
+      return `<li class="plan-phase ${checked ? "is-done" : ""} ${ev.ok ? "has-evidence" : ""}">
+        <div class="plan-phase__head">
+          <span class="plan-phase__n" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
+          <div class="plan-phase__text">
+            <h3>${esc(phase.name)}${checked ? " ✓" : ""}</h3>
+            <p class="small muted">${esc(phase.desc)}</p>
+          </div>
+          <label class="check">
+            <input type="checkbox" ${checked ? "checked" : ""} aria-label="Marcar fase ${i + 1}, ${esc(phase.name)}, como concluída" onchange="Plan.togglePhase('${phase.key}', this.checked)">
+            <span class="small">Concluída</span>
+          </label>
+        </div>
+        <p class="small">Evidência local: <b class="${ev.ok ? "good" : "muted"}">${esc(ev.text)}</b></p>
+        <button type="button" class="ghost tiny" onclick="goToPage('${phase.page}')">${esc(phase.cta)} →</button>
+      </li>`;
+    }).join("");
+  }
+
+  function togglePhase(key, checked) {
+    if (!PHASES.some(x => x.key === key)) return;
+    const p = planState();
+    p.phases[key] = Boolean(checked);
+    Storage.save();
+    renderPage(document.getElementById("view"));
+  }
+
   function masteryPanel() {
     const s = Storage.get();
     const done = new Set(s.done || []);
@@ -254,6 +331,12 @@
   <div class="card"><div class="eyebrow">Prazo</div><div class="plan-big">${p.deadline && pc.daysLeft !== null ? Math.max(0, pc.daysLeft) : "—"}<span>${p.deadline ? "dias" : ""}</span></div><p class="small ${pc.onTrack ? "good" : "bad"}">${p.deadline ? (pc.onTrack ? "Ritmo compatível com o prazo." : "Ritmo insuficiente: aumente as horas ou revise o prazo.") : "Defina um prazo para receber este alerta."}</p></div>
 </div>
 
+<div class="card section" id="planPhases">
+  <div class="row"><h2>Roadmap em 6 fases</h2><span class="pill">${PHASES.filter(x => !!p.phases[x.key]).length}/6 concluídas</span></div>
+  <p class="muted">Cada fase mostra uma evidência verificável nos seus dados locais. A marcação manual é opcional e nunca substitui o progresso real das aulas.</p>
+  <ol class="plan-phases">${phaseCards()}</ol>
+</div>
+
 <div class="grid2 section">
   <div class="card" id="planNext">
     <div class="row"><h3>Próximas aulas</h3><span class="pill">${next.length} na fila</span></div>
@@ -284,6 +367,7 @@
 
   window.Plan = {
     renderPage, generate, setHours, setDeadline, toggleMilestone,
-    addCustom, removeCustom, clearPlan, progress, pace, pathIds, goals: GOALS
+    addCustom, removeCustom, clearPlan, togglePhase,
+    progress, pace, pathIds, phaseEvidence, phases: PHASES, goals: GOALS
   };
 })();

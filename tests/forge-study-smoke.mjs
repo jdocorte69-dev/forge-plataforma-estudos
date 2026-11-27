@@ -205,7 +205,7 @@ check("sessão guarda texto, explicação e revisão sem apagar sessões anterio
 
 /* ---------- migração e preservação de dados ---------- */
 
-check("schema v4 preserva dados antigos e cria espaço de estudo", () => {
+check("schema v5 preserva dados antigos e cria espaço de estudo", () => {
   const seed = { "forge.study.v2": JSON.stringify({
     version: 2, done: ["c-0-0"], xp: 120, mistakes: [{ lesson: "c-0-0", question: "q" }],
     plan: { goal: "x" }
@@ -213,17 +213,78 @@ check("schema v4 preserva dados antigos e cria espaço de estudo", () => {
   const isolated = buildContext(seed);
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   const state = isolated.window.Storage.get();
-  assert.equal(state.version, 4);
+  assert.equal(state.version, 5);
+  assert.equal(state.versionString, "5.0.0");
   assert.deepEqual(state.done, ["c-0-0"]);
   assert.equal(state.xp, 120);
   assert.equal(state.mistakes.length, 1);
   assert.equal(state.plan.goal, "x");
   assert.ok(state.study && typeof state.study.sessions === "object");
   assert.ok(state.forge3 && state.forge3.simulators && Array.isArray(state.simLogs), "espaços v4 ausentes");
+  assert.ok(state.forge4 && state.forge4.pwaVersion === 7, "espaços v5 ausentes");
+  assert.ok(Array.isArray(state.oral_exam_history) && Array.isArray(state.bug_hunt_history));
+  assert.ok(state.progress && typeof state.progress.lessons === "object");
   assert.equal(state.theme, "dark");
   assert.ok(isolated.storage.has("forge.study.v2.lastBackup"), "backup automático ausente");
-  assert.ok(isolated.storage.has("forge.study.v4"), "namespace v4 não gravado");
+  assert.ok(isolated.storage.has("forge.study.v5"), "namespace v5 não gravado");
   assert.ok(isolated.storage.has("forge.study.v2"), "chave legada foi apagada");
+});
+
+check("v4 → v5: backup versionado, checksum FNV-1a e userId preservados", () => {
+  const original = {
+    version: 4,
+    userId: "usr_fnv1a_8f93a10c",
+    done: ["trk_math_m01_l01"],
+    mastery: { trk_math_m01_l01: { score: 9, mastered: true, last_reviewed_at: 1709200000000 } },
+    cards: { trk_math_m01_l01: { interval: 6, repetition: 2, efactor: 2.5, next_review: 1709718400000 } },
+    feynman: { trk_math_m01_l01: "Uma função bijetora possui inversibilidade direta e correspondência única." },
+    xp: 777,
+    forge3: { trails: { trk_math: { status: "in_progress", mastery_percentage: 42.5 } }, pwaVersion: 6 }
+  };
+  const isolated = buildContext({ "forge.study.v4": JSON.stringify(original) });
+  vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
+  const state = isolated.window.Storage.get();
+  assert.equal(state.version, 5);
+  assert.equal(state.userId, "usr_fnv1a_8f93a10c", "userId alterado na migração");
+  assert.equal(state.xp, 777);
+  assert.ok(state.forge4.sourceVersion === 4 && /^[0-9a-f]{8}$/.test(state.forge4.sourceChecksum));
+  assert.equal(state.forge4.userSeed, isolated.window.Storage.userSeed(state.userId));
+  assert.ok(state.progress.lessons.trk_math_m01_l01.score === 9);
+  assert.equal(state.progress.lessons.trk_math_m01_l01.sm2_card.interval, 6);
+  assert.equal(state.progress.tracks.trk_math.mastery_percentage, 42.5);
+  assert.equal(isolated.window.Storage.isLessonMastered(9, "x".repeat(30)), true);
+  assert.equal(isolated.window.Storage.isLessonMastered(8, "curto"), false);
+  assert.equal(isolated.window.Storage.isLessonMastered(7.9, "x".repeat(40)), false);
+  const backupKeys = [...isolated.storage.keys()].filter(k => k.startsWith("forge.study.v4.bak_"));
+  assert.equal(backupKeys.length, 1, "backup timestampado da migração ausente");
+  const backup = JSON.parse(isolated.storage.get(backupKeys[0]));
+  assert.equal(backup.from, "forge.study.v4");
+  assert.equal(backup.version, 4);
+  assert.equal(backup.algorithm, "FNV-1a-32");
+  assert.equal(backup.checksum, state.forge4.sourceChecksum);
+  assert.equal(backup.state.userId, original.userId);
+  const marker = JSON.parse(isolated.storage.get("forge.study.v5.migration"));
+  assert.equal(marker.status, "complete");
+  assert.equal(marker.backupKey, backupKeys[0]);
+  assert.ok(isolated.storage.has("forge.study.v4"), "payload v4 original apagado");
+  assert.equal(isolated.storage.get("forge.study.v4"), JSON.stringify(original));
+});
+
+check("v4 → v5: checksum divergente aborta a migração sem tocar nos dados", () => {
+  const original = { version: 4, userId: "u1", done: ["a"], forge4: { sourceChecksum: "00000000" } };
+  // v5 válido evita que o loadState inicial tente a migração corrompida; o
+  // teste chama a transformação diretamente para isolar a checagem de hash.
+  const isolated = buildContext({
+    "forge.study.v5": JSON.stringify({ version: 5, done: [], userId: "u1" }),
+    "forge.study.v4": JSON.stringify(original)
+  });
+  vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
+  let code = null;
+  try {
+    isolated.window.Storage.migrateV4ToV5(original, JSON.stringify(original));
+  } catch (err) { code = err.code; }
+  assert.equal(code, "CHECKSUM_MISMATCH");
+  assert.equal(isolated.storage.get("forge.study.v4"), JSON.stringify(original));
 });
 
 check("estado de versão futura não é rebaixado", () => {
@@ -282,8 +343,8 @@ check("nav, script e service worker incluem os módulos de livros", () => {
   assert.ok(refs.indexOf("js/data-books-meta.js") < refs.indexOf("js/books-store.js"));
   assert.ok(refs.indexOf("js/books-store.js") < refs.indexOf("js/book-reader.js"));
   const sw = read("sw.js");
-  // FORGE 3.0 adota a versão de cache forge-v6 exigida pela especificação PWA v6.
-  assert.match(sw, /forge-v6/);
+  // FORGE 4.0 atualiza o cache para forge-v7 (manifesto completo + SWR).
+  assert.match(sw, /forge-v7/);
   assert.match(sw, /"\.\/js\/study\.js"/);
   for (const file of ["js/data-books-meta.js", "js/books-store.js",
     "js/book-questions.js", "js/book-reader.js"]) {
@@ -291,7 +352,7 @@ check("nav, script e service worker incluem os módulos de livros", () => {
   }
   // Os bundles do PDF.js entram no cache na primeira abertura (o handler de
   // fetch guarda toda resposta local), evitando compilação no install.
-  assert.match(sw, /c\.put\(req, copy\)/);
+  assert.match(sw, /put\(cacheKey \|\| req, copy\)/);
   assert.doesNotMatch(sw, /"\.\/vendor\/pdfjs\/pdf\.worker\.min\.js"/);
 });
 
@@ -398,19 +459,19 @@ await checkAsync("importação de versão futura é recusada sem mutar dados nem
   assert.match(isolated.window.__toast, /preservados/);
 });
 
-await checkAsync("importação válida v2 continua migrando para v4 com backup", async () => {
+await checkAsync("importação válida v2 continua migrando para v5 com backup", async () => {
   const seed = { "forge.study.v2": JSON.stringify({ version: 3, done: ["local"], xp: 7 }) };
   const isolated = prepareImportContext(seed);
   await isolated.window.Storage.import({
     content: JSON.stringify({ version: 2, state: { version: 2, done: ["imported"], xp: 555, plan: { goal: "meta" } } })
   });
   const imported = isolated.window.Storage.get();
-  assert.equal(imported.version, 4);
+  assert.equal(imported.version, 5);
   assert.deepEqual(imported.done, ["imported"]);
   assert.equal(imported.xp, 555);
   assert.equal(imported.plan.goal, "meta");
   assert.ok(isolated.storage.has("forge.study.v2.lastBackup"), "backup não criado");
-  assert.match(isolated.window.__toast, /v2 → v4/);
+  assert.match(isolated.window.__toast, /v2 → v5/);
 });
 
 /* ---------- FORGE 3.0 ---------- */
@@ -451,14 +512,15 @@ check("FORGE 3.0: 12 trilhas, 92 módulos, 515 aulas e questões suficientes", (
   }
 });
 
-check("FORGE 3.0: userId estável e logs de simuladores no schema v4", () => {
+check("FORGE 3.0: userId estável e logs de simuladores no schema v5", () => {
   const isolated = buildContext();
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   isolated.window.Storage.migrate();
   const first = isolated.window.Storage.get();
   assert.ok(first.userId && typeof first.userId === "string", "userId ausente");
   assert.equal(first.forge3.pwaVersion, 6);
-  const before = JSON.parse(isolated.storage.get("forge.study.v4")).userId;
+  assert.equal(first.forge4.pwaVersion, 7);
+  const before = JSON.parse(isolated.storage.get("forge.study.v5")).userId;
   assert.equal(before, first.userId, "userId não foi persistido");
   isolated.window.Storage.logSimulator("logic", "tabela verdade");
   isolated.window.Storage.logSimulator("cpu", "ADD RAX, RBX");
@@ -486,6 +548,21 @@ check("FORGE 3.0: embaralhamento FNV-1a + LCG é determinístico por aula e usu�
   assert.match(read("js/exercises.js"), /2166136261/);
   assert.match(read("js/exercises.js"), /1664525/);
   assert.match(read("js/exercises.js"), /shuffleUserSeed/);
+});
+
+check("FORGE 4.0: utils-math expõe FNV-1a, LCG e entropia de Shannon", () => {
+  const isolated = buildContext();
+  vm.runInContext(read("js/utils-math.js") + "\n" + read("js/exercises.js"),
+    isolated.context, { filename: "math-bundle.js" });
+  const m = isolated.window.ForgeMathUtils;
+  assert.ok(m && typeof m.fnv1a32 === "function");
+  assert.equal(m.fnv1a32("a"), 0xe40c292c);
+  assert.equal(m.fnv1a32("a"), isolated.window.hashSeed("a"), "hash diverge de exercises.js");
+  assert.deepEqual(m.lcgSequence(1, 3), [m.lcgNext(1), m.lcgNext(m.lcgNext(1)), m.lcgNext(m.lcgNext(m.lcgNext(1)))]);
+  assert.equal(m.lcgNext(0), 1013904223);
+  assert.equal(m.shannonEntropy("aaaa"), 0);
+  assert.ok(m.shannonEntropy("abab") > 0.99 && m.shannonEntropy("abab") < 1.01);
+  assert.ok(scriptRefs().includes("js/utils-math.js"), "utils-math.js ausente no carregamento");
 });
 
 check("FORGE 3.0: simuladores, bottom nav e PWA v6 estão integrados", () => {
@@ -523,6 +600,101 @@ check("FORGE 3.0: simuladores, bottom nav e PWA v6 estão integrados", () => {
   assert.ok(manifest.icons.some(icon => icon.purpose === "maskable" && icon.sizes === "512x512"));
   for (const icon of ["icon-192.png", "icon-512.png", "icon-maskable-192.png", "icon-maskable-512.png"]) {
     assert.ok(fs.existsSync(path.join(ROOT, icon)), `ícone ausente: ${icon}`);
+  }
+});
+
+check("FORGE 4.0: acervo de 233 resumos indexado sem re-OCR", () => {
+  const ctx = { window: {} };
+  vm.createContext(ctx);
+  vm.runInContext(read("js/data-summaries-index.js"), ctx, { filename: "js/data-summaries-index.js" });
+  const index = ctx.window.FORGE_SUMMARIES_INDEX;
+  assert.equal(index.totalBooks, 13);
+  assert.equal(index.totalSummaries, 233);
+  const onDisk = [];
+  const walk = dir => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith(".md")) onDisk.push(full);
+    }
+  };
+  walk(path.join(ROOT, "saida", "02_resumos_por_livro"));
+  assert.equal(onDisk.length, 233);
+  const chapters = index.books.flatMap(book => book.chapters);
+  assert.equal(chapters.length, 233);
+  for (const chapter of chapters) {
+    assert.ok(fs.existsSync(path.join(ROOT, chapter.path)), `arquivo ausente: ${chapter.path}`);
+    assert.ok(chapter.theme && chapter.words > 0 && chapter.chars > 0, chapter.id);
+    assert.ok(!/[\\$]/.test(chapter.title + chapter.theme), `LaTeX residual em ${chapter.id}`);
+  }
+  const manifest = JSON.parse(read("saida/00_inventario/manifest.json"));
+  assert.equal(manifest.total_pdfs, 13);
+  for (const book of index.books) {
+    assert.ok(manifest.livros.some(l => l.titulo === book.title), `metadado inventado: ${book.slug}`);
+  }
+});
+
+check("FORGE 4.0: módulos do acervo registrados e rota ligada", () => {
+  const refs = scriptRefs();
+  const files = ["js/data-summaries-index.js", "js/books-summaries-index.js", "js/summaries-page.js"];
+  for (const file of files) {
+    assert.ok(refs.includes(file), `script ausente: ${file}`);
+    assert.ok(fs.existsSync(path.join(ROOT, file)), `arquivo ausente: ${file}`);
+  }
+  assert.ok(refs.indexOf(files[0]) < refs.indexOf(files[1]));
+  assert.ok(refs.indexOf(files[1]) < refs.indexOf(files[2]));
+  const app = read("js/app.js");
+  assert.match(app, /summaries: v =>/);
+  assert.match(app, /SummariesPage\.renderPage/);
+  assert.match(read("index.html"), /data-page="summaries"/);
+  assert.match(read("css/style.css"), /\.summary-reader__grid/);
+});
+
+check("FORGE 4.0: leitor escapa HTML e preserva notação Unicode", () => {
+  const ctx = {
+    window: {
+      BooksSummariesIndex: {
+        normalizeMath: value => String(value || ""),
+        fold: value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+      }
+    }
+  };
+  vm.createContext(ctx);
+  vm.runInContext(read("js/summaries-page.js"), ctx, { filename: "js/summaries-page.js" });
+  const html = ctx.window.SummariesPage.markdownToHTML(
+    "### Sessão ℝ\n\n<script>alert(1)</script>\n\n**negrito** `x<y`\n\n- [x] feito\n\n```js\nconst a = 1 < 2;\n```"
+  );
+  assert.ok(html.includes("&lt;script&gt;"), html);
+  assert.ok(!html.includes("<script>"), html);
+  assert.match(html, /<strong>negrito<\/strong>/);
+  assert.match(html, /<code>x&lt;y<\/code>/);
+  assert.match(html, /id="sec-sessao"/);
+  assert.match(html, /<pre><code class="language-js">const a = 1 &lt; 2;<\/code><\/pre>/);
+});
+
+check("FORGE 4.0: service worker forge-v7 com cache-first, SWR e manifesto completo", () => {
+  const sw = read("sw.js");
+  assert.match(sw, /const VERSION = "forge-v7"/);
+  assert.match(sw, /importScripts\("\.\/sw-summaries\.js"\)/);
+  assert.match(sw, /caches\.match\(cacheKey \|\| req\)/);
+  assert.match(sw, /function revalidate/);
+  assert.ok(sw.indexOf("function revalidate") < sw.indexOf("self.addEventListener(\"fetch\""));
+  const assets = ["js/utils-math.js", "js/dashboard-widgets.js", "js/sim-oral.js",
+    "js/sim-crypto.js", "js/data-summaries-index.js", "js/books-summaries-index.js",
+    "js/summaries-page.js", "vendor/katex/katex.min.css", "vendor/katex/katex.min.js",
+    "vendor/katex/contrib/auto-render.min.js"];
+  for (const file of assets) {
+    assert.ok(sw.includes(`"./${file}"`), `asset ausente no service worker: ${file}`);
+  }
+  assert.match(sw, /const PRECACHE = APP_SHELL\.concat\(/);
+  const ctx = {};
+  vm.createContext(ctx);
+  vm.runInContext(read("sw-summaries.js"), ctx, { filename: "sw-summaries.js" });
+  const manifest = vm.runInContext("SUMMARY_MANIFEST", ctx);
+  assert.equal(manifest.length, 233);
+  assert.equal(new Set(manifest).size, 233);
+  for (const entry of manifest) {
+    assert.ok(fs.existsSync(path.join(ROOT, entry.replace(/^\.\//, ""))), `resumo ausente: ${entry}`);
   }
 });
 
