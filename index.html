@@ -13,6 +13,9 @@
 <link rel="stylesheet" href="css/forge7.css">
 <!-- FORGE 8.0 — navegação em 6 grupos, onboarding, home em 3 blocos e micro-cards. -->
 <link rel="stylesheet" href="css/forge8.css">
+<!-- FORGE 9.0 — AssaadFlix / OMEGA (camada aditiva, sem fontes ou CDN). -->
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/components.css">
 <script>
 /* FORGE 8.0 — decisão de primeira visita antes do primeiro paint.
    Qualquer namespace forge.study preservado significa retorno: a tela de
@@ -44,7 +47,7 @@
 </div>
 <div class="f8-nav-group" data-f8-group="pratica">
   <button type="button" class="f8-group-head" data-f8-default="plan" aria-expanded="false" aria-label="Prática guiada: aula, exercício e revisão"><span class="f8-group-label">Prática guiada</span><span class="f8-group-sub">Aula, exercício e revisão</span></button>
-  <div class="f8-subnav" hidden><button type="button" data-page="plan">◇ Meu plano</button><button type="button" data-page="lab">⌘ Laboratórios</button><button type="button" data-page="review">◷ Revisão espaçada</button><button type="button" data-page="mistakes">✎ Caderno de erros</button><button type="button" data-page="feynman">◎ Técnica Feynman</button><button type="button" data-page="study">✦ Aprenda a estudar</button></div>
+  <div class="f8-subnav" hidden><button type="button" data-page="plan">◇ Meu plano</button><button type="button" data-page="lab">⌘ Laboratórios</button><button type="button" data-page="review">◷ Revisão espaçada</button><button type="button" data-page="mistakes">✎ Caderno de erros</button><button type="button" data-page="feynman">◎ Técnica Feynman</button><button type="button" data-page="study">✦ Aprenda a estudar</button><button type="button" data-page="mental">◈ Academia mental</button><button type="button" data-page="trilha13">▤ Trilha 13 · Cálculo mental</button><button type="button" data-page="trilha14">▤ Trilha 14 · Letras e fé</button></div>
 </div>
 <div class="f8-nav-group" data-f8-group="metodo">
   <button type="button" class="f8-group-head" data-f8-default="porque" aria-expanded="false" aria-label="Método FORGE: porquê e como estudar"><span class="f8-group-label">Método FORGE</span><span class="f8-group-sub">Porquê e como estudar</span></button>
@@ -56,7 +59,7 @@
 </div>
 <div class="f8-nav-group" data-f8-group="referencia">
   <button type="button" class="f8-group-head" data-f8-default="library" aria-expanded="false" aria-label="Biblioteca: fontes, livros e resumos"><span class="f8-group-label">Biblioteca</span><span class="f8-group-sub">Fontes, livros e resumos</span></button>
-  <div class="f8-subnav" hidden><button type="button" data-page="library">▣ Biblioteca unificada</button><button type="button" data-page="richlib">▤ Biblioteca rica</button><button type="button" data-page="books">▤ Livros em PDF</button><button type="button" data-page="summaries">▤ Livros &amp; Resumos</button><button type="button" data-page="glossary">◬ Glossário</button></div>
+  <div class="f8-subnav" hidden><button type="button" data-page="library">▣ Biblioteca unificada</button><button type="button" data-page="richlib">▤ Biblioteca rica</button><button type="button" data-page="books">▤ Livros em PDF</button><button type="button" data-page="summaries">▤ Livros &amp; Resumos</button><button type="button" data-page="flix">▣ Catálogo AssaadFlix</button><button type="button" data-page="glossary">◬ Glossário</button></div>
 </div>
 <div class="f8-nav-group" data-f8-group="dados">
   <button type="button" class="f8-group-head" data-f8-default="settings" aria-expanded="false" aria-label="Dados: progresso e backup"><span class="f8-group-label">Dados</span><span class="f8-group-sub">Progresso e backup</span></button>
@@ -77,7 +80,7 @@
     <span class="f8-step-pill" data-current="false">2. Ponto de partida</span>
     <span class="f8-step-pill" data-current="false">3. Meta diária</span>
   </div>
-  <p class="f8-kicker">Boas-vindas ao FORGE 8.0</p>
+  <p class="f8-kicker">Boas-vindas ao FORGE 9.0 · AssaadFlix</p>
   <h1 id="f8OnboardTitle">Comece com um passo claro</h1>
   <section data-f8-onboard-step="0">
     <p>Você aprende em um ciclo curto e repetível:</p>
@@ -116,6 +119,7 @@
   </div>
 </section>
 </div>
+<div id="f9HomeRoot"></div>
 <div id="f7MapRoot"></div>
 <div id="f7HubRoot"></div>
 </div>
@@ -151,6 +155,12 @@
 <script defer src="js/forge8-glossary.js"></script>
 <script defer src="js/data-forge8.js"></script>
 <script defer src="js/forge8-ui.js"></script>
+<!-- FORGE 9.0 — dados das trilhas 13/14, resumões, academia mental e controlador. -->
+<script defer src="js/data-trilha13.js"></script>
+<script defer src="js/data-trilha14.js"></script>
+<script defer src="js/data-book-summaries.js"></script>
+<script defer src="js/sim-mental.js"></script>
+<script defer src="js/forge9-ui.js"></script>
 <script defer src="js/utils-math.js"></script>
 <script defer src="js/storage.js"></script>
 <script defer src="js/exercises.js"></script>

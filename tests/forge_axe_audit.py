@@ -1,4 +1,4 @@
-"""FORGE 8.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
+"""FORGE 9.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
 
 Uso:
     $env:FORGE_AXE_PATH='<caminho para axe.min.js>'
@@ -21,6 +21,8 @@ PAGES = [
     # FORGE 8.0 — rotas e superfícies novas.
     "deep-lesson", "review", "mistakes", "feynman", "domain", "books",
     "glossary", "catalog", "projects", "focus",
+    # FORGE 9.0 — OMEGA / AssaadFlix.
+    "mental", "trilha13", "trilha14", "flix",
 ]
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
@@ -116,6 +118,30 @@ def main():
                     page.locator(f"[data-f8-tab='{tab}']").click()
                     assert page.locator("[role='tabpanel']").count() == 1, tab
                     audit(f"library-tab-{tab}")
+
+                # FORGE 9.0 — quatro abas do catálogo AssaadFlix.
+                for tab in ("tecnicos", "classicos", "resumoes", "exercicios"):
+                    page.evaluate("goToPage('flix')")
+                    page.locator(f"[data-f9-tab='{tab}']").click()
+                    assert page.locator("[role='tabpanel']").count() == 1, tab
+                    audit(f"flix-tab-{tab}")
+
+                # FORGE 9.0 — aula das trilhas 13/14 no padrão Universo Narrado.
+                for track in ("13", "14"):
+                    page.evaluate("t => goToPage(t === '13' ? 'trilha13' : 'trilha14')", track)
+                    page.locator("[data-f9-module]").first.click()
+                    assert page.locator("[data-f9-lesson]").count() == 1, track
+                    audit(f"trilha{track}-lesson")
+
+                # FORGE 9.0 — detalhe de resumão com exercícios e síntese Feynman.
+                page.evaluate("goToPage('flix')")
+                page.locator("[data-f9-book]").first.click()
+                assert page.locator("[data-f9-book-detail]").count() == 1
+                assert page.evaluate("page === 'book-summary'")
+                audit("book-summary-detail")
+                page.locator("[data-f9-exercises]").first.evaluate("el => el.open = true")
+                audit("book-summary-exercises")
+
                 if errors:
                     print(f"ERROS JS em {label}/{theme}: {errors[:3]}")
                     failures.append((f"{label}/{theme}/pageerror", errors[:3]))

@@ -1,0 +1,700 @@
+/* ============================================================
+   FORGE 9.0 — ASSAADFLIX / OMEGA (camada aditiva)
+   Carregar depois de css/style.css, css/forge7.css e css/forge8.css.
+
+   Orçamento da camada:
+   - somente pilhas de fonte do sistema (nenhuma fonte carregada por CSS,
+     nenhum CDN e nenhuma requisição de rede);
+   - animações apenas de transform/opacity, sem deslocamento de layout;
+   - sem contenção de layout e sem visibilidade de conteúdo;
+   - nenhum seletor relacional novo;
+   - alvos interativos com no mínimo 48x48px;
+   - alto contraste legado continua soberano sobre os dois temas.
+   ============================================================ */
+
+:root,
+html[data-theme="dark"] {
+  --f9-bg: #090D16;
+  --f9-surface: #111827;
+  --f9-surface-2: #172134;
+  --f9-text: #EAF2FF;
+  --f9-muted: #A9B8CC;
+  --f9-border: rgba(148, 163, 184, 0.24);
+  --f9-accent: #38BDF8;
+  --f9-accent-text: #7DD3FC;
+  --f9-accent-solid: #38BDF8;
+  --f9-on-accent: #04121F;
+  --f9-success: #6EE7B7;
+  --f9-warn: #FDBA74;
+  --f9-glow: rgba(56, 189, 248, 0.18);
+  --f9-glass: rgba(17, 24, 39, 0.92);
+  --f9-track: rgba(148, 163, 184, 0.26);
+  --f9-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  --f9-code: #0B1220;
+  --f9-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f9-font-mono: ui-monospace, "JetBrains Mono", Consolas, monospace;
+  --f9-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --f9-radius: 16px;
+  --f9-card-bg:
+    radial-gradient(circle at 100% 0%, var(--f9-glow), transparent 58%),
+    var(--f9-glass);
+}
+
+html[data-theme="light"] {
+  --f9-bg: #F8FAFC;
+  --f9-surface: #FFFFFF;
+  --f9-surface-2: #F1F5F9;
+  --f9-text: #0F172A;
+  --f9-muted: #475569;
+  --f9-border: rgba(15, 23, 42, 0.18);
+  --f9-accent: #0284C7;
+  --f9-accent-text: #0369A1;
+  --f9-accent-solid: #0369A1;
+  --f9-on-accent: #FFFFFF;
+  --f9-success: #047857;
+  --f9-warn: #9A3412;
+  --f9-glow: rgba(2, 132, 199, 0.14);
+  --f9-glass: rgba(255, 255, 255, 0.95);
+  --f9-track: rgba(15, 23, 42, 0.14);
+  --f9-shadow: 0 16px 38px rgba(15, 23, 42, 0.12);
+  --f9-code: #F8FAFC;
+}
+
+html.high-contrast,
+html.high-contrast[data-theme="light"] {
+  --f9-bg: #000;
+  --f9-surface: #000;
+  --f9-surface-2: #101010;
+  --f9-text: #FFF;
+  --f9-muted: #E8E8E8;
+  --f9-border: #FFF;
+  --f9-accent: #FFE600;
+  --f9-accent-text: #FFE600;
+  --f9-accent-solid: #FFE600;
+  --f9-on-accent: #000;
+  --f9-success: #66FF99;
+  --f9-warn: #FFD166;
+  --f9-glow: rgba(255, 230, 0, 0.28);
+  --f9-glass: #000;
+  --f9-track: #FFF;
+  --f9-shadow: none;
+  --f9-code: #000;
+}
+
+/* `[hidden]` do HTML precisa vencer regras legadas de display. */
+:is([class^="f9-"], [class*=" f9-"])[hidden],
+.f9-shell [hidden] {
+  display: none !important;
+}
+
+/* ---------- Casca e home em catálogo ---------- */
+
+.f9-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 28px);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+}
+
+.f9-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.f9-hero {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  min-height: 220px;
+  padding: clamp(20px, 4vw, 34px);
+  border: 1px solid var(--f9-border);
+  border-top-color: var(--f9-accent);
+  border-radius: calc(var(--f9-radius) + 4px);
+  background:
+    radial-gradient(circle at 12% 8%, var(--f9-glow), transparent 46%),
+    radial-gradient(circle at 88% 92%, var(--f9-glow), transparent 48%),
+    var(--f9-glass);
+  box-shadow: var(--f9-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  isolation: isolate;
+}
+
+.f9-hero h1,
+.f9-hero h2 {
+  margin: 0;
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: clamp(1.4rem, 3vw, 2.05rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+}
+
+.f9-hero p {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--f9-muted);
+  line-height: 1.55;
+}
+
+.f9-eyebrow {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+/* ---------- Prateleiras e cartões ---------- */
+
+.f9-lane {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.f9-lane-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 48px;
+}
+
+.f9-lane-title {
+  margin: 0;
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.f9-lane-sub {
+  margin: 0;
+  color: var(--f9-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.f9-shelf {
+  position: relative;
+  min-width: 0;
+}
+
+.f9-shelf-track {
+  display: flex;
+  gap: 14px;
+  min-height: 200px;
+  padding: 6px 4px 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--f9-border) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.f9-shelf-track > * {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.f9-card {
+  position: relative;
+  display: flex;
+  flex: 1 1 260px;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 176px;
+  padding: 18px;
+  border: 1px solid var(--f9-border);
+  border-radius: var(--f9-radius);
+  background: var(--f9-card-bg);
+  box-shadow: var(--f9-shadow);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.94rem;
+  line-height: 1.5;
+  text-align: left;
+  transition: transform 0.2s var(--f9-ease), opacity 0.2s var(--f9-ease);
+}
+
+.f9-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  width: 34px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--f9-accent);
+}
+
+.f9-shelf-track > .f9-card {
+  flex: 0 0 min(78vw, 264px);
+}
+
+.f9-card--wide {
+  min-height: 200px;
+}
+
+.f9-shelf-track > .f9-card--wide {
+  flex: 0 0 min(88vw, 420px);
+}
+
+.f9-card:hover {
+  transform: translateY(-3px);
+}
+
+button.f9-card,
+a.f9-card,
+[role="button"].f9-card {
+  font: inherit;
+  font-family: var(--f9-font-sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+button.f9-card:hover:not(:disabled) {
+  background: var(--f9-card-bg);
+}
+
+.f9-card-kicker {
+  margin: 0;
+  color: var(--f9-accent-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.f9-card-title {
+  margin: 0;
+  color: var(--f9-text);
+  font-size: 1.02rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.f9-card-meta {
+  margin: 0;
+  color: var(--f9-muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.f9-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.f9-progress {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--f9-track);
+}
+
+.f9-progress > span {
+  display: block;
+  height: 100%;
+  min-width: 0;
+  max-width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--f9-accent-solid), var(--f9-success));
+  transform-origin: left center;
+}
+
+/* ---------- Pills e botões ---------- */
+
+.f9-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 999px;
+  background: var(--f9-glow);
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.f9-pill--success {
+  border-color: var(--f9-success);
+  background: color-mix(in srgb, var(--f9-success) 12%, transparent);
+  color: var(--f9-success);
+}
+
+.f9-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--f9-border);
+  border-radius: 12px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 0.18s var(--f9-ease), opacity 0.18s var(--f9-ease);
+}
+
+.f9-btn--primary {
+  border-color: transparent;
+  background: var(--f9-accent-solid);
+  color: var(--f9-on-accent);
+  box-shadow: 0 10px 26px var(--f9-glow);
+  font-weight: 750;
+}
+
+.f9-btn--ghost {
+  border-color: var(--f9-border);
+  background: transparent;
+  color: var(--f9-text);
+}
+
+.f9-btn--text {
+  min-width: 48px;
+  padding: 0 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--f9-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.f9-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.f9-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.f9-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* A regra legada `button:hover:not(:disabled)` troca o fundo e derruba o
+   contraste AA; estas mais específicas preservam o par texto/fundo. */
+button.f9-btn:hover:not(:disabled) {
+  background: var(--f9-surface-2);
+}
+
+button.f9-btn--primary:hover:not(:disabled) {
+  background: var(--f9-accent-solid);
+}
+
+button.f9-btn--ghost:hover:not(:disabled) {
+  border-color: var(--f9-accent);
+  background: transparent;
+}
+
+button.f9-btn--text:hover:not(:disabled) {
+  background: transparent;
+  color: var(--f9-accent-text);
+}
+
+button.f9-pill:hover:not(:disabled) {
+  background: var(--f9-glow);
+}
+
+/* ---------- Grade, abas e utilitários ---------- */
+
+.f9-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+  min-width: 0;
+}
+
+.f9-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.f9-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 60px;
+  padding: 6px;
+  border: 1px solid var(--f9-border);
+  border-radius: 14px;
+  background: var(--f9-glass);
+}
+
+.f9-tabs button,
+.f9-tabs [role="tab"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--f9-muted);
+  font-family: var(--f9-font-sans);
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.f9-tabs [aria-selected="true"] {
+  border-color: var(--f9-accent);
+  background: var(--f9-glow);
+  color: var(--f9-accent-text);
+}
+
+/* Specificidade superior ao button:hover:not(:disabled) legado de style.css,
+   que troca o fundo por --accent-hover e derruba o contraste AA na aba ativa. */
+.f9-tabs [role="tab"]:hover:not(:disabled) {
+  background: var(--f9-glow);
+}
+
+.f9-tabpanel {
+  min-height: 180px;
+  padding: 4px 0 0;
+  color: var(--f9-text);
+}
+
+.f9-section {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.f9-muted {
+  color: var(--f9-muted);
+}
+
+.f9-metric {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--f9-muted);
+  font-size: 0.86rem;
+}
+
+.f9-metric strong,
+.f9-metric b {
+  color: var(--f9-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.f9-stack {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.f9-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.f9-divider {
+  height: 1px;
+  margin: 8px 0;
+  border: 0;
+  background: var(--f9-border);
+}
+
+/* ---------- Alvos e foco ---------- */
+
+.f9-shell :is(button, [role="button"], input, select, textarea, summary) {
+  min-height: 48px;
+}
+
+.f9-shell :is(button, [role="button"]) {
+  min-width: 48px;
+}
+
+.f9-shell :is(a.f9-btn, a.f9-card, a.f9-pill) {
+  min-width: 48px;
+  min-height: 48px;
+}
+
+:is(.f9-shell, .f9-home-grid, .f9-hero, .f9-lane, .f9-shelf, .f9-shelf-track,
+    .f9-card, .f9-card--wide, .f9-card-actions, .f9-pill, .f9-btn, .f9-tabs,
+    .f9-grid, .f9-section, .f9-stack, .f9-row)
+  :is(button, a, [role="button"], input, textarea, select, summary, [tabindex]):focus-visible,
+:is(.f9-card, .f9-pill, .f9-btn, .f9-btn--primary, .f9-btn--ghost,
+    .f9-btn--text, .f9-shelf-track, .f9-tabpanel):focus-visible {
+  outline: 3px solid var(--f9-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Adaptações progressivas: 900 / 640 / 400 ---------- */
+
+@media (max-width: 900px) {
+  .f9-shell {
+    gap: 16px;
+    padding: 18px 14px;
+  }
+
+  .f9-home-grid,
+  .f9-grid--2 {
+    grid-template-columns: 1fr;
+  }
+
+  .f9-hero {
+    min-height: 0;
+  }
+
+  .f9-shelf-track > .f9-card {
+    flex-basis: min(72vw, 240px);
+  }
+}
+
+@media (max-width: 640px) {
+  .f9-shell {
+    padding: 14px 12px;
+  }
+
+  .f9-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .f9-lane-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .f9-shelf-track {
+    gap: 10px;
+    min-height: 0;
+    padding: 4px 2px 12px;
+  }
+
+  .f9-shelf-track > .f9-card,
+  .f9-shelf-track > .f9-card--wide {
+    flex-basis: min(84vw, 280px);
+  }
+
+  .f9-card {
+    min-height: 0;
+    padding: 14px;
+  }
+
+  .f9-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .f9-tabs button,
+  .f9-tabs [role="tab"] {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 400px) {
+  .f9-shelf-track {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    overflow: visible;
+    scroll-snap-type: none;
+    padding: 0;
+  }
+
+  .f9-shelf-track > * {
+    scroll-snap-align: none;
+  }
+
+  .f9-shelf-track > .f9-card,
+  .f9-shelf-track > .f9-card--wide {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .f9-pill,
+  .f9-btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- Alto contraste: superfícies sem decoração ---------- */
+
+html.high-contrast .f9-hero,
+html.high-contrast .f9-card,
+html.high-contrast .f9-tabs {
+  background: var(--f9-surface);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html.high-contrast .f9-progress > span {
+  background: var(--f9-accent-solid);
+}
+
+html.high-contrast .f9-card::before {
+  background: var(--f9-accent);
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :is([class^="f9-"], [class*=" f9-"]),
+  :is([class^="f9-"], [class*=" f9-"])::before,
+  :is([class^="f9-"], [class*=" f9-"])::after,
+  .f9-shell :is(button, a, [role="button"], input, textarea, select, summary) {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

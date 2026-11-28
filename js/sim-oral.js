@@ -1,9 +1,10 @@
 /* ============================================================
-   FORGE 7.0 — sim-oral.js
-   Prova oral local (3–5 tópicos, cronômetro e rubrica em três
-   painéis) e Modo Professor (Aula Invertida) com checagem
-   transparente dos 7 Degraus Didáticos. Sem rede ou serviços
-   externos. Expõe window.OralSim (API preservada).
+   FORGE 9.0 (OMEGA) — sim-oral.js
+   Prova oral local (3–5 tópicos, cronômetro de 3 minutos e rubrica
+   em quatro painéis) e Modo Professor (Aula Invertida) com checagem
+   transparente dos 7 Degraus Didáticos. Feynman (≥30 caracteres) e
+   palavras-chave entram como evidência automática. Sem rede ou
+   serviços externos. Expõe window.OralSim (API preservada).
    ============================================================ */
 
 (function () {
@@ -35,6 +36,15 @@
         "Usa linguagem acessível sem perder rigor",
         "Mantém notação consistente",
         "Conclui com uma síntese em uma frase"
+      ]
+    },
+    {
+      key: "dominio",
+      title: "4. Domínio (Feynman + palavras-chave)",
+      items: [
+        "Explicou com as próprias palavras (≥30 caracteres)",
+        "Usou pelo menos duas palavras-chave do tema",
+        "Corrigiu um erro comum ou limite da explicação"
       ]
     }
   ];
@@ -72,8 +82,8 @@
     stage: "setup",
     topics: [],
     selected: [],
-    minutes: 5,
-    secondsLeft: 300,
+    minutes: 3,
+    secondsLeft: 180,
     running: false,
     intervalId: null,
     answer: "",
@@ -148,6 +158,30 @@
 
   function normalizeText(value) {
     return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  }
+
+  /* Palavras-chave vêm dos tópicos selecionados e, quando disponíveis, das
+     trilhas 13/14. A checagem é transparente: só conta termo presente no texto. */
+  function keywordEvidence(text) {
+    const normalized = normalizeText(text);
+    const titles = state.topics.filter(t => state.selected.includes(t.id)).map(t => t.title);
+    const extra = [];
+    try {
+      for (const key of ["FORGE_TRILHA13", "FORGE_TRILHA14"]) {
+        const data = (typeof window !== "undefined" && window[key]) || null;
+        if (!data || !Array.isArray(data.modules)) continue;
+        for (const mod of data.modules) {
+          if (titles.some(title => normalizeText(title).includes(normalizeText(mod.title)))) {
+            extra.push(...(mod.keywords || []));
+          }
+        }
+      }
+    } catch (e) { /* evidência extra é opcional */ }
+    const terms = [...new Set(titles.concat(extra)
+      .flatMap(value => normalizeText(value).split(/[^a-z0-9]+/))
+      .filter(word => word.length >= 5))].slice(0, 24);
+    const hits = terms.filter(word => normalized.includes(word));
+    return { terms, hits, covered: hits.length >= 2 };
   }
 
   function evaluateExplanation(text) {
@@ -231,9 +265,9 @@
   </fieldset>
   <label for="oralMinutes">Duração</label>
   <select id="oralMinutes" style="min-height:48px" onchange="OralSim.setMinutes(Number(this.value))">
-    <option value="3">3 minutos</option>
+    <option value="3" selected>3 minutos</option>
     <option value="4">4 minutos</option>
-    <option value="5" selected>5 minutos</option>
+    <option value="5">5 minutos</option>
   </select>` : professorControls}
   <div class="actions" style="margin-top:14px">
     <button type="button" style="min-height:48px" onclick="OralSim.start()">${examiner ? "▶ Iniciar prova" : "▶ Abrir modo professor"}</button>
@@ -475,9 +509,12 @@
     stop();
     const checked = RUBRIC.reduce((sum, g) => sum + (state.checks[g.key] || []).length, 0);
     const chars = state.answer.trim().length;
-    const evidence = chars >= 220 ? 1 : chars >= 120 ? 0.5 : 0;
+    const keywords = keywordEvidence(state.answer);
+    const feynman = chars >= 30;
+    const evidence = (chars >= 220 ? 0.5 : chars >= 120 ? 0.25 : 0)
+      + (feynman ? 0.25 : 0) + (keywords.covered ? 0.25 : 0);
     const score = Math.round((checked + evidence) * 10) / 10;
-    const passed = score >= 8 && chars >= 30;
+    const passed = score >= 8 && feynman;
     const topics = state.topics.filter(t => state.selected.includes(t.id)).map(t => t.title);
     const elapsed = Math.max(1, state.minutes * 60 - state.secondsLeft);
     state.lastResult = {

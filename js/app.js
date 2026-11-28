@@ -220,6 +220,11 @@ function render() {
     richlib: "Biblioteca rica",
     books: "Livros em PDF",
     summaries: "Livros & Resumos",
+    flix: "AssaadFlix · Biblioteca",
+    "book-summary": "Resumo · Síntese Feynman",
+    mental: "Academia de Cálculo Mental",
+    trilha13: "Trilha 13 · Cálculo Mental",
+    trilha14: "Trilha 14 · Letras, Filosofia e Fé",
     porque: "O Porquê de Tudo",
     protocol: "Protocolo de estudo",
     stellar: "Mapa estelar",
@@ -276,6 +281,17 @@ function render() {
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
     books: v => { if (typeof BooksPage !== "undefined") BooksPage.renderPage(v); },
     summaries: v => { if (typeof SummariesPage !== "undefined") SummariesPage.renderPage(v); else v.innerHTML = '<p class="muted">Resumos indisponíveis.</p>'; },
+    // FORGE 9.0 — OMEGA / AssaadFlix: catálogo, resumões, trilhas e academia.
+    flix: v => { if (typeof Forge9UI !== "undefined") Forge9UI.renderCatalog(v); else v.innerHTML = '<p class="muted">Catálogo indisponível.</p>'; },
+    "book-summary": v => {
+      if (typeof Forge9UI === "undefined") { v.innerHTML = '<p class="muted">Resumo indisponível.</p>'; return; }
+      const book = typeof Forge9UI.currentBook === "function" ? Forge9UI.currentBook() : null;
+      if (!book) { goToPage("flix"); return; }
+      Forge9UI.renderBook(v, book.id);
+    },
+    mental: v => { if (typeof MentalGym !== "undefined") MentalGym.renderPage(v); else v.innerHTML = '<p class="muted">Academia mental indisponível.</p>'; },
+    trilha13: v => { if (typeof Forge9UI !== "undefined") Forge9UI.renderTrilha(v, "13"); else v.innerHTML = '<p class="muted">Trilha 13 indisponível.</p>'; },
+    trilha14: v => { if (typeof Forge9UI !== "undefined") Forge9UI.renderTrilha(v, "14"); else v.innerHTML = '<p class="muted">Trilha 14 indisponível.</p>'; },
     porque: v => { if (typeof Forge7UI !== "undefined") Forge7UI.porquePage(v); else v.innerHTML = '<p class="muted">Conteúdo didático indisponível.</p>'; },
     protocol: v => { if (typeof Forge7UI !== "undefined") Forge7UI.protocolPage(v); else v.innerHTML = '<p class="muted">Protocolo indisponível.</p>'; },
     stellar: v => { if (typeof Forge7UI !== "undefined") Forge7UI.stellarPage(v); else v.innerHTML = '<p class="muted">Mapa estelar indisponível.</p>'; },
@@ -301,6 +317,7 @@ function render() {
 
   if (renderers[page]) renderers[page](v);
   if (page !== "oral" && typeof OralSim !== "undefined") OralSim.stop();
+  if (page !== "mental" && typeof MentalGym !== "undefined") MentalGym.stop();
   if (page === "crypto" && typeof CryptoSim !== "undefined") CryptoSim.refresh();
   if (page === "lab") {
     if (typeof LogicSim !== "undefined") LogicSim.mount();
@@ -319,7 +336,7 @@ function render() {
 }
 
 let page = "dashboard";
-const INTERNAL_PAGES = ["book", "reader", "questions", "stellar", "tools", "deep-lesson"];
+const INTERNAL_PAGES = ["book", "reader", "questions", "stellar", "tools", "deep-lesson", "book-summary"];
 let currentLesson = null;
 let labTab = "linux";
 let reviewIndex = 0;
@@ -364,6 +381,10 @@ function dashboardPage(v) {
   if (typeof Forge8UI !== "undefined") {
     Forge8UI.mountDashboard(v);
     Forge8UI.mountOnboarding(v);
+  }
+  // FORGE 9.0 — prateleiras do AssaadFlix no horário nobre do painel.
+  if (typeof Forge9UI !== "undefined" && typeof Forge9UI.mountDashboard === "function") {
+    Forge9UI.mountDashboard(v);
   }
   v.insertAdjacentHTML("beforeend", `
 ${typeof Gamification !== "undefined" ? Gamification.dashboardWidgets() : ""}
@@ -838,6 +859,8 @@ const ForgeNav = {
   more() {
     const pages = [
       ["oral", "Prova oral"], ["bugs", "Caça-bugs"], ["crypto", "Laboratório crypto"],
+      ["mental", "◈ Academia mental"], ["trilha13", "▤ Trilha 13 · Cálculo mental"],
+      ["trilha14", "▤ Trilha 14 · Letras e fé"], ["flix", "▣ Catálogo AssaadFlix"],
       ["summaries", "Livros & Resumos"],
       ["review", "◷ Revisão espaçada"], ["mistakes", "✎ Caderno de erros"],
       ["feynman", "◎ Técnica Feynman"], ["study", "✦ Aprenda a estudar"],
@@ -1766,7 +1789,8 @@ document.addEventListener("keydown", e => {
 /* Renderiza assim que o último script defer termina de executar. Esperar
    window.onload atrasava o LCP porque o navegador aguarda todas as fontes,
    imagens e o service worker antes de disparar esse evento. */
-Storage.migrate();
+/* Storage.migrate() já rodou no topo do arquivo; repeti-lo aqui custava uma
+   segunda validação de schema inteira dentro do mesmo long task do TTI. */
 render();
 
 /* FORGE 3.0 — carregamento diferido em tempo ocioso.
@@ -1828,6 +1852,8 @@ function loadDeferredScripts(list, index = 0) {
        Uma única tarefa de ~150ms (buildAllLessons + widgets + Math) derrubava
        o TBT do Lighthouse de 100 para 99 mesmo com FCP/LCP/CLS perfeitos. */
     const steps = [
+      // Os módulos diferidos acrescentam trilhas e aulas a CURRICULUM; sem
+      // reconstruir a lista aqui, a página de trilhas encontra IDs órfãos.
       () => { lessons = buildAllLessons(); },
       () => { refreshDashboardCounts(); },
       () => {

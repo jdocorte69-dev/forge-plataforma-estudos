@@ -1,7 +1,7 @@
 {
-  "name": "Forge — Plataforma de Estudos",
-  "short_name": "Forge",
-  "description": "12 trilhas, 92 módulos e mais de 500 aulas de Matemática, C, Linux, Sistemas, Redes, Banco de Dados, Arquitetura, Assembly e IA — com laboratórios e revisão espaçada, online ou offline.",
+  "name": "FORGE OMEGA 9.0 — Plataforma de Estudos",
+  "short_name": "FORGE 9",
+  "description": "14 trilhas, 102 módulos e mais de 500 aulas de Matemática, C, Linux, Sistemas, Redes, Banco de Dados, Arquitetura, Assembly, IA, Cálculo Mental e Humanidades — com biblioteca AssaadFlix, academia mental, prova oral, caça-bugs e revisão espaçada, online ou offline.",
   "id": "./index.html",
   "start_url": "./index.html",
   "scope": "./",

@@ -1,8 +1,8 @@
 /* Forge — service worker para uso offline */
-/* FORGE 7.0: cache-first + stale-while-revalidate, manifesto completo. */
+/* FORGE 9.0: cache-first + stale-while-revalidate, manifesto completo. */
 importScripts("./sw-summaries.js");
 
-const VERSION = "forge-v9";
+const VERSION = "forge-v10";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -20,6 +20,14 @@ const APP_SHELL = [
   "./css/forge7.css",
   /* FORGE 8.0 — camada aditiva, glossário, conteúdo e controlador. */
   "./css/forge8.css",
+  /* FORGE 9.0 — AssaadFlix: tokens, componentes e módulos OMEGA. */
+  "./css/main.css",
+  "./css/components.css",
+  "./js/data-trilha13.js",
+  "./js/data-trilha14.js",
+  "./js/data-book-summaries.js",
+  "./js/sim-mental.js",
+  "./js/forge9-ui.js",
   "./js/data-porque.js",
   "./js/forge7-ui.js",
   "./js/forge8-glossary.js",

@@ -1,0 +1,764 @@
+/* ============================================================
+   FORGE 9.0 — COMPONENTES REUTILIZÁVEIS (camada aditiva)
+   Carregar depois de css/main.css. Usa os mesmos tokens --f9-*.
+
+   Orçamento da camada:
+   - somente pilhas de fonte do sistema (nenhuma fonte carregada por CSS,
+     nenhum CDN e nenhuma requisição de rede);
+   - animações apenas de transform/opacity, com espaço reservado;
+   - sem contenção de layout, visibilidade de conteúdo ou seletor relacional
+     novo;
+   - alvos interativos com no mínimo 48x48px;
+   - alto contraste legado continua soberano.
+   ============================================================ */
+
+:is([class^="f9-"], [class*=" f9-"])[hidden],
+.f9-onboard [hidden],
+.f9-lesson [hidden],
+.f9-gym [hidden],
+.f9-oral [hidden],
+.f9-exercise [hidden],
+.f9-disclosure [hidden] {
+  display: none !important;
+}
+
+/* ---------- Onboarding e trilha de passos ---------- */
+
+.f9-onboard {
+  display: grid;
+  gap: 18px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 30px);
+  border: 1px solid var(--f9-border);
+  border-top-color: var(--f9-accent);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 92% 0%, var(--f9-glow), transparent 44%),
+    var(--f9-glass);
+  box-shadow: var(--f9-shadow);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+}
+
+.f9-onboard h1,
+.f9-onboard h2 {
+  margin: 0 0 8px;
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.f9-onboard p {
+  margin: 0;
+  color: var(--f9-muted);
+  line-height: 1.5;
+}
+
+.f9-step-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.f9-step-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 999px;
+  background: var(--f9-surface-2);
+  color: var(--f9-muted);
+  font-family: var(--f9-font-sans);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.f9-step-pill[data-current="true"] {
+  border-color: var(--f9-accent);
+  background: var(--f9-glow);
+  box-shadow: 0 0 0 2px var(--f9-glow);
+  color: var(--f9-accent-text);
+  font-weight: 750;
+}
+
+.f9-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.f9-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 6px;
+  min-width: 48px;
+  min-height: 96px;
+  padding: 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 14px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.94rem;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s var(--f9-ease), opacity 0.18s var(--f9-ease);
+}
+
+.f9-choice:hover {
+  border-color: var(--f9-accent);
+  transform: translateY(-2px);
+}
+
+.f9-choice[aria-pressed="true"],
+.f9-choice[aria-checked="true"],
+.f9-choice.is-active {
+  border-color: var(--f9-accent);
+  box-shadow: 0 0 0 2px var(--f9-glow);
+}
+
+.f9-choice strong {
+  color: var(--f9-text);
+}
+
+.f9-choice small {
+  color: var(--f9-muted);
+}
+
+button.f9-choice:hover:not(:disabled) {
+  background: var(--f9-surface-2);
+}
+
+button.f9-step-pill:hover:not(:disabled) {
+  background: var(--f9-surface-2);
+}
+
+/* ---------- Aula em doze blocos ---------- */
+
+.f9-lesson {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.f9-block {
+  position: relative;
+  padding: 16px 18px;
+  border: 1px solid var(--f9-border);
+  border-left: 3px solid var(--f9-accent);
+  border-radius: 12px;
+  background: var(--f9-glass);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+}
+
+.f9-block h2 {
+  margin: 0 0 8px;
+  color: var(--f9-text);
+  font-size: 1.05rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.f9-block p,
+.f9-block li {
+  color: var(--f9-muted);
+  line-height: 1.55;
+}
+
+.f9-block code {
+  font-family: var(--f9-font-mono);
+}
+
+.f9-block pre {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--f9-code);
+  color: var(--f9-text);
+  line-height: 1.5;
+  scrollbar-width: thin;
+}
+
+.f9-block:nth-child(3n + 2) {
+  border-left-color: var(--f9-success);
+}
+
+.f9-block:nth-child(3n + 3) {
+  border-left-color: var(--f9-warn);
+}
+
+.f9-limit {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--f9-warn);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--f9-warn) 10%, transparent);
+  color: var(--f9-warn);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.f9-rule-name {
+  margin: 10px 0 0;
+  color: var(--f9-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.f9-check {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.f9-check button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s var(--f9-ease), opacity 0.18s var(--f9-ease);
+}
+
+.f9-check button:hover {
+  border-color: var(--f9-accent);
+  transform: translateY(-1px);
+}
+
+button.f9-check button:hover:not(:disabled) {
+  background: var(--f9-surface-2);
+}
+
+.f9-hint {
+  margin: 0;
+  color: var(--f9-accent-text);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.f9-feedback {
+  min-height: 40px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--f9-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.f9-feedback[data-tone="ok"] {
+  border-color: var(--f9-success);
+  background: color-mix(in srgb, var(--f9-success) 10%, transparent);
+  color: var(--f9-success);
+}
+
+.f9-feedback[data-tone="warn"] {
+  border-color: var(--f9-warn);
+  background: color-mix(in srgb, var(--f9-warn) 10%, transparent);
+  color: var(--f9-warn);
+}
+
+.f9-alt {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+}
+
+.f9-textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.f9-textarea::placeholder {
+  color: var(--f9-muted);
+}
+
+.f9-three {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--f9-muted);
+}
+
+.f9-three li {
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* ---------- Academia de cálculo ---------- */
+
+.f9-gym {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.f9-gym-question {
+  margin: 0;
+  color: var(--f9-text);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.f9-gym-input {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-mono);
+  font-size: 0.96rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.f9-gym-input::placeholder {
+  color: var(--f9-muted);
+}
+
+.f9-gym-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 14px;
+  border: 1px solid var(--f9-border);
+  border-top-color: var(--f9-accent);
+  border-radius: 12px;
+  background: var(--f9-code);
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-mono);
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.f9-gym-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.f9-gym-stats > * {
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-muted);
+  font-size: 0.8rem;
+}
+
+.f9-gym-stats strong {
+  display: block;
+  color: var(--f9-text);
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.f9-gym-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.f9-gym-choices button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: transform 0.18s var(--f9-ease), opacity 0.18s var(--f9-ease);
+}
+
+.f9-gym-choices button:hover {
+  border-color: var(--f9-accent);
+  transform: translateY(-2px);
+}
+
+button.f9-gym-choices button:hover:not(:disabled) {
+  background: var(--f9-surface-2);
+}
+
+.f9-gym-steps {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--f9-muted);
+}
+
+.f9-gym-steps li {
+  padding: 4px 0;
+  line-height: 1.5;
+}
+
+/* ---------- Prova oral ---------- */
+
+.f9-oral {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.f9-oral-rubric {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.f9-oral-rubric label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.f9-oral-rubric input {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--f9-accent-solid);
+}
+
+.f9-oral-timer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: 14px;
+  border: 1px solid var(--f9-border);
+  border-top-color: var(--f9-accent);
+  border-radius: 12px;
+  background: var(--f9-code);
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.f9-oral-result {
+  min-height: 56px;
+  padding: 12px 14px;
+  border: 1px solid var(--f9-accent);
+  border-radius: 12px;
+  background: var(--f9-glow);
+  color: var(--f9-text);
+  line-height: 1.5;
+}
+
+/* ---------- Livros, exercícios e divulgações ---------- */
+
+.f9-book-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--f9-border);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 100% 0%, var(--f9-glow), transparent 55%),
+    var(--f9-glass);
+  color: var(--f9-text);
+}
+
+.f9-book-card h3 {
+  margin: 0;
+  color: var(--f9-text);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.f9-book-card p {
+  margin: 0;
+  color: var(--f9-muted);
+}
+
+.f9-exercise {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 12px;
+  background: var(--f9-surface-2);
+  color: var(--f9-text);
+}
+
+.f9-exercise label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  color: var(--f9-text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.f9-exercise input[type="checkbox"],
+.f9-exercise input[type="radio"] {
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--f9-accent-solid);
+}
+
+.f9-exercise button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1px solid var(--f9-border);
+  border-radius: 10px;
+  background: var(--f9-surface);
+  color: var(--f9-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button.f9-exercise button:hover:not(:disabled) {
+  background: var(--f9-surface);
+}
+
+.f9-disclosure {
+  margin-top: 10px;
+  padding: 0 14px 14px;
+  border: 1px dashed var(--f9-border);
+  border-radius: 12px;
+  background: var(--f9-surface-2);
+  color: var(--f9-muted);
+}
+
+.f9-disclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 6px 0;
+  color: var(--f9-accent-text);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.f9-disclosure[open] > summary {
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--f9-border);
+}
+
+/* ---------- Micro componentes: dica, termo, informação, selo ---------- */
+
+.f9-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.f9-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--f9-accent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-mono);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.f9-info::after {
+  /* Alvo de toque invisível: o botão visual continua discreto. */
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+}
+
+.f9-tip {
+  position: absolute;
+  z-index: 60;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: min(320px, 80vw);
+  padding: 10px 12px;
+  border: 1px solid var(--f9-border);
+  border-top-color: var(--f9-accent);
+  border-radius: 10px;
+  background: var(--f9-surface);
+  box-shadow: var(--f9-shadow);
+  color: var(--f9-text);
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  /* Dica é somente leitura: nunca intercepta o clique seguinte. */
+  pointer-events: none;
+}
+
+.f9-tip[hidden] {
+  display: none !important;
+}
+
+.f9-tip strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--f9-accent-text);
+}
+
+.f9-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--f9-border);
+  border-radius: 999px;
+  background: var(--f9-glow);
+  color: var(--f9-accent-text);
+  font-family: var(--f9-font-sans);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.f9-badge[data-tone="success"] {
+  border-color: var(--f9-success);
+  color: var(--f9-success);
+}
+
+.f9-badge[data-tone="warn"] {
+  border-color: var(--f9-warn);
+  color: var(--f9-warn);
+}
+
+/* ---------- Alvos, foco e temas ---------- */
+
+:is(.f9-onboard, .f9-lesson, .f9-block, .f9-check, .f9-gym, .f9-oral,
+    .f9-exercise, .f9-disclosure, .f9-term)
+  :is(button, [role="button"], input, textarea, select, summary) {
+  min-height: 48px;
+}
+
+:is(.f9-onboard, .f9-lesson, .f9-block, .f9-check, .f9-gym, .f9-oral,
+    .f9-exercise, .f9-disclosure, .f9-term) :is(button, [role="button"]) {
+  min-width: 48px;
+}
+
+:is(.f9-onboard, .f9-choice-grid, .f9-lesson, .f9-block, .f9-check, .f9-gym,
+    .f9-oral, .f9-exercise, .f9-disclosure, .f9-term)
+  :is(button, a, input, textarea, select, summary, label, [role="button"], [tabindex]):focus-visible,
+:is(.f9-choice, .f9-step-pill, .f9-info, .f9-textarea, .f9-gym-input,
+    .f9-disclosure summary, .f9-check button, .f9-gym-choices button,
+    .f9-exercise label, .f9-oral-rubric label):focus-visible {
+  outline: 3px solid var(--f9-accent);
+  outline-offset: 2px;
+}
+
+html.high-contrast .f9-onboard,
+html.high-contrast .f9-block,
+html.high-contrast .f9-book-card,
+html.high-contrast .f9-exercise,
+html.high-contrast .f9-choice,
+html.high-contrast .f9-step-pill,
+html.high-contrast .f9-check button,
+html.high-contrast .f9-gym-choices button,
+html.high-contrast .f9-oral-rubric label {
+  background: var(--f9-surface-2);
+  box-shadow: none;
+}
+
+html.high-contrast .f9-gym-timer,
+html.high-contrast .f9-oral-timer {
+  background: var(--f9-surface);
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :is([class^="f9-"], [class*=" f9-"]),
+  :is([class^="f9-"], [class*=" f9-"])::before,
+  :is([class^="f9-"], [class*=" f9-"])::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
