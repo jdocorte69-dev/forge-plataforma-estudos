@@ -98,10 +98,13 @@ with sync_playwright() as pw:
 
     def c_initial():
         n = page.locator("#nav button[data-page]").count()
+        groups = page.locator("#nav .f8-nav-group").count()
+        heads = page.locator("#nav .f8-group-head[aria-label]").count()
         assert n == 23, f"nav={n}"
-        return f"nav={n}"
+        assert groups == 6 and heads == 6, f"grupos={groups}, cabeçalhos={heads}"
+        return f"nav={n} em {groups} grupos"
 
-    check("carregamento inicial e 21 páginas na navegação", c_initial)
+    check("carregamento inicial e 23 destinos em 6 grupos na navegação", c_initial)
 
     def c_study():
         page.evaluate("goToPage('study')")
@@ -634,15 +637,15 @@ with sync_playwright() as pw:
         p2 = browser.new_context(viewport={"width": 900, "height": 700}).new_page()
         p2.goto(BASE, wait_until="domcontentloaded")
         wait_ready(p2)
-        p2.evaluate("localStorage.setItem('forge.study.v7', '{broken')")
+        p2.evaluate("localStorage.setItem('forge.study.v8', '{broken')")
         p2.reload(wait_until="domcontentloaded")
         wait_ready(p2)
         backup = p2.evaluate("localStorage.getItem('forge.study.v2.lastBackup')")
         assert backup and '"corrupted":true' in backup and "{broken" in backup, (backup or "")[:300]
-        versioned = p2.evaluate("Object.keys(localStorage).filter(k => k.startsWith('forge.study.v5.bak_'))")
+        versioned = p2.evaluate("Object.keys(localStorage).filter(k => k.startsWith('forge.study.v7.bak_'))")
         assert len(versioned) == 1, versioned
         p2.context.close()
-        return "JSON corrompido preservado em forge.study.v2.lastBackup e forge.study.v5.bak_"
+        return "JSON corrompido preservado em forge.study.v2.lastBackup e forge.study.v7.bak_"
 
     check("REGRESSÃO: estado corrompido gera backup antes de resetar", c_corrupt_backup)
 
@@ -681,10 +684,10 @@ with sync_playwright() as pw:
             backup: !!localStorage.getItem('forge.study.v2.lastBackup')
           };
         }""")
-        assert r["version"] == 7 and r["done"] == ["importado"] and r["xp"] == 555, r
+        assert r["version"] == 8 and r["done"] == ["importado"] and r["xp"] == 555, r
         assert r["goal"] == "meta" and r["backup"] is True, r
-        assert "v2 → v7" in r["toast"], r
-        return "v2 migrada para v7 com backup e aviso"
+        assert "v2 → v8" in r["toast"], r
+        return "v2 migrada para v8 com backup e aviso"
 
     check("IMPORTAÇÃO: versão compatível ainda migra com backup", c_import_valid_migration)
 
@@ -720,15 +723,15 @@ with sync_playwright() as pw:
             v4Preserved: !!localStorage.getItem('forge.study.v4')
           };
         }""")
-        assert r["version"] == 7 and r["userId"] == "usr_teste_v4", r
+        assert r["version"] == 8 and r["userId"] == "usr_teste_v4", r
         assert r["done"] == ["aula-1"] and r["xp"] == 321 and r["lessonScore"] == 9, r
         assert r["sourceVersion"] == 4 and r["checksum"] == r["backupChecksum"], r
         assert r["backupAlgorithm"] == "FNV-1a-32" and r["backupCount"] == 1, r
         assert r["markerStatus"] == "complete" and r["v4Preserved"] is True, r
         p3.context.close()
-        return "v4→v5→v7 atômica: backup, checksum, userId e progresso preservados"
+        return "v4→v5→v7→v8 atômica: backup, checksum, userId e progresso preservados"
 
-    check("MIGRAÇÃO: v4→v5→v7 atômica com backup e checksum", c_v4_to_v5_migration)
+    check("MIGRAÇÃO: v4→v5→v7→v8 atômica com backup e checksum", c_v4_to_v5_migration)
 
     def c_forge4_widgets():
         page.evaluate("goToPage('dashboard')")
@@ -877,7 +880,7 @@ with sync_playwright() as pw:
         page.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=20000)
         cached = page.evaluate("""async () => {
           const keys = await caches.keys();
-          const key = keys.find(k => k.startsWith('forge-v8'));
+          const key = keys.find(k => k.startsWith('forge-v9'));
           if (!key) return { keys, key: null, found: false, total: 0 };
           const cache = await caches.open(key);
           const found = Boolean(await cache.match('./saida/02_resumos_por_livro/FME_1/cap01.md'));
@@ -885,7 +888,7 @@ with sync_playwright() as pw:
         }""")
         assert cached["key"], cached
         assert cached["found"] and cached["total"] >= 233, cached
-        assert all(k.startswith("forge-v8") for k in cached["keys"]), cached
+        assert all(k.startswith("forge-v9") for k in cached["keys"]), cached
         context.set_offline(True)
         try:
             page.evaluate("SummariesPage.open('FME_1/cap01')")
@@ -898,9 +901,9 @@ with sync_playwright() as pw:
         finally:
             context.set_offline(False)
             page.evaluate("SummariesPage.back()")
-        return f"cache forge-v8 com {cached['total']} entradas; resumo lido offline"
+        return f"cache forge-v9 com {cached['total']} entradas; resumo lido offline"
 
-    check("PWA/offline: resumo do acervo no cache forge-v8", c_forge4_offline_summaries)
+    check("PWA/offline: resumo do acervo no cache forge-v9", c_forge4_offline_summaries)
 
     def c_forge4_plan_six_phases():
         page.evaluate("goToPage('plan')")
@@ -932,6 +935,140 @@ with sync_playwright() as pw:
         return f"6 fases com evidência local; marcação persistida (done={persisted['done']})"
 
     check("FORGE 4.0: plano de estudo em 6 fases com evidência local", c_forge4_plan_six_phases)
+
+    # ---------------- FORGE 8.0 ----------------
+
+    def c_f8_onboarding_home_tooltip():
+        ctx8 = browser.new_context(viewport={"width": 1440, "height": 900}, locale="pt-BR")
+        p8 = ctx8.new_page()
+        p8.goto(BASE, wait_until="domcontentloaded")
+        wait_ready(p8)
+        assert p8.locator("#f8Onboard").count() == 1
+        assert p8.locator("#f8Onboard [data-f8-onboard-step='0']").is_visible()
+        p8.locator("#f8Onboard .f8-info").first.click()
+        assert p8.locator("#f8Onboard .f8-tip:not([hidden])").count() == 1
+        assert p8.locator("#f8Onboard .f8-info").first.get_attribute("aria-expanded") == "true"
+        p8.get_by_role("button", name="Próximo passo →").click()
+        assert p8.locator("#f8Onboard [data-f8-onboard-step='1']").is_visible()
+        assert p8.locator("#f8Onboard [data-f8-entry]").count() == 3
+        p8.locator("[data-f8-entry='placement']").click()
+        p8.get_by_role("button", name="Próximo passo →").click()
+        assert p8.locator("#f8Onboard [data-f8-goal]").count() == 3
+        p8.locator("[data-f8-goal='leve']").click()
+        p8.get_by_role("button", name="Começar minha primeira aula →").click()
+        r = p8.evaluate("""() => ({
+          first: Storage.get().isFirstVisit,
+          entry: Storage.getForge8State().onboarding.entryPoint,
+          goal: Storage.getForge8State().onboarding.dailyGoal,
+          completed: !!Storage.getForge8State().onboarding.completedAt,
+          minutes: Storage.get().user_profile.daily_goal_minutes,
+          onboard: !!document.getElementById('f8Onboard')
+        })""")
+        assert r["first"] is False and r["completed"] and not r["onboard"], r
+        assert r["entry"] == "placement" and r["goal"] == "leve" and r["minutes"] == 30, r
+        assert p8.evaluate("document.getElementById('pageTitle').textContent") == "Aprenda a estudar"
+        p8.evaluate("goToPage('dashboard')")
+        home = p8.evaluate("""() => ({
+          cycle: [...document.querySelectorAll('.f8-cycle li')].map(n => n.textContent.trim()),
+          heroes: document.querySelectorAll('.f8-hero-card').length,
+          ctas: document.querySelectorAll('.f8-hero-card .f8-primary').length,
+          cards: document.querySelectorAll('#f8HomeRoot .f8-mini-card').length,
+          advancedOpen: document.querySelector('.f8-advanced')?.open
+        })""")
+        assert len(home["cycle"]) == 4 and home["heroes"] == 1 and home["ctas"] == 1, home
+        assert home["cards"] == 2 and home["advancedOpen"] is False, home
+        p8.evaluate("Storage.get().done.push('primeira-aula'); Storage.save(); goToPage('dashboard')")
+        assert p8.locator(".f8-advanced").get_attribute("open") is not None
+        ctx8.close()
+        return "3 etapas, micro-card, meta 30 min e ferramentas avançadas desbloqueadas após 1 aula"
+
+    check("FORGE 8.0: onboarding, home em 3 blocos e micro-card", c_f8_onboarding_home_tooltip)
+
+    def c_f8_lesson_12_rules():
+        page.evaluate("goToPage('deep-lesson')")
+        r = page.evaluate("""() => ({
+          rules: document.querySelectorAll('.f8-deep-block[data-f8-rule]').length,
+          named: [...document.querySelectorAll('.f8-rule-name')].filter(n => n.textContent.includes('Regra ')).length,
+          checks: document.querySelectorAll('[data-f8-check]').length,
+          title: document.querySelector('#view h1')?.textContent || '',
+          terms: document.querySelectorAll('#view .f8-info').length
+        })""")
+        assert r["rules"] == 12 and r["named"] == 11, r
+        assert r["checks"] >= 2 and r["terms"] >= 4, r
+        assert "ponteiros" in r["title"].lower(), r
+        page.locator("[data-f8-check='0'] [data-f8-option='0']").click()
+        feedback = page.locator("[data-f8-check='0'] .f8-feedback").inner_text()
+        assert feedback and page.locator("[data-f8-check='0'] .f8-hint").is_visible()
+        page.locator("[data-f8-alternative]").click()
+        assert page.locator(".f8-alt").is_visible()
+        page.locator("#f8Feynman").fill("curto")
+        page.locator("[data-f8-feynman]").click()
+        assert "Precisa de ao menos" in page.locator("[data-f8-feynman-feedback]").inner_text()
+        page.locator("#f8Feynman").fill(
+            "O ponteiro guarda o endereço da variável na memória; a CPU lê esse endereço "
+            "para encontrar o valor e atualiza o registrador com a posição indicada.")
+        page.locator("[data-f8-feynman]").click()
+        assert "Síntese registrada" in page.locator("[data-f8-feynman-feedback]").inner_text()
+        return f"12 blocos, {r['checks']} checagens, alternativa e Feynman validados"
+
+    check("FORGE 8.0: aula Universo Narrado com 12 regras e checagens", c_f8_lesson_12_rules)
+
+    def c_f8_library_tabs():
+        page.evaluate("goToPage('library')")
+        assert page.locator("[data-f8-tab]").count() == 4
+        assert page.locator("[role='tab'][aria-selected='true']").count() == 1
+        page.locator("[data-f8-tab='resumos']").click()
+        assert page.locator("[data-f8-tab='resumos']").get_attribute("aria-selected") == "true"
+        assert page.locator("[role='tabpanel']").count() == 1
+        page.locator("[data-f8-tab='catalogo']").click()
+        assert page.locator("#f8-panel-catalogo [data-f8-tab]").count() == 0
+        stored = page.evaluate("Storage.getForge8State().library.activeTab")
+        assert stored == "catalogo", stored
+        page.locator("[data-f8-tab='livros']").click()
+        return "4 abas na mesma rota, estado persistido e painéis sem duplicação"
+
+    check("FORGE 8.0: biblioteca unificada em 4 abas", c_f8_library_tabs)
+
+    def c_f8_v7_to_v8_atomic():
+        ctx9 = browser.new_context(viewport={"width": 900, "height": 700}, locale="pt-BR")
+        p9 = ctx9.new_page()
+        p9.goto(BASE, wait_until="domcontentloaded")
+        wait_ready(p9)
+        p9.evaluate("""() => {
+          localStorage.clear();
+          localStorage.setItem('forge.study.v7', JSON.stringify({
+            version: 7, versionString: '7.0.0', userId: 'usr_v8_atomico',
+            done: ['aula-v7'], xp: 432,
+            mastery: { 'aula-v7': { score: 9, mastered: true } },
+            feynman: { 'aula-v7': 'Explicação com mais de trinta caracteres preservada na migração.' },
+            forge7: { userSeed: 123456789 }
+          }));
+        }""")
+        p9.reload(wait_until="domcontentloaded")
+        wait_ready(p9)
+        r = p9.evaluate("""() => {
+          const s = Storage.get();
+          const bak = Object.keys(localStorage).filter(k => k.indexOf('forge.study.v7.bak_') === 0);
+          return {
+            version: s.version, userId: s.userId, done: s.done, xp: s.xp,
+            seed7: s.forge7 && s.forge7.userSeed, seed8: s.forge8 && s.forge8.userSeed,
+            first: s.isFirstVisit, advanced: s.forge8 && s.forge8.advancedRevealed,
+            tmp: localStorage.getItem('forge.study.v8.tmp'),
+            backups: bak.length, v7preserved: !!localStorage.getItem('forge.study.v7'),
+            lessonScore: s.progress.lessons['aula-v7'] && s.progress.lessons['aula-v7'].score,
+            feynman: s.feynman['aula-v7']
+          };
+        }""")
+        assert r["version"] == 8 and r["userId"] == "usr_v8_atomico", r
+        assert r["done"] == ["aula-v7"] and r["xp"] == 432 and r["lessonScore"] == 9, r
+        assert r["seed8"] == (1664525 * r["seed7"] + 1013904223) % (2 ** 32), r
+        assert r["backups"] == 1 and r["v7preserved"] and r["tmp"] is None, r
+        assert r["first"] is False and r["advanced"] is True, r
+        assert "trinta caracteres" in r["feynman"], r
+        ctx9.close()
+        return "v7→v8 atômico: backup, LCG, userId, domínio e Feynman preservados"
+
+    check("FORGE 8.0: migração v7→v8 atômica com LCG e invariante de domínio", c_f8_v7_to_v8_atomic)
 
     browser.close()
 

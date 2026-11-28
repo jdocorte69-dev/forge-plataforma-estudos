@@ -207,6 +207,7 @@ function render() {
     dashboard: "Painel geral",
     tracks: "Trilhas e aulas",
     lesson: "Aula",
+    "deep-lesson": "Aula · Universo Narrado",
     focus: "Modo foco",
     plan: "Meu plano de formação",
     lab: "Laboratórios",
@@ -246,6 +247,7 @@ function render() {
     else b.removeAttribute("aria-current");
   });
   if (typeof ForgeNav !== "undefined") ForgeNav.sync();
+  if (typeof Forge8UI !== "undefined" && typeof Forge8UI.syncNav === "function") Forge8UI.syncNav(page);
 
   const v = document.getElementById("view");
   if (!v) return;
@@ -256,6 +258,10 @@ function render() {
     dashboard: dashboardPage,
     tracks: tracksPage,
     lesson: renderLesson,
+    "deep-lesson": v => {
+      if (typeof Forge8UI !== "undefined") Forge8UI.mountLesson(v);
+      else v.innerHTML = '<p class="muted">Aula indisponível.</p>';
+    },
     focus: v => { if (typeof Focus !== "undefined") Focus.renderPage(v); },
     plan: v => { if (typeof Plan !== "undefined") Plan.renderPage(v); },
     lab: labPage,
@@ -264,7 +270,9 @@ function render() {
     feynman: feynmanPage,
     study: v => { if (typeof StudyPage !== "undefined") StudyPage.renderPage(v); else v.innerHTML = '<p class="muted">Módulo de estudo guiado indisponível.</p>'; },
     domain: v => { v.innerHTML = `<div class="eyebrow">Avaliação por evidência</div><h1 class="h1">Mapa de domínio</h1><p class="sub">Domínio não é XP: cada selo 8/10 exige explicação, exercícios, aplicação, laboratório e revisão posterior.</p>` + (typeof Mastery !== "undefined" ? Mastery.panelHTML() : '<p class="muted">Módulo de domínio indisponível.</p>'); },
-    library: libraryPage,
+    // FORGE 8.0 — uma única rota com quatro abas; as rotas legadas continuam
+    // disponíveis para compatibilidade e para os atalhos já existentes.
+    library: v => { if (typeof Forge8UI !== "undefined") Forge8UI.renderLibrary(v); else libraryPage(v); },
     richlib: v => { if (typeof LibraryRich !== "undefined") v.innerHTML = LibraryRich.pageHTML(); },
     books: v => { if (typeof BooksPage !== "undefined") BooksPage.renderPage(v); },
     summaries: v => { if (typeof SummariesPage !== "undefined") SummariesPage.renderPage(v); else v.innerHTML = '<p class="muted">Resumos indisponíveis.</p>'; },
@@ -311,7 +319,7 @@ function render() {
 }
 
 let page = "dashboard";
-const INTERNAL_PAGES = ["book", "reader", "questions", "stellar", "tools"];
+const INTERNAL_PAGES = ["book", "reader", "questions", "stellar", "tools", "deep-lesson"];
 let currentLesson = null;
 let labTab = "linux";
 let reviewIndex = 0;
@@ -325,34 +333,37 @@ function dashboardPage(v) {
     .filter(([d]) => d >= startStr)
     .reduce((acc, [, h]) => acc + h, 0);
 
-  /* FORGE 7.0 — as três camadas vêm antes do painel legado. O herói já está
-     no HTML inicial (LCP no primeiro paint); mapa e hub são preenchidos
-     somente se o módulo aditivo estiver disponível, sem CLS. */
+  /* FORGE 7.0/8.0 — ciclo, herói, mapa e hub vêm antes do painel legado.
+     O herói já está no HTML inicial (LCP no primeiro paint). Nas voltas ao
+     painel ele é recriado sem substituir o restante da página, para que nada
+     do FORGE 7.0 seja perdido. */
   if (!v.querySelector("#f7HeroRoot")) {
-    v.insertAdjacentHTML("afterbegin", `<div id="f7HeroRoot"></div><div id="f7MapRoot"></div><div id="f7HubRoot"></div>`);
+    v.insertAdjacentHTML("afterbegin", `
+<div class="f8-cycle" role="region" aria-label="Ciclo de aprendizagem FORGE">
+  <strong>Ciclo FORGE</strong>
+  <ol><li>Estudar aula</li><li>Praticar em lab/quiz</li><li>Registrar erros</li><li>Revisar no momento exato</li></ol>
+</div>
+<div id="f7HeroRoot">
+  <section class="f8-hero-card focus-hero" aria-labelledby="f7HeroTitle">
+    <div>
+      <p class="f8-kicker">Sua missão agora · M1</p>
+      <h1 id="f7HeroTitle">Peano e Aritmética</h1>
+      <p>Construa domínio com uma aula curta, uma prática e uma revisão no momento certo.</p>
+      <div class="f8-actions"><button type="button" class="f8-primary" data-f8-go="deep-lesson">Continuar aula →</button></div>
+    </div>
+    <div class="f7-hero-ring" data-value="0%" style="--f7-progress:0" role="img" aria-label="Progresso geral: 0%">
+      <svg viewBox="0 0 92 92" aria-hidden="true" focusable="false">
+        <circle class="f7-ring-track" cx="46" cy="46" r="40"></circle>
+        <circle class="f7-ring-value" cx="46" cy="46" r="40"></circle>
+      </svg>
+    </div>
+  </section>
+</div><div id="f7MapRoot"></div><div id="f7HubRoot"></div>`);
   }
   if (typeof Forge7UI !== "undefined") Forge7UI.mountDashboard(v);
-
-  /* O cartão herói já vem no HTML inicial, o que permite pintá-lo antes de
-     qualquer módulo JavaScript (LCP no primeiro paint). Em navegações
-     posteriores ele é recriado junto com o restante da página. */
-  if (!v.querySelector(".focus-hero")) {
-    v.innerHTML = `
-<div class="eyebrow">Seu espaço de aprendizagem</div>
-<h1 class="h1">Construa domínio, uma sessão por vez.</h1>
-<p class="sub">Estude com intenção, pratique, registre erros e revise. O progresso fica salvo neste navegador.</p>
-
-<div class="card section focus-hero">
-  <div>
-    <div class="eyebrow">Estudar com intenção</div>
-    <h2 style="margin:4px 0 6px">Modo foco: uma etapa por vez</h2>
-    <p class="muted">Oito passos curtos, timer de blocos, pausa quando precisar e retomada de onde parou. Ideal para sessões de 5 a 25 minutos.</p>
-  </div>
-  <div class="actions">
-    <button type="button" onclick="if(window.Focus)Focus.open(nextLessonId(),'dashboard')">▶ Iniciar modo foco</button>
-    <button type="button" class="secondary" onclick="if(window.Focus)Focus.openPicker()">Escolher aula</button>
-  </div>
-</div>`;
+  if (typeof Forge8UI !== "undefined") {
+    Forge8UI.mountDashboard(v);
+    Forge8UI.mountOnboarding(v);
   }
   v.insertAdjacentHTML("beforeend", `
 ${typeof Gamification !== "undefined" ? Gamification.dashboardWidgets() : ""}
@@ -833,7 +844,7 @@ const ForgeNav = {
       ["domain", "◈ Mapa de domínio"], ["library", "▣ Biblioteca"],
       ["books", "▤ Livros em PDF"], ["glossary", "◬ Glossário"],
       ["projects", "⚒ Projetos integradores"], ["catalog", "⌗ Catálogo de labs"],
-      ["settings", "⚙ Progresso e backup"]
+      ["deep-lesson", "✦ Aula Universo Narrado"], ["settings", "⚙ Progresso e backup"]
     ];
     openModal(`<h2>Mais páginas</h2><p class="muted small">Acesso rápido ao restante da plataforma.</p>
       <div class="grid" style="grid-template-columns:1fr">
@@ -868,7 +879,9 @@ document.getElementById("themeBtn").onclick = () => {
 };
 
 document.getElementById("menuBtn").onclick = () => {
-  document.getElementById("sidebar").classList.toggle("open");
+  const button = document.getElementById("menuBtn");
+  const open = document.getElementById("sidebar").classList.toggle("open");
+  button.setAttribute("aria-expanded", open ? "true" : "false");
 };
 
 function labPage(v) {

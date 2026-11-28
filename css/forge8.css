@@ -1,0 +1,864 @@
+/* ============================================================
+   FORGE 8.0 — Obsidian Studio / Editorial Ivory (camada aditiva)
+   Carregar depois de css/style.css e css/forge7.css.
+
+   Regras de orçamento:
+   - nenhuma rede, nenhuma fonte externa, nenhum CDN;
+   - somente transform/opacity nas animações (60 FPS, sem CLS);
+   - sem `contain: layout`/`content-visibility`: o FORGE 4.0 já
+     reserva altura nas seções do painel;
+   - todos os alvos interativos com no mínimo 48x48px;
+   - alto contraste legado continua soberano.
+   ============================================================ */
+
+:root,
+html[data-theme="dark"] {
+  --f8-bg: #090D16;
+  --f8-surface: #111827;
+  --f8-surface-2: #172134;
+  --f8-text: #EAF2FF;
+  --f8-muted: #A9B8CC;
+  --f8-border: rgba(148, 163, 184, 0.24);
+  --f8-accent: #38BDF8;
+  --f8-accent-text: #7DD3FC;
+  --f8-accent-solid: #38BDF8;
+  --f8-on-accent: #04121F;
+  --f8-success: #6EE7B7;
+  --f8-warn: #FDBA74;
+  --f8-glow: rgba(56, 189, 248, 0.18);
+  --f8-glass: rgba(17, 24, 39, 0.92);
+  --f8-track: rgba(148, 163, 184, 0.26);
+  --f8-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+  --f8-code: #0B1220;
+}
+
+html[data-theme="light"] {
+  --f8-bg: #F8FAFC;
+  --f8-surface: #FFFFFF;
+  --f8-surface-2: #F1F5F9;
+  --f8-text: #0F172A;
+  --f8-muted: #475569;
+  --f8-border: rgba(15, 23, 42, 0.18);
+  --f8-accent: #0284C7;
+  --f8-accent-text: #0369A1;
+  --f8-accent-solid: #0369A1;
+  --f8-on-accent: #FFFFFF;
+  --f8-success: #047857;
+  --f8-warn: #9A3412;
+  --f8-glow: rgba(2, 132, 199, 0.14);
+  --f8-glass: rgba(255, 255, 255, 0.95);
+  --f8-track: rgba(15, 23, 42, 0.14);
+  --f8-shadow: 0 16px 38px rgba(15, 23, 42, 0.12);
+  --f8-code: #F8FAFC;
+}
+
+html.high-contrast,
+html.high-contrast[data-theme="light"] {
+  --f8-bg: #000;
+  --f8-surface: #000;
+  --f8-surface-2: #101010;
+  --f8-text: #FFF;
+  --f8-muted: #E8E8E8;
+  --f8-border: #FFF;
+  --f8-accent: #FFE600;
+  --f8-accent-text: #FFE600;
+  --f8-accent-solid: #FFE600;
+  --f8-on-accent: #000;
+  --f8-success: #66FF99;
+  --f8-warn: #FFD166;
+  --f8-glow: rgba(255, 230, 0, 0.28);
+  --f8-glass: #000;
+  --f8-track: #FFF;
+  --f8-shadow: none;
+  --f8-code: #000;
+}
+
+/* ---------- Navegação em 6 grupos ---------- */
+
+.f8-nav-group {
+  display: block;
+  margin: 0 0 4px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.f8-nav-group[data-open="true"] {
+  border-color: var(--f8-border);
+  background: var(--f8-glow);
+}
+
+.f8-group-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--f8-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.f8-group-head:hover {
+  background: var(--f8-glow);
+}
+
+/* O tema legado .nav button.active define fundo próprio; esta regra mais
+   específica garante contraste AA do subtítulo também no grupo ativo. */
+#nav .f8-nav-group > .f8-group-head:is([aria-current="page"], .active) {
+  background: var(--f8-accent-solid);
+  color: var(--f8-on-accent);
+}
+
+#nav .f8-nav-group > .f8-group-head:is([aria-current="page"], .active) .f8-group-sub {
+  color: var(--f8-on-accent);
+}
+
+.f8-group-label {
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.f8-group-sub {
+  color: var(--f8-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+/* Alvos legados do cartão caça-bugs (widget do painel): ampliados sem
+   alterar a lógica do módulo, para satisfazer WCAG 2.2 target-size. */
+#bugHuntCard .bug-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
+#bugHuntCard .bug-line:hover {
+  background: var(--f8-glow);
+}
+
+#bugHuntCard .bug-line input[type="radio"] {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--f8-accent-solid);
+}
+
+#bugHuntCard button[type="submit"] {
+  min-height: 48px;
+}
+
+/* Exceção cirúrgica à mitigação FORGE 4.0: o cartão caça-bugs precisa de
+   layout real para que o axe meça os alvos rádio; as demais seções do painel
+   continuam com content-visibility: auto + contain-intrinsic-size. */
+#view[data-page="dashboard"] > #forge4Widgets:has(#bugHuntCard) {
+  content-visibility: visible;
+}
+
+.f8-subnav {
+  display: grid;
+  gap: 2px;
+  padding: 0 8px 8px;
+}
+
+.f8-subnav[hidden] {
+  display: none;
+}
+
+.f8-subnav button {
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--f8-muted);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.f8-subnav button:hover,
+.f8-subnav button[aria-current="page"] {
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+}
+
+.f8-nav-legacy {
+  display: none !important;
+}
+
+/* ---------- Faixa do ciclo e home em 3 blocos ---------- */
+
+.f8-cycle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--f8-border);
+  border-bottom-color: var(--f8-accent);
+  border-radius: 14px;
+  background: var(--f8-glass);
+  color: var(--f8-text);
+}
+
+.f8-cycle ol {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.f8-cycle li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.f8-cycle li:not(:last-child)::after {
+  content: "→";
+  color: var(--f8-accent-text);
+  font-weight: 700;
+}
+
+.f8-home {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.f8-hero-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: clamp(16px, 3vw, 26px);
+  border: 1px solid var(--f8-border);
+  border-top-color: var(--f8-accent);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 12% 8%, var(--f8-glow), transparent 48%),
+    var(--f8-glass);
+  box-shadow: var(--f8-shadow);
+}
+
+.f8-hero-card > div:first-child {
+  flex: 1 1 340px;
+}
+
+.f8-hero-card p {
+  max-width: 62ch;
+}
+
+.f8-onboard .f8-actions,
+.f8-onboard .f8-choice-grid,
+.f8-onboard .f8-flow {
+  margin-bottom: 10px;
+}
+
+.f8-onboard [hidden] {
+  display: none !important;
+}
+
+.f8-kicker {
+  margin: 0 0 6px;
+  color: var(--f8-accent-text);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.f8-hero-card h1,
+.f8-onboard h1 {
+  margin: 0 0 8px;
+  color: var(--f8-text);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.18;
+}
+
+.f8-hero-card p,
+.f8-onboard p {
+  color: var(--f8-muted);
+  line-height: 1.5;
+}
+
+.f8-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--f8-accent-solid);
+  color: var(--f8-on-accent);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.f8-primary:hover {
+  transform: translateY(-2px);
+}
+
+.f8-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.f8-textlink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 6px;
+  border: 0;
+  background: transparent;
+  color: var(--f8-accent-text);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* A regra legada global `button:hover:not(:disabled)` troca o fundo por
+   --accent-hover sem alterar a cor do texto, derrubando o contraste AA nos
+   botões novos. Estas regras são mais específicas e preservam o par
+   texto/fundo em ambos os temas, inclusive sob o mouse do axe. */
+button.f8-primary:hover:not(:disabled) {
+  background: var(--f8-accent-solid);
+}
+
+button.f8-secondary:hover:not(:disabled) {
+  background: var(--f8-surface-2);
+  border-color: var(--f8-accent);
+}
+
+button.f8-textlink:hover:not(:disabled) {
+  background: transparent;
+  color: var(--f8-accent-text);
+}
+
+.f8-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.f8-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.f8-mini-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  border: 1px solid var(--f8-border);
+  border-radius: 14px;
+  background: var(--f8-glass);
+  color: var(--f8-text);
+}
+
+.f8-mini-card h2,
+.f8-mini-card h3 {
+  margin: 0;
+  color: var(--f8-text);
+  font-size: 1rem;
+}
+
+.f8-mini-card p {
+  margin: 0;
+  color: var(--f8-muted);
+}
+
+.f8-bar {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--f8-track);
+}
+
+.f8-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--f8-accent);
+  transform-origin: left center;
+}
+
+.f8-metric {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--f8-muted);
+  font-size: 0.86rem;
+}
+
+.f8-metric strong {
+  color: var(--f8-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Onboarding em 3 passos ---------- */
+
+.f8-onboard {
+  display: grid;
+  gap: 18px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(16px, 3vw, 30px);
+  border: 1px solid var(--f8-border);
+  border-top-color: var(--f8-accent);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 90% 0%, var(--f8-glow), transparent 44%),
+    var(--f8-glass);
+  box-shadow: var(--f8-shadow);
+}
+
+/* O painel já vem no HTML inicial e é revelado por um atributo decidido no
+   <head>, antes do primeiro paint. Nada é inserido acima do herói depois. */
+html[data-f8-first="1"] #f8Onboard[hidden] {
+  display: grid;
+}
+
+.f8-steps-rail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.f8-step-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--f8-border);
+  border-radius: 999px;
+  color: var(--f8-muted);
+  font-size: 0.8rem;
+}
+
+.f8-step-pill[data-current="true"] {
+  border-color: var(--f8-accent);
+  color: var(--f8-accent-text);
+  font-weight: 700;
+}
+
+.f8-flow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.f8-flow li {
+  display: grid;
+  place-items: center;
+  min-height: 86px;
+  padding: 12px;
+  border: 1px solid var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.f8-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.f8-choice,
+.f8-goal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-height: 92px;
+  padding: 14px;
+  border: 1px solid var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.f8-choice:hover,
+.f8-goal:hover {
+  transform: translateY(-2px);
+}
+
+.f8-choice[aria-pressed="true"],
+.f8-goal[aria-pressed="true"] {
+  border-color: var(--f8-accent);
+  box-shadow: 0 0 0 2px var(--f8-glow);
+}
+
+.f8-choice strong,
+.f8-goal strong {
+  color: var(--f8-text);
+}
+
+.f8-choice small,
+.f8-goal small {
+  color: var(--f8-muted);
+}
+
+.f8-onboard-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* ---------- Abas das páginas unificadas ---------- */
+
+.f8-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 6px;
+  border: 1px solid var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-glass);
+}
+
+.f8-tabs button {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--f8-muted);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.f8-tabs button[aria-selected="true"] {
+  border-color: var(--f8-accent);
+  background: var(--f8-glow);
+  color: var(--f8-accent-text);
+}
+
+.f8-panel[hidden] {
+  display: none !important;
+}
+
+.f8-reveal {
+  animation: f8-rise 0.24s ease-out;
+}
+
+@keyframes f8-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Micro-cards contextuais ---------- */
+
+.f8-term {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.f8-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--f8-accent);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--f8-accent-text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: help;
+}
+
+.f8-info::after {
+  /* alvo de toque invisível: o botão visual continua discreto. */
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 48px;
+  height: 48px;
+  transform: translate(-50%, -50%);
+}
+
+.f8-info-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.f8-tip {
+  position: absolute;
+  z-index: 60;
+  left: 50%;
+  top: calc(100% + 8px);
+  width: min(320px, 80vw);
+  padding: 10px 12px;
+  border: 1px solid var(--f8-border);
+  border-top-color: var(--f8-accent);
+  border-radius: 10px;
+  background: var(--f8-surface);
+  box-shadow: var(--f8-shadow);
+  color: var(--f8-text);
+  font-size: 0.84rem;
+  font-weight: 400;
+  line-height: 1.4;
+  transform: translateX(-50%);
+  /* Dica é somente leitura: nunca intercepta o clique seguinte. */
+  pointer-events: none;
+}
+
+.f8-tip[hidden] {
+  display: none;
+}
+
+.f8-tip strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--f8-accent-text);
+}
+
+/* ---------- Aula em 12 passos ---------- */
+
+.f8-deep {
+  display: grid;
+  gap: 12px;
+}
+
+.f8-deep-block {
+  padding: 16px;
+  border: 1px solid var(--f8-border);
+  border-left-color: var(--f8-accent);
+  border-radius: 12px;
+  background: var(--f8-glass);
+  color: var(--f8-text);
+}
+
+.f8-deep-block > h2,
+.f8-deep-block > h3 {
+  margin: 0 0 8px;
+  color: var(--f8-text);
+  font-size: 1.05rem;
+}
+
+.f8-deep-block p,
+.f8-deep-block li {
+  color: var(--f8-muted);
+  line-height: 1.55;
+}
+
+.f8-deep-block code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+
+.f8-deep pre {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--f8-code);
+  color: var(--f8-text);
+  line-height: 1.5;
+}
+
+.f8-limit {
+  padding: 10px 12px;
+  border: 1px solid var(--f8-warn);
+  border-radius: 10px;
+  color: var(--f8-warn);
+}
+
+.f8-rule-name {
+  margin: 10px 0 0;
+  color: var(--f8-muted);
+  font-size: 0.78rem;
+}
+
+.f8-alt {
+  margin-top: 10px;
+  padding: 12px;
+  border: 1px solid var(--f8-border);
+  border-radius: 10px;
+  background: var(--f8-surface-2);
+}
+
+.f8-alt[hidden] {
+  display: none !important;
+}
+
+.f8-check {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.f8-check button {
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid var(--f8-border);
+  border-radius: 10px;
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.f8-hint {
+  margin: 0;
+  color: var(--f8-accent-text);
+  font-size: 0.86rem;
+}
+
+.f8-feedback {
+  min-height: 24px;
+  color: var(--f8-success);
+  font-size: 0.9rem;
+}
+
+.f8-feedback[data-tone="warn"] {
+  color: var(--f8-warn);
+}
+
+.f8-textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px;
+  border: 1px solid var(--f8-border);
+  border-radius: 10px;
+  background: var(--f8-surface-2);
+  color: var(--f8-text);
+  font: inherit;
+  resize: vertical;
+}
+
+.f8-three {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--f8-muted);
+}
+
+.f8-three li {
+  margin: 4px 0;
+}
+
+/* ---------- Ferramentas avançadas com revelação progressiva ---------- */
+
+.f8-advanced {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px dashed var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-surface-2);
+  color: var(--f8-muted);
+}
+
+.f8-advanced > summary {
+  min-height: 48px;
+  color: var(--f8-accent-text);
+  cursor: pointer;
+}
+
+.f8-advanced[open] > .f8-grid {
+  animation: f8-rise 0.24s ease-out;
+}
+
+.f8-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.f8-grid button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 84px;
+  padding: 12px;
+  border: 1px solid var(--f8-border);
+  border-radius: 12px;
+  background: var(--f8-glass);
+  color: var(--f8-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.f8-grid button small {
+  color: var(--f8-muted);
+}
+
+:is(.f8-primary, .f8-secondary, .f8-textlink, .f8-choice, .f8-goal,
+    .f8-group-head, .f8-subnav button, .f8-tabs button, .f8-grid button,
+    .f8-info, .f8-check button, .f8-advanced summary):focus-visible {
+  outline: 3px solid var(--f8-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :is([class^="f8-"], [class*=" f8-"]),
+  :is([class^="f8-"], [class*=" f8-"])::before,
+  :is([class^="f8-"], [class*=" f8-"])::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

@@ -11,6 +11,22 @@
 <link rel="stylesheet" href="css/style.css">
 <!-- FORGE 7.0 — folha aditiva (Obsidian Studio / Editorial Ivory). -->
 <link rel="stylesheet" href="css/forge7.css">
+<!-- FORGE 8.0 — navegação em 6 grupos, onboarding, home em 3 blocos e micro-cards. -->
+<link rel="stylesheet" href="css/forge8.css">
+<script>
+/* FORGE 8.0 — decisão de primeira visita antes do primeiro paint.
+   Qualquer namespace forge.study preservado significa retorno: a tela de
+   boas-vindas só reserva espaço quando não há histórico algum. */
+(function () {
+  var first = true;
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      if (String(localStorage.key(i)).indexOf("forge.study.") === 0) { first = false; break; }
+    }
+  } catch (e) { first = false; }
+  if (first) document.documentElement.setAttribute("data-f8-first", "1");
+})();
+</script>
 <!-- KaTeX (CSS e JS) é injetado sob demanda por ForgeMath: o painel inicial
      não contém fórmulas e trocar a folha em tempo ocioso invalidava o layout. -->
 </head>
@@ -19,50 +35,77 @@
 <div class="app">
 <aside class="side" id="sidebar">
 <div class="brand">forge<span>.</span></div><p class="tag">Sua oficina de conhecimento</p>
+<!-- FORGE 8.0 — 6 grupos com subtítulos explicativos. Os 23 destinos originais
+     continuam presentes como botões data-page (nenhum conteúdo foi removido). -->
 <nav class="nav" id="nav" aria-label="Navegação principal">
-<div class="navlabel">Aprender</div>
-<button class="active" data-page="dashboard">▦ Painel geral</button>
-<button data-page="tracks">▤ Trilhas e aulas</button>
-<button data-page="focus">◉ Modo foco</button>
-<button data-page="plan">◇ Meu plano</button>
-<button data-page="lab">⌘ Laboratórios</button>
-<button data-page="review">◷ Revisão espaçada</button>
-<button data-page="mistakes">✎ Caderno de erros</button>
-<button data-page="feynman">◎ Técnica Feynman</button>
-<button data-page="study">✦ Aprenda a estudar</button>
-<button data-page="porque">✧ O Porquê de Tudo</button>
-<button data-page="protocol">◫ Protocolo de estudo</button>
-<button data-page="domain">◈ Mapa de domínio</button>
-<button data-page="oral">◉ Prova oral</button>
-<button data-page="bugs">✖ Caça-bugs</button>
-<button data-page="crypto">⚿ Laboratório crypto</button>
-<div class="navlabel">Referência</div>
-<button data-page="library">▣ Biblioteca</button>
-<button data-page="richlib">▤ Biblioteca rica</button>
-<button data-page="books">▤ Livros em PDF</button>
-<button data-page="summaries">▤ Livros &amp; Resumos</button>
-<button data-page="glossary">◬ Glossário</button>
-<button data-page="projects">⚒ Projetos integradores</button>
-<button data-page="catalog">⌗ Catálogo de labs</button>
-<div class="navlabel">Dados</div>
-<button data-page="settings">⚙ Progresso e backup</button>
+<div class="f8-nav-group" data-f8-group="painel">
+  <button type="button" class="f8-group-head" data-f8-default="dashboard" aria-expanded="true" aria-label="Painel: seu ponto de partida"><span class="f8-group-label">Painel</span><span class="f8-group-sub">Seu ponto de partida</span></button>
+  <div class="f8-subnav"><button type="button" class="active" data-page="dashboard" aria-current="page">▦ Painel geral</button><button type="button" data-page="tracks">▤ Trilhas e aulas</button><button type="button" data-page="focus">◉ Modo foco</button></div>
+</div>
+<div class="f8-nav-group" data-f8-group="pratica">
+  <button type="button" class="f8-group-head" data-f8-default="plan" aria-expanded="false" aria-label="Prática guiada: aula, exercício e revisão"><span class="f8-group-label">Prática guiada</span><span class="f8-group-sub">Aula, exercício e revisão</span></button>
+  <div class="f8-subnav" hidden><button type="button" data-page="plan">◇ Meu plano</button><button type="button" data-page="lab">⌘ Laboratórios</button><button type="button" data-page="review">◷ Revisão espaçada</button><button type="button" data-page="mistakes">✎ Caderno de erros</button><button type="button" data-page="feynman">◎ Técnica Feynman</button><button type="button" data-page="study">✦ Aprenda a estudar</button></div>
+</div>
+<div class="f8-nav-group" data-f8-group="metodo">
+  <button type="button" class="f8-group-head" data-f8-default="porque" aria-expanded="false" aria-label="Método FORGE: porquê e como estudar"><span class="f8-group-label">Método FORGE</span><span class="f8-group-sub">Porquê e como estudar</span></button>
+  <div class="f8-subnav" hidden><button type="button" data-page="porque">✧ O Porquê de Tudo</button><button type="button" data-page="protocol">◫ Protocolo de estudo</button><button type="button" data-page="domain">◈ Mapa de domínio</button><button type="button" data-page="oral">◉ Prova oral</button><button type="button" data-page="bugs">✖ Caça-bugs</button></div>
+</div>
+<div class="f8-nav-group" data-f8-group="labs">
+  <button type="button" class="f8-group-head" data-f8-default="crypto" aria-expanded="false" aria-label="Laboratórios: simulações e desafios"><span class="f8-group-label">Laboratórios</span><span class="f8-group-sub">Simulações e desafios</span></button>
+  <div class="f8-subnav" hidden><button type="button" data-page="crypto">⚿ Laboratório crypto</button><button type="button" data-page="catalog">⌗ Catálogo de labs</button><button type="button" data-page="projects">⚒ Projetos integradores</button></div>
+</div>
+<div class="f8-nav-group" data-f8-group="referencia">
+  <button type="button" class="f8-group-head" data-f8-default="library" aria-expanded="false" aria-label="Biblioteca: fontes, livros e resumos"><span class="f8-group-label">Biblioteca</span><span class="f8-group-sub">Fontes, livros e resumos</span></button>
+  <div class="f8-subnav" hidden><button type="button" data-page="library">▣ Biblioteca unificada</button><button type="button" data-page="richlib">▤ Biblioteca rica</button><button type="button" data-page="books">▤ Livros em PDF</button><button type="button" data-page="summaries">▤ Livros &amp; Resumos</button><button type="button" data-page="glossary">◬ Glossário</button></div>
+</div>
+<div class="f8-nav-group" data-f8-group="dados">
+  <button type="button" class="f8-group-head" data-f8-default="settings" aria-expanded="false" aria-label="Dados: progresso e backup"><span class="f8-group-label">Dados</span><span class="f8-group-sub">Progresso e backup</span></button>
+  <div class="f8-subnav" hidden><button type="button" data-page="settings">⚙ Progresso e backup</button></div>
+</div>
 </nav>
 </aside>
 <main class="main" id="main" tabindex="-1">
 <header class="top"><div class="row"><button class="secondary mobilemenu" id="menuBtn" aria-label="Abrir menu de navegação" aria-expanded="false">☰</button><strong id="pageTitle">Painel geral</strong></div><div class="topright"><span class="pill hide-sm" id="today"></span><button class="secondary" id="searchBtn" aria-label="Buscar em todo o conteúdo (Ctrl+K)" title="Buscar (Ctrl+K)" onclick="if(window.GlobalSearch)GlobalSearch.open()">⌕ Buscar</button><button class="secondary" id="themeBtn" aria-label="Alternar tema claro e escuro" title="Alternar tema">☾</button></div></header>
-<!-- FORGE 7.0: o herói é estático para que o LCP aconteça no primeiro paint.
-     Mapa estelar e hub são preenchidos pelo módulo aditivo sem deslocamento. -->
+<!-- FORGE 8.0: ciclo + herói estáticos no primeiro paint (LCP sem CLS).
+     Mapa estelar e hub do FORGE 7.0 continuam preenchidos pelo módulo aditivo. -->
 <div class="content" id="view" role="region" aria-label="Conteúdo da página" aria-live="polite">
+<!-- FORGE 8.0: o onboarding existe no HTML inicial. Injetá-lo depois do
+     primeiro paint deslocava o herói ~880px em conexões lentas (CLS 0.57). -->
+<section class="f8-onboard" id="f8Onboard" aria-labelledby="f8OnboardTitle" hidden>
+  <div class="f8-steps-rail" aria-label="Etapas do onboarding">
+    <span class="f8-step-pill" data-current="true">1. O ciclo</span>
+    <span class="f8-step-pill" data-current="false">2. Ponto de partida</span>
+    <span class="f8-step-pill" data-current="false">3. Meta diária</span>
+  </div>
+  <p class="f8-kicker">Boas-vindas ao FORGE 8.0</p>
+  <h1 id="f8OnboardTitle">Comece com um passo claro</h1>
+  <section data-f8-onboard-step="0">
+    <p>Você aprende em um ciclo curto e repetível:</p>
+    <ol class="f8-flow">
+      <li>Estudar aula</li><li>Praticar em lab/quiz</li><li>Registrar erros</li><li>Revisar no momento exato</li>
+    </ol>
+    <p><span class="f8-term">Feynman<span class="f8-info-wrap"><button type="button" class="f8-info" data-f8-term="Feynman" aria-label="O que significa Feynman?" aria-expanded="false" aria-controls="f8-tip-first-paint">?</button><span class="f8-tip" id="f8-tip-first-paint" role="tooltip" hidden><strong>Feynman</strong>É o teste em que você ensina o conceito com as próprias palavras, sem olhar a fonte.</span></span></span> entra no fim: você explica com as próprias palavras.</p>
+  </section>
+  <section data-f8-onboard-step="1" hidden><p>Onde você quer começar?</p></section>
+  <section data-f8-onboard-step="2" hidden><p>Quanto tempo você pode estudar por dia?</p></section>
+  <div class="f8-onboard-nav">
+    <button type="button" class="f8-secondary" data-f8-onboard="prev" hidden>Voltar</button>
+    <button type="button" class="f8-primary" data-f8-onboard="next">Próximo passo →</button>
+  </div>
+  <button type="button" class="f8-textlink" data-f8-onboard="skip">Pular apresentação</button>
+</section>
+<div class="f8-cycle" role="region" aria-label="Ciclo de aprendizagem FORGE">
+  <strong>Ciclo FORGE</strong>
+  <ol><li>Estudar aula</li><li>Praticar em lab/quiz</li><li>Registrar erros</li><li>Revisar no momento exato</li></ol>
+</div>
 <div id="f7HeroRoot">
-<section class="f7-hero focus-hero" aria-labelledby="f7HeroTitle">
+<section class="f8-hero-card focus-hero" aria-labelledby="f7HeroTitle">
   <div>
-    <p class="f7-eyebrow">Sua missão agora · M1</p>
-    <h2 id="f7HeroTitle">Peano e Aritmética</h2>
-    <p>Construa domínio, uma sessão por vez. Cada aula concluída vira evidência no mapa e cartão no radar SM-2.</p>
-    <div class="f7-hero-actions">
-      <button type="button" data-f7-action="continue">▶ Continuar estudando</button>
-      <button type="button" data-f7-action="goto" data-page="porque">O porquê de tudo</button>
-      <button type="button" data-f7-action="goto" data-page="protocol">Protocolo de estudo</button>
+    <p class="f8-kicker">Sua missão agora · M1</p>
+    <h1 id="f7HeroTitle">Peano e Aritmética</h1>
+    <p>Construa domínio com uma aula curta, uma prática e uma revisão no momento certo.</p>
+    <div class="f8-actions">
+      <button type="button" class="f8-primary" data-f8-go="deep-lesson">Continuar aula →</button>
     </div>
   </div>
   <div class="f7-hero-ring" data-value="0%" style="--f7-progress:0" role="img" aria-label="Progresso geral: 0%">
@@ -102,9 +145,12 @@
 <script defer src="js/data-trilha10.js"></script>
 <script defer src="js/data-trilha11.js"></script>
 <script defer src="js/data-trilha12.js"></script>
-<!-- FORGE 7.0: conteúdo didático e UI aditiva, carregados antes do roteador. -->
+<!-- FORGE 7.0/8.0: conteúdo didático e UI aditiva, carregados antes do roteador. -->
 <script defer src="js/data-porque.js"></script>
 <script defer src="js/forge7-ui.js"></script>
+<script defer src="js/forge8-glossary.js"></script>
+<script defer src="js/data-forge8.js"></script>
+<script defer src="js/forge8-ui.js"></script>
 <script defer src="js/utils-math.js"></script>
 <script defer src="js/storage.js"></script>
 <script defer src="js/exercises.js"></script>

@@ -2,7 +2,7 @@
 /* FORGE 7.0: cache-first + stale-while-revalidate, manifesto completo. */
 importScripts("./sw-summaries.js");
 
-const VERSION = "forge-v8";
+const VERSION = "forge-v9";
 const CACHE = VERSION + "-cache";
 
 const APP_SHELL = [
@@ -18,8 +18,13 @@ const APP_SHELL = [
   "./css/style.css",
   /* FORGE 7.0 — tema cinematográfico, conteúdo didático e UI aditiva. */
   "./css/forge7.css",
+  /* FORGE 8.0 — camada aditiva, glossário, conteúdo e controlador. */
+  "./css/forge8.css",
   "./js/data-porque.js",
   "./js/forge7-ui.js",
+  "./js/forge8-glossary.js",
+  "./js/data-forge8.js",
+  "./js/forge8-ui.js",
   "./js/data.js",
   "./js/data-linux.js",
   "./js/data-c.js",

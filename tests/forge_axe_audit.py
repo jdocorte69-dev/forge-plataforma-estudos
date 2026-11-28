@@ -1,4 +1,4 @@
-"""FORGE 7.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
+"""FORGE 8.0 — auditoria axe-core WCAG 2.2 AA (temas claro/escuro).
 
 Uso:
     $env:FORGE_AXE_PATH='<caminho para axe.min.js>'
@@ -18,6 +18,9 @@ VIEWPORTS = [("desktop", 1440, 900), ("mobile", 390, 844)]
 PAGES = [
     "dashboard", "tracks", "lab", "study", "settings", "library", "plan",
     "oral", "bugs", "crypto", "summaries", "porque", "protocol", "stellar", "tools",
+    # FORGE 8.0 — rotas e superfícies novas.
+    "deep-lesson", "review", "mistakes", "feynman", "domain", "books",
+    "glossary", "catalog", "projects", "focus",
 ]
 TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]
 
@@ -55,12 +58,12 @@ def main():
                 }""", theme)
                 assert page.evaluate("document.documentElement.dataset.theme") == theme
                 page.add_script_tag(path=axe)
-                for route in PAGES:
+                def audit(name, settle=320):
+                    nonlocal total
                     total += 1
-                    page.evaluate("r => goToPage(r)", route)
-                    # .nav button tem transition: all .2s; auditamos depois que
-                    # as cores transicionais assentam, não no meio do fade.
-                    page.wait_for_timeout(320)
+                    # .nav button tem transição de cor; auditamos depois que as
+                    # cores assentam, não no meio do fade.
+                    page.wait_for_timeout(settle)
                     violations = page.evaluate("""async tags => {
                       const r = await axe.run(document, { runOnly: { type: 'tag', values: tags } });
                       return r.violations.map(v => ({
@@ -69,31 +72,50 @@ def main():
                         targets: v.nodes.slice(0, 3).map(n => n.target.join(' '))
                       }));
                     }""", TAGS)
-                    scenario = f"{label}/{theme}/{route}"
+                    scenario = f"{label}/{theme}/{name}"
                     if violations:
                         failures.append((scenario, violations))
                         print(f"FAIL | {scenario}: " + "; ".join(
                             f"{v['id']}({v['nodes']}) {v['targets'][0] if v['targets'] else ''}" for v in violations))
                     else:
                         print(f"PASS | {scenario}")
+
+                for route in PAGES:
+                    page.evaluate("r => goToPage(r)", route)
+                    audit(route)
+
                 # Leitor de resumo também é uma superfície de leitura.
-                total += 1
                 page.evaluate("goToPage('summaries'); SummariesPage.open('FME_1/cap01')")
                 page.wait_for_selector("#summaryArticle h3", timeout=10000)
-                # Mesma espera das rotas: a cor da aba ativa ainda transiciona.
-                page.wait_for_timeout(320)
-                violations = page.evaluate("""async tags => {
-                  const r = await axe.run(document, { runOnly: { type: 'tag', values: tags } });
-                  return r.violations.map(v => ({ id: v.id, impact: v.impact, nodes: v.nodes.length,
-                    targets: v.nodes.slice(0, 3).map(n => n.target.join(' ')) }));
-                }""", TAGS)
-                scenario = f"{label}/{theme}/summaries-reader"
-                if violations:
-                    failures.append((scenario, violations))
-                    print(f"FAIL | {scenario}: " + "; ".join(
-                        f"{v['id']}({v['nodes']}) {v['targets'][0] if v['targets'] else ''}" for v in violations))
-                else:
-                    print(f"PASS | {scenario}")
+                audit("summaries-reader")
+
+                # FORGE 8.0 — estados transitórios e componentes aditivos.
+                page.evaluate("goToPage('dashboard')")
+                page.locator("#f8Onboard [data-f8-onboard='next']").click()
+                assert page.locator("#f8Onboard [data-f8-onboard-step='1']").is_visible()
+                audit("onboarding-step-2")
+                page.locator("#f8Onboard [data-f8-onboard='next']").click()
+                assert page.locator("#f8Onboard [data-f8-onboard-step='2']").is_visible()
+                audit("onboarding-step-3")
+                page.locator("#f8Onboard [data-f8-onboard='prev']").click()
+                page.locator("#f8Onboard [data-f8-onboard='prev']").click()
+                assert page.locator("#f8Onboard [data-f8-onboard-step='0']").is_visible()
+                page.locator("#f8Onboard .f8-info").first.click()
+                assert page.locator("#f8Onboard .f8-tip:not([hidden])").count() == 1
+                audit("onboarding-tooltip")
+                page.evaluate("Forge8UI.closeTips(document); goToPage('dashboard')")
+                page.locator("#f8HomeRoot .f8-info").first.click()
+                assert page.locator("#f8HomeRoot .f8-tip:not([hidden])").count() == 1
+                audit("home-tooltip")
+                page.evaluate("Forge8UI.closeTips(document); goToPage('deep-lesson')")
+                page.locator("[data-f8-alternative]").click()
+                assert page.locator(".f8-alt").is_visible()
+                audit("lesson-alternative")
+                for tab in ("livros", "pdfs", "resumos", "catalogo"):
+                    page.evaluate("goToPage('library')")
+                    page.locator(f"[data-f8-tab='{tab}']").click()
+                    assert page.locator("[role='tabpanel']").count() == 1, tab
+                    audit(f"library-tab-{tab}")
                 if errors:
                     print(f"ERROS JS em {label}/{theme}: {errors[:3]}")
                     failures.append((f"{label}/{theme}/pageerror", errors[:3]))

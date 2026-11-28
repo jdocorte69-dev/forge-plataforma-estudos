@@ -17,7 +17,8 @@
     fontSize: 17,
     width: "normal",
     currentId: null,
-    cleanup: null
+    cleanup: null,
+    root: null
   };
 
   const READER_KEY = "summaryProgress";
@@ -258,6 +259,7 @@ ${result.length > shown.length ? '<div class="actions"><button type="button" onc
   }
 
   function getView() {
+    if (ui.root && typeof ui.root.innerHTML !== "undefined") return ui.root;
     return (typeof document !== "undefined") ? document.getElementById("view") : null;
   }
 
@@ -310,8 +312,15 @@ ${result.length > shown.length ? '<div class="actions"><button type="button" onc
   function renderPage(view) {
     if (!view || typeof view.innerHTML === "undefined") return;
     detach();
+    ui.root = view;
     ui.currentId = null;
     view.innerHTML = listHTML();
+  }
+
+  // FORGE 8.0: monta o índice dentro do painel da biblioteca unificada.
+  // A API antiga (renderPage) continua intacta para a rota legada.
+  function mountInto(root) {
+    renderPage(root || getView());
   }
 
   function refresh() {
@@ -381,7 +390,7 @@ ${result.length > shown.length ? '<div class="actions"><button type="button" onc
   }
 
   const api = {
-    renderPage, refresh, open, back, setQuery, setBook, setTheme, showMore,
+    renderPage, mountInto, refresh, open, back, setQuery, setBook, setTheme, showMore,
     setFontSize, setWidth, goSection, toggleRead,
     state: ui, markdownToHTML: renderMarkdown
   };

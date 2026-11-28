@@ -3,30 +3,34 @@
    Gerenciamento de estado, localStorage, export/import
    ============================================================ */
 
-// FORGE 7.0 — namespace v7. As chaves v2/v3/v4/v5 continuam legíveis e são
+// FORGE 8.0 — namespace v8. As chaves v2/v3/v4/v5/v7 continuam legíveis e são
 // preservadas (nunca apagadas) para garantir retrocompatibilidade total.
 const STORE_KEY_V5 = "forge.study.v5";
-const STORE_KEY = "forge.study.v7";
+const V7_KEY = "forge.study.v7";
+const STORE_KEY = "forge.study.v8";
 const V4_KEY = "forge.study.v4";
-const LEGACY_KEYS = ["forge.study.v2", "forge.study.v3", V4_KEY, STORE_KEY_V5];
-const CURRENT_VERSION = 7;
+const LEGACY_KEYS = ["forge.study.v2", "forge.study.v3", V4_KEY, STORE_KEY_V5, V7_KEY];
+const CURRENT_VERSION = 8;
 // Cópia de segurança automática antes de qualquer migração/importação.
 // A chave antiga é mantida por compatibilidade com backups já existentes;
-// cada migração v4→v5 grava forge.study.v4.bak_[TIMESTAMP] e cada migração
-// v5→v7 grava forge.study.v5.bak_[TIMESTAMP].
+// cada migração v4→v5 grava forge.study.v4.bak_[TIMESTAMP], v5→v7 grava
+// forge.study.v5.bak_[TIMESTAMP] e v7→v8 grava forge.study.v7.bak_[TIMESTAMP].
 const BACKUP_KEY = "forge.study.v2.lastBackup";
 const V4_BACKUP_PREFIX = "forge.study.v4.bak_";
 const V5_BACKUP_PREFIX = "forge.study.v5.bak_";
+const V7_BACKUP_PREFIX = "forge.study.v7.bak_";
 const MIGRATION_KEY = "forge.study.v5.migration";
 const V7_MIGRATION_KEY = "forge.study.v7.migration";
+const V8_MIGRATION_KEY = "forge.study.v8.migration";
 const V7_TMP_KEY = "forge.study.v7.tmp";
+const V8_TMP_KEY = "forge.study.v8.tmp";
 
 /* JSON Schema (subconjunto: type/required/properties/items/enum/min/max) usado
    para validar o estado antes de gravar e após a leitura. Nenhuma dependência
    externa: o validador roda no navegador e no Node/vm dos testes. */
-const FORGE_V7_SCHEMA = {
+const FORGE_V8_SCHEMA = {
   type: "object",
-  required: ["version", "userId", "done", "mistakes", "cards", "progress", "settings", "forge4", "forge7"],
+  required: ["version", "userId", "done", "mistakes", "cards", "progress", "settings", "forge4", "forge7", "forge8"],
   properties: {
     version: { type: "number", minimum: 1 },
     versionString: { type: "string" },
@@ -53,6 +57,8 @@ const FORGE_V7_SCHEMA = {
     study: { type: "object" },
     forge4: { type: "object", required: ["masteryInvariant"], properties: { masteryInvariant: { type: "object" } } },
     forge7: { type: "object", required: ["schema", "masteryInvariant", "lc"], properties: { schema: { type: "string" }, masteryInvariant: { type: "object" }, lc: { type: "object" } } },
+    forge8: { type: "object", required: ["schema", "masteryInvariant", "lc"], properties: { schema: { type: "string" }, masteryInvariant: { type: "object" }, lc: { type: "object" } } },
+    isFirstVisit: { type: "boolean" },
     simLogs: { type: "array" }
   }
 };
@@ -93,9 +99,11 @@ function validateAgainstSchema(value, schema, path = "$", errors = []) {
   return errors;
 }
 
-function validateStateV7(state) {
-  return validateAgainstSchema(state, FORGE_V7_SCHEMA);
+function validateStateV8(state) {
+  return validateAgainstSchema(state, FORGE_V8_SCHEMA);
 }
+// Alias histórico: módulos e testes antigos continuam chamando validateStateV7.
+const validateStateV7 = validateStateV8;
 
 // FNV-1a 32-bit: usa a implementação compartilhada quando disponível e mantém
 // uma cópia idêntica como fallback (storage.js também roda isolado em Node/vm).
@@ -179,14 +187,16 @@ function makeUserId() {
 function defaultState() {
   return {
     version: CURRENT_VERSION,
-    versionString: "7.0.0",
+    versionString: "8.0.0",
+    // Onboarding visual: apenas estados recém-criados começam com a flag ativa.
+    isFirstVisit: true,
     userId: makeUserId(),
     created_at: Date.now(),
     updated_at: Date.now(),
     user_profile: {
       name: "Estudante Mestre",
       target_pace: "intensive",
-      daily_goal_minutes: 240
+      daily_goal_minutes: 90
     },
     // Projeção didática do schema v5. Os arrays/objetos planos (done, mastery,
     // cards, feynman...) permanecem intactos: progress é espelho aditivo.
@@ -307,6 +317,25 @@ function defaultState() {
       masterSummaries: {},
       libraryVerified: []
     },
+    // FORGE 8.0 — navegação unificada, micro-cards e didática de 12 regras.
+    // Espaço aditivo: nada do v7 é reestruturado.
+    forge8: {
+      schema: "forge.study.v8",
+      migratedAt: null,
+      sourceVersion: 7,
+      sourceChecksum: null,
+      userSeed: null,
+      pwaVersion: 9,
+      masteryInvariant: { minScore: 8, minFeynmanChars: 30 },
+      lc: { a: 1664525, c: 1013904223, m: 4294967296 },
+      nav: { groups: 6, subtitles: true, activeGroup: "painel" },
+      onboarding: { step: 0, entryPoint: null, dailyGoal: "consistente", completedAt: null },
+      home: { cycle: true, singlePrimaryAction: true },
+      pedagogy: { rules: 12, template: "universo-narrado", tooltips: true },
+      library: { tabs: ["livros", "pdfs", "resumos", "catalogo"], activeTab: "livros" },
+      advancedRevealed: false,
+      glossarySeen: []
+    },
     simLogs: []
   };
 }
@@ -365,7 +394,10 @@ function normalizeState(raw) {
   // FORGE 4.0: normalização aditiva — nenhum campo v4 é sobrescrito.
   if (!Number.isFinite(Number(out.created_at))) out.created_at = fresh.created_at;
   if (!Number.isFinite(Number(out.updated_at))) out.updated_at = Date.now();
-  out.versionString = Number(out.version) >= 7 ? "7.0.0" : "5.0.0";
+  out.versionString = Number(out.version) >= 8 ? "8.0.0"
+    : Number(out.version) >= 7 ? "7.0.0" : "5.0.0";
+  // Flag de onboarding: somente um valor booleano explícito é preservado.
+  if (typeof out.isFirstVisit !== "boolean") out.isFirstVisit = fresh.isFirstVisit;
   const profileRaw = out.user_profile && typeof out.user_profile === "object" && !Array.isArray(out.user_profile) ? out.user_profile : {};
   out.user_profile = { ...fresh.user_profile, ...profileRaw };
   const progressRaw = out.progress && typeof out.progress === "object" && !Array.isArray(out.progress) ? out.progress : {};
@@ -409,6 +441,24 @@ function normalizeState(raw) {
     out.forge7[key] = bucket && typeof bucket === "object" && !Array.isArray(bucket) ? bucket : (key === "libraryVerified" ? [] : {});
   }
   if (!Number.isFinite(Number(out.forge7.userSeed))) out.forge7.userSeed = lcgNext(userSeed(out.userId));
+  // FORGE 8.0: mescla aditiva; o invariante permanece o mesmo do v5/v7.
+  const forge8Raw = out.forge8 && typeof out.forge8 === "object" && !Array.isArray(out.forge8) ? out.forge8 : {};
+  out.forge8 = { ...fresh.forge8, ...forge8Raw };
+  out.forge8.schema = "forge.study.v8";
+  out.forge8.masteryInvariant = { ...fresh.forge8.masteryInvariant };
+  out.forge8.lc = { ...fresh.forge8.lc, ...(forge8Raw.lc || {}) };
+  out.forge8.nav = { ...fresh.forge8.nav, ...(forge8Raw.nav || {}) };
+  out.forge8.onboarding = { ...fresh.forge8.onboarding, ...(forge8Raw.onboarding || {}) };
+  out.forge8.home = { ...fresh.forge8.home, ...(forge8Raw.home || {}) };
+  out.forge8.pedagogy = { ...fresh.forge8.pedagogy, ...(forge8Raw.pedagogy || {}) };
+  out.forge8.library = { ...fresh.forge8.library, ...(forge8Raw.library || {}) };
+  if (!Array.isArray(out.forge8.library.tabs) || !out.forge8.library.tabs.length) {
+    out.forge8.library.tabs = [...fresh.forge8.library.tabs];
+  }
+  if (!Array.isArray(out.forge8.glossarySeen)) out.forge8.glossarySeen = [];
+  if (!Number.isFinite(Number(out.forge8.userSeed))) {
+    out.forge8.userSeed = lcgNext(Number(out.forge7.userSeed) || userSeed(out.userId));
+  }
   out.settings = { ...fresh.settings, ...((raw && raw.settings) || {}) };
   out.focus = { ...fresh.focus, ...((raw && raw.focus) || {}) };
   out.plan = { ...fresh.plan, ...((raw && raw.plan) || {}) };
@@ -510,20 +560,21 @@ function loadState() {
 }
 
 // Backup com timestamp por versão de origem (v4→v5 e v5→v7 conforme a especificação).
-function backupRawSnapshot(raw, sourceKey = V4_KEY, forcedPrefix = null) {
+function backupRawSnapshot(raw, sourceKey = V4_KEY, forcedPrefix = null, toKey = STORE_KEY) {
   if (!raw) return null;
   const version = sourceKey === V4_KEY ? 4
     : sourceKey === STORE_KEY_V5 ? 5
-    : sourceKey === STORE_KEY ? CURRENT_VERSION
+    : sourceKey === V7_KEY || sourceKey === STORE_KEY ? Number(safeParse(raw)?.version) || 7
     : Number(safeParse(raw)?.version) || 4;
-  const prefix = forcedPrefix || (version >= 5 ? V5_BACKUP_PREFIX : V4_BACKUP_PREFIX);
+  const prefix = forcedPrefix || (version >= 7 ? V7_BACKUP_PREFIX
+    : version >= 5 ? V5_BACKUP_PREFIX : V4_BACKUP_PREFIX);
   const key = `${prefix}${backupTimestamp()}`;
   const parsed = safeParse(raw);
   try {
     localStorage.setItem(key, JSON.stringify({
       savedAt: new Date().toISOString(),
       from: `forge.study.v${version}`,
-      to: STORE_KEY,
+      to: toKey,
       version,
       checksum: checksumState(parsed),
       algorithm: "FNV-1a-32",
@@ -643,16 +694,16 @@ function migrateV4ToV5(oldState, rawText = null, skipBackup = false) {
 // Nenhum dado do v5 é reestruturado; userId e o invariante de domínio são preservados.
 function migrateV5ToV7(oldState, rawText = null, skipBackup = false) {
   const sourceVersion = Number(oldState?.version) || 5;
-  if (sourceVersion >= CURRENT_VERSION) return normalizeState(oldState);
+  if (sourceVersion >= 7) return normalizeState(oldState);
   const raw = rawText || JSON.stringify(oldState);
   const checksum = checksumState(oldState);
   let backupKey = null;
   if (!skipBackup) {
     backupState(oldState);
-    backupKey = backupRawSnapshot(raw, STORE_KEY_V5, V5_BACKUP_PREFIX);
+    backupKey = backupRawSnapshot(raw, STORE_KEY_V5, V5_BACKUP_PREFIX, V7_KEY);
   }
   const migrated = normalizeState(oldState);
-  migrated.version = CURRENT_VERSION;
+  migrated.version = 7;
   migrated.versionString = "7.0.0";
   migrated.updated_at = Date.now();
   migrated.forge7 = {
@@ -666,9 +717,12 @@ function migrateV5ToV7(oldState, rawText = null, skipBackup = false) {
     masteryInvariant: { minScore: 8, minFeynmanChars: 30 },
     lc: { ...V7_LCG }
   };
+  // v7 é um degrau intermediário: o onboarding 8.0 não é imposto a quem já
+  // usava a versão anterior, mesmo que ainda não tenha aulas concluídas.
+  migrated.isFirstVisit = false;
   rebuildProgress(migrated);
 
-  const errors = validateStateV7(migrated);
+  const errors = validateStateV8(migrated);
   if (errors.length) {
     const err = new Error(`Validação de schema v7 falhou: ${errors.slice(0, 3).join("; ")}`);
     err.code = "SCHEMA_VALIDATION_FAILED";
@@ -686,18 +740,18 @@ function migrateV5ToV7(oldState, rawText = null, skipBackup = false) {
   if (tmpWritten) {
     try {
       const staged = JSON.parse(localStorage.getItem(V7_TMP_KEY) || "null");
-      verified = Boolean(staged && validateStateV7(staged).length === 0 &&
-        staged.version === CURRENT_VERSION && staged.userId === migrated.userId &&
+      verified = Boolean(staged && validateStateV8(staged).length === 0 &&
+        staged.version === 7 && staged.userId === migrated.userId &&
         staged.forge7?.sourceChecksum === checksum &&
         (staged.done || []).length === (migrated.done || []).length &&
         checksumState(staged) === checksumState(migrated));
-      if (verified) localStorage.setItem(STORE_KEY, JSON.stringify(staged));
+      if (verified) localStorage.setItem(V7_KEY, JSON.stringify(staged));
     } catch (e) { verified = false; }
   }
   if (verified) {
     try {
-      const finalCheck = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
-      verified = Boolean(finalCheck && finalCheck.version === CURRENT_VERSION &&
+      const finalCheck = JSON.parse(localStorage.getItem(V7_KEY) || "null");
+      verified = Boolean(finalCheck && finalCheck.version === 7 &&
         finalCheck.userId === migrated.userId && checksumState(finalCheck) === checksumState(migrated));
     } catch (e) { verified = false; }
   }
@@ -714,7 +768,7 @@ function migrateV5ToV7(oldState, rawText = null, skipBackup = false) {
     localStorage.setItem(V7_MIGRATION_KEY, JSON.stringify({
       at: migrated.forge7.migratedAt,
       from: sourceVersion,
-      to: CURRENT_VERSION,
+      to: 7,
       backupKey,
       checksum,
       userId: migrated.userId,
@@ -724,14 +778,106 @@ function migrateV5ToV7(oldState, rawText = null, skipBackup = false) {
   return migrated;
 }
 
-// v2/v3 → v5 → v7 e v4 → v5 → v7: cadeia aditiva; nenhum campo antigo é removido.
+// v7 → v8: promoção atômica para o namespace forge.study.v8. O userId, o
+// histórico e o invariante de domínio (≥8/10 + Feynman ≥30) são preservados.
+// O backup forge.study.v7.bak_[TIMESTAMP] é gravado ANTES de qualquer mutação.
+function migrateV7ToV8(oldState, rawText = null, skipBackup = false) {
+  const sourceVersion = Number(oldState?.version) || 7;
+  if (sourceVersion >= CURRENT_VERSION) return normalizeState(oldState);
+  const raw = rawText || JSON.stringify(oldState);
+  const checksum = checksumState(oldState);
+  let backupKey = null;
+  if (!skipBackup) {
+    backupState(oldState);
+    backupKey = backupRawSnapshot(raw, V7_KEY, V7_BACKUP_PREFIX);
+  }
+  const migrated = normalizeState(oldState);
+  migrated.version = CURRENT_VERSION;
+  migrated.versionString = "8.0.0";
+  migrated.updated_at = Date.now();
+  migrated.isFirstVisit = (migrated.done || []).length === 0 && migrated.placementDone === false
+    && Boolean(skipBackup);
+  migrated.forge8 = {
+    ...(migrated.forge8 || {}),
+    schema: "forge.study.v8",
+    migratedAt: new Date().toISOString(),
+    sourceVersion,
+    sourceChecksum: checksum,
+    userSeed: lcgNext(Number(migrated.forge7?.userSeed) || userSeed(migrated.userId)),
+    pwaVersion: 9,
+    masteryInvariant: { minScore: 8, minFeynmanChars: 30 },
+    lc: { ...V7_LCG },
+    advancedRevealed: (migrated.done || []).length >= 1
+  };
+  rebuildProgress(migrated);
+
+  const errors = validateStateV8(migrated);
+  if (errors.length) {
+    const err = new Error(`Validação de schema v8 falhou: ${errors.slice(0, 3).join("; ")}`);
+    err.code = "SCHEMA_VALIDATION_FAILED";
+    err.errors = errors;
+    throw err;
+  }
+
+  let tmpWritten = false;
+  try {
+    localStorage.setItem(V8_TMP_KEY, JSON.stringify(migrated));
+    tmpWritten = true;
+  } catch (e) { console.warn("Não foi possível gravar o staging v8:", e); }
+  let verified = false;
+  if (tmpWritten) {
+    try {
+      const staged = JSON.parse(localStorage.getItem(V8_TMP_KEY) || "null");
+      verified = Boolean(staged && validateStateV8(staged).length === 0 &&
+        staged.version === CURRENT_VERSION && staged.userId === migrated.userId &&
+        staged.forge8?.sourceChecksum === checksum &&
+        (staged.done || []).length === (migrated.done || []).length &&
+        checksumState(staged) === checksumState(migrated));
+      if (verified) localStorage.setItem(STORE_KEY, JSON.stringify(staged));
+    } catch (e) { verified = false; }
+  }
+  if (verified) {
+    try {
+      const finalCheck = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      verified = Boolean(finalCheck && finalCheck.version === CURRENT_VERSION &&
+        finalCheck.userId === migrated.userId && checksumState(finalCheck) === checksumState(migrated));
+    } catch (e) { verified = false; }
+  }
+  if (!verified) {
+    try { localStorage.setItem(V7_KEY, raw); } catch (e) { /* sem espaço */ }
+    state = normalizeState(safeParse(raw));
+    const err = new Error("Falha na verificação pós-gravação da migração v8");
+    err.code = "MIGRATION_WRITE_FAILED";
+    throw err;
+  }
+  try { localStorage.removeItem(V8_TMP_KEY); } catch (e) { /* staging órfão é inofensivo */ }
+  try {
+    localStorage.setItem(V8_MIGRATION_KEY, JSON.stringify({
+      at: migrated.forge8.migratedAt,
+      from: sourceVersion,
+      to: CURRENT_VERSION,
+      backupKey,
+      checksum,
+      userId: migrated.userId,
+      status: "complete"
+    }));
+  } catch (e) { console.warn("Marcador de migração v8 não gravado:", e); }
+  return migrated;
+}
+
+// v2/v3 → v5 → v7 → v8 e v4 → v5 → v7 → v8: cadeia aditiva; nenhum campo antigo é removido.
 function migrateState(oldState, skipBackup = false, rawText = null, sourceKey = null) {
   const sourceVersion = Number(oldState?.version) || 1;
   if (sourceVersion >= CURRENT_VERSION) return normalizeState(oldState);
-  if (sourceVersion === 5) return migrateV5ToV7(oldState, rawText, skipBackup);
+  if (sourceVersion === 7) return migrateV7ToV8(oldState, rawText, skipBackup);
+  if (sourceVersion === 5) {
+    const v7 = migrateV5ToV7(oldState, rawText, skipBackup);
+    return migrateV7ToV8(v7, JSON.stringify(v7), skipBackup);
+  }
   if (sourceVersion === 4) {
     const v5 = migrateV4ToV5(oldState, rawText, skipBackup);
-    return migrateV5ToV7(v5, JSON.stringify(v5), skipBackup);
+    const v7 = migrateV5ToV7(v5, JSON.stringify(v5), skipBackup);
+    return migrateV7ToV8(v7, JSON.stringify(v7), skipBackup);
   }
   if (!skipBackup) {
     backupState(oldState);
@@ -759,7 +905,8 @@ function migrateState(oldState, skipBackup = false, rawText = null, sourceKey = 
   };
   rebuildProgress(migrated);
   try { localStorage.setItem(STORE_KEY_V5, JSON.stringify(migrated)); } catch (e) { console.warn(e); }
-  return migrateV5ToV7(migrated, JSON.stringify(migrated), skipBackup);
+  const v7 = migrateV5ToV7(migrated, JSON.stringify(migrated), skipBackup);
+  return migrateV7ToV8(v7, JSON.stringify(v7), skipBackup);
 }
 
 // Projeta o progresso plano (v4) no formato didático do schema v5 sem apagar
@@ -823,15 +970,16 @@ function rebuildProgress(target = state) {
   return target.progress;
 }
 
-// Idempotente: garante que o namespace v7 exista e esteja normalizado mesmo
+// Idempotente: garante que o namespace v8 exista e esteja normalizado mesmo
 // quando o app.js é carregado depois do storage.js. Retorna o estado atual.
-function ensureV7() {
+function ensureV8() {
   if (!state) return loadState();
   // Verifica o que já estava persistido antes de normalizar: um userId recém
   // gerado precisa ser gravado uma única vez para que a semente seja estável.
   let persistedUserId = null;
   try {
-    const raw = localStorage.getItem(STORE_KEY) || localStorage.getItem(STORE_KEY_V5) || localStorage.getItem(V4_KEY);
+    const raw = localStorage.getItem(STORE_KEY) || localStorage.getItem(V7_KEY)
+      || localStorage.getItem(STORE_KEY_V5) || localStorage.getItem(V4_KEY);
     if (raw) persistedUserId = JSON.parse(raw).userId;
   } catch (e) { persistedUserId = null; }
   if (Number(state.version) !== CURRENT_VERSION) {
@@ -841,22 +989,25 @@ function ensureV7() {
   }
   if (!state.forge4?.userSeed) state.forge4 = { ...(state.forge4 || {}), userSeed: userSeed(state.userId) };
   if (!state.forge7?.userSeed) state.forge7 = { ...(state.forge7 || {}), userSeed: lcgNext(userSeed(state.userId)) };
+  if (!state.forge8?.userSeed) state.forge8 = { ...(state.forge8 || {}), userSeed: lcgNext(Number(state.forge7?.userSeed) || userSeed(state.userId)) };
   if (!persistedUserId) saveState(state);
   return state;
 }
 
-// Aliases históricos: módulos externos que chamavam ensureV4/ensureV5 continuam funcionando.
-const ensureV5 = ensureV7;
-const ensureV4 = ensureV7;
+// Aliases históricos: módulos externos que chamavam ensureV4/ensureV5/ensureV7 continuam funcionando.
+const ensureV7 = ensureV8;
+const ensureV5 = ensureV8;
+const ensureV4 = ensureV8;
 
 // Ponto de entrada público usado no topo de app.js (Fase 2).
 function migrateStorage() {
-  return ensureV7();
+  return ensureV8();
 }
 
 function getMigrationInfo() {
   try {
-    const raw = localStorage.getItem(V7_MIGRATION_KEY) || localStorage.getItem(MIGRATION_KEY);
+    const raw = localStorage.getItem(V8_MIGRATION_KEY) || localStorage.getItem(V7_MIGRATION_KEY)
+      || localStorage.getItem(MIGRATION_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch (e) { return null; }
 }
@@ -869,7 +1020,7 @@ function saveState(newState = state) {
     // substitui um backup íntegro no localStorage.
     const errors = validateStateV7(state);
     if (errors.length && Number(state.version) === CURRENT_VERSION) {
-      console.warn("Estado v7 inválido não gravado:", errors.slice(0, 5));
+      console.warn("Estado v8 inválido não gravado:", errors.slice(0, 5));
       return false;
     }
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
@@ -1334,6 +1485,57 @@ function setLibraryVerified(links) {
   return f7.libraryVerified;
 }
 
+/* ---------- FORGE 8.0 — onboarding, home e revelação progressiva ---------- */
+
+function getForge8State() {
+  const s = getState();
+  if (!s.forge8 || typeof s.forge8 !== "object") s.forge8 = defaultState().forge8;
+  return s.forge8;
+}
+
+function setOnboardingStep(step) {
+  const s = getState();
+  const f8 = getForge8State();
+  f8.onboarding.step = Math.max(0, Math.min(2, Number(step) || 0));
+  saveState();
+  return f8.onboarding.step;
+}
+
+function setOnboardingChoice(key, value) {
+  const s = getState();
+  const f8 = getForge8State();
+  const allowed = new Set(["zero", "placement", "free"]);
+  const goals = new Set(["leve", "consistente", "intensivo"]);
+  if (key === "entryPoint") f8.onboarding.entryPoint = allowed.has(value) ? value : "zero";
+  if (key === "dailyGoal") {
+    f8.onboarding.dailyGoal = goals.has(value) ? value : "consistente";
+    s.user_profile = { ...(s.user_profile || {}), daily_goal_minutes: f8.onboarding.dailyGoal === "leve" ? 30 : f8.onboarding.dailyGoal === "intensivo" ? 180 : 90 };
+  }
+  saveState();
+  return f8.onboarding;
+}
+
+function finishOnboarding() {
+  const s = getState();
+  const f8 = getForge8State();
+  s.isFirstVisit = false;
+  f8.onboarding.completedAt = new Date().toISOString();
+  f8.onboarding.step = 2;
+  f8.advancedRevealed = (s.done || []).length >= 1;
+  saveState();
+  return s;
+}
+
+function revealAdvancedTools() {
+  const s = getState();
+  const f8 = getForge8State();
+  if ((s.done || []).length < 1) return false;
+  f8.advancedRevealed = true;
+  s.isFirstVisit = false;
+  saveState();
+  return true;
+}
+
 window.Storage = {
   load: loadState,
   logSimulator,
@@ -1341,15 +1543,24 @@ window.Storage = {
   ensureV4,
   ensureV5,
   ensureV7,
+  ensureV8,
   migrateV4ToV5,
   migrateV5ToV7,
+  migrateV7ToV8,
   validateStateV7,
+  validateStateV8,
+  getForge8State,
+  setOnboardingStep,
+  setOnboardingChoice,
+  finishOnboarding,
+  revealAdvancedTools,
   lcgNext,
   lcgFloat,
   lcgShuffle,
   V7_LCG,
   STORE_KEY,
   STORE_KEY_V5,
+  V7_KEY,
   CURRENT_VERSION,
   getForge7State,
   setStudyProtocolStep,

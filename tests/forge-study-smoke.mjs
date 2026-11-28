@@ -205,7 +205,7 @@ check("sessão guarda texto, explicação e revisão sem apagar sessões anterio
 
 /* ---------- migração e preservação de dados ---------- */
 
-check("schema v7 preserva dados antigos e cria espaço de estudo", () => {
+check("schema v8 preserva dados antigos e cria espaço de estudo", () => {
   const seed = { "forge.study.v2": JSON.stringify({
     version: 2, done: ["c-0-0"], xp: 120, mistakes: [{ lesson: "c-0-0", question: "q" }],
     plan: { goal: "x" }
@@ -213,8 +213,11 @@ check("schema v7 preserva dados antigos e cria espaço de estudo", () => {
   const isolated = buildContext(seed);
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   const state = isolated.window.Storage.get();
-  assert.equal(state.version, 7);
-  assert.equal(state.versionString, "7.0.0");
+  assert.equal(state.version, 8);
+  assert.equal(state.versionString, "8.0.0");
+  assert.ok(state.forge8 && state.forge8.pwaVersion === 9, "espaços v8 ausentes");
+  assert.equal(state.forge8.schema, "forge.study.v8");
+  assert.equal(state.isFirstVisit, false, "quem migra do v7 não deve rever onboarding");
   assert.deepEqual(JSON.parse(JSON.stringify(state.done)), ["c-0-0"]);
   assert.equal(state.xp, 120);
   assert.equal(state.mistakes.length, 1);
@@ -232,10 +235,11 @@ check("schema v7 preserva dados antigos e cria espaço de estudo", () => {
   assert.ok(isolated.storage.has("forge.study.v2.lastBackup"), "backup automático ausente");
   assert.ok(isolated.storage.has("forge.study.v5"), "namespace v5 não gravado");
   assert.ok(isolated.storage.has("forge.study.v7"), "namespace v7 não gravado");
+  assert.ok(isolated.storage.has("forge.study.v8"), "namespace v8 não gravado");
   assert.ok(isolated.storage.has("forge.study.v2"), "chave legada foi apagada");
 });
 
-check("v4 → v5 → v7: backups versionados, checksum FNV-1a e userId preservados", () => {
+check("v4 → v5 → v7 → v8: backups versionados, checksum FNV-1a e userId preservados", () => {
   const original = {
     version: 4,
     userId: "usr_fnv1a_8f93a10c",
@@ -249,9 +253,12 @@ check("v4 → v5 → v7: backups versionados, checksum FNV-1a e userId preservad
   const isolated = buildContext({ "forge.study.v4": JSON.stringify(original) });
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   const state = isolated.window.Storage.get();
-  assert.equal(state.version, 7);
+  assert.equal(state.version, 8);
+  assert.equal(state.versionString, "8.0.0");
   assert.equal(state.userId, "usr_fnv1a_8f93a10c", "userId alterado na migração");
   assert.equal(state.xp, 777);
+  assert.equal(state.forge8.sourceVersion, 7);
+  assert.deepEqual(JSON.parse(JSON.stringify(state.forge8.masteryInvariant)), { minScore: 8, minFeynmanChars: 30 });
   assert.ok(state.forge7.sourceVersion === 5 && /^[0-9a-f]{8}$/.test(state.forge7.sourceChecksum));
   assert.ok(state.forge4.sourceVersion === 4 && /^[0-9a-f]{8}$/.test(state.forge4.sourceChecksum));
   assert.equal(state.forge4.userSeed, isolated.window.Storage.userSeed(state.userId));
@@ -276,6 +283,13 @@ check("v4 → v5 → v7: backups versionados, checksum FNV-1a e userId preservad
   assert.equal(marker.to, 7);
   assert.equal(marker.from, 5);
   assert.equal(marker.backupKey, backupV7Keys[0]);
+  const backupV8Keys = [...isolated.storage.keys()].filter(k => k.startsWith("forge.study.v7.bak_"));
+  assert.equal(backupV8Keys.length, 1, "backup timestampado da migração v7→v8 ausente");
+  const markerV8 = JSON.parse(isolated.storage.get("forge.study.v8.migration"));
+  assert.equal(markerV8.status, "complete");
+  assert.equal(markerV8.from, 7);
+  assert.equal(markerV8.to, 8);
+  assert.equal(markerV8.backupKey, backupV8Keys[0]);
   assert.ok(isolated.storage.has("forge.study.v4"), "payload v4 original apagado");
   assert.ok(isolated.storage.has("forge.study.v5"), "payload v5 intermediário apagado");
   assert.equal(isolated.storage.get("forge.study.v4"), JSON.stringify(original));
@@ -298,7 +312,7 @@ check("v4 → v5: checksum divergente aborta a migração sem tocar nos dados", 
   assert.equal(isolated.storage.get("forge.study.v4"), JSON.stringify(original));
 });
 
-check("v5 → v7: backup timestampado, userId preservado e domínio inalterado", () => {
+check("v5 → v7 → v8: backup timestampado, userId preservado e domínio inalterado", () => {
   const original = {
     version: 5,
     versionString: "5.0.0",
@@ -313,11 +327,12 @@ check("v5 → v7: backup timestampado, userId preservado e domínio inalterado",
   const isolated = buildContext({ "forge.study.v5": JSON.stringify(original) });
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   const state = isolated.window.Storage.get();
-  assert.equal(state.version, 7);
-  assert.equal(state.versionString, "7.0.0");
+  assert.equal(state.version, 8);
+  assert.equal(state.versionString, "8.0.0");
   assert.equal(state.userId, "usr_v5_estavel");
   assert.equal(state.xp, 432);
   assert.deepEqual(JSON.parse(JSON.stringify(state.done)), ["aula-1"]);
+  assert.equal(state.forge8.sourceVersion, 7);
   assert.equal(state.forge7.sourceVersion, 5);
   assert.ok(/^[0-9a-f]{8}$/.test(state.forge7.sourceChecksum));
   assert.equal(state.forge7.userSeed, isolated.window.Storage.lcgNext(isolated.window.Storage.userSeed(state.userId)));
@@ -338,10 +353,21 @@ check("v5 → v7: backup timestampado, userId preservado e domínio inalterado",
   assert.equal(marker.status, "complete");
   assert.equal(marker.backupKey, backupKeys[0]);
   assert.equal(marker.checksum, state.forge7.sourceChecksum);
+  const backupV8Keys = [...isolated.storage.keys()].filter(k => k.startsWith("forge.study.v7.bak_"));
+  assert.equal(backupV8Keys.length, 1, "backup v7 timestampado ausente");
+  const markerV8 = JSON.parse(isolated.storage.get("forge.study.v8.migration"));
+  assert.equal(markerV8.status, "complete");
+  assert.equal(markerV8.from, 7);
+  assert.equal(markerV8.to, 8);
+  assert.equal(markerV8.backupKey, backupV8Keys[0]);
+  assert.equal(JSON.parse(isolated.storage.get(backupV8Keys[0])).to, "forge.study.v8");
+  assert.equal(markerV8.checksum, state.forge8.sourceChecksum);
   assert.equal(isolated.storage.get("forge.study.v5"), JSON.stringify(original), "payload v5 original apagado");
   assert.ok(isolated.storage.has("forge.study.v7"));
-  assert.ok(!isolated.storage.has("forge.study.v7.tmp"), "staging não foi limpo");
-  assert.deepEqual(JSON.parse(JSON.stringify(isolated.window.Storage.validateStateV7(state))), []);
+  assert.ok(isolated.storage.has("forge.study.v8"));
+  assert.ok(!isolated.storage.has("forge.study.v7.tmp"), "staging v7 não foi limpo");
+  assert.ok(!isolated.storage.has("forge.study.v8.tmp"), "staging v8 não foi limpo");
+  assert.deepEqual(JSON.parse(JSON.stringify(isolated.window.Storage.validateStateV8(state))), []);
 });
 
 check("FORGE 7.0: LCG determinístico (a=1664525, c=1013904223, m=2^32)", () => {
@@ -420,8 +446,8 @@ check("nav, script e service worker incluem os módulos de livros", () => {
   assert.ok(refs.indexOf("js/data-books-meta.js") < refs.indexOf("js/books-store.js"));
   assert.ok(refs.indexOf("js/books-store.js") < refs.indexOf("js/book-reader.js"));
   const sw = read("sw.js");
-  // FORGE 7.0 atualiza o cache para forge-v8 (manifesto completo + SWR).
-  assert.match(sw, /forge-v8/);
+  // FORGE 8.0 atualiza o cache para forge-v9 (manifesto completo + SWR).
+  assert.match(sw, /forge-v9/);
   assert.match(sw, /"\.\/js\/study\.js"/);
   for (const file of ["js/data-books-meta.js", "js/books-store.js",
     "js/book-questions.js", "js/book-reader.js"]) {
@@ -438,7 +464,7 @@ check("as rotas internas de livro, leitor e questões são aceitas pelo roteador
   assert.match(app, /book: v =>/);
   assert.match(app, /reader: v =>/);
   assert.match(app, /questions: v =>/);
-  assert.match(app, /INTERNAL_PAGES = \["book", "reader", "questions", "stellar", "tools"\]/);
+  assert.match(app, /INTERNAL_PAGES = \["book", "reader", "questions", "stellar", "tools", "deep-lesson"\]/);
   assert.match(app, /INTERNAL_PAGES\.includes\(requested\)/);
 });
 
@@ -536,19 +562,19 @@ await checkAsync("importação de versão futura é recusada sem mutar dados nem
   assert.match(isolated.window.__toast, /preservados/);
 });
 
-await checkAsync("importação válida v2 continua migrando para v7 com backup", async () => {
+await checkAsync("importação válida v2 continua migrando para v8 com backup", async () => {
   const seed = { "forge.study.v2": JSON.stringify({ version: 3, done: ["local"], xp: 7 }) };
   const isolated = prepareImportContext(seed);
   await isolated.window.Storage.import({
     content: JSON.stringify({ version: 2, state: { version: 2, done: ["imported"], xp: 555, plan: { goal: "meta" } } })
   });
   const imported = isolated.window.Storage.get();
-  assert.equal(imported.version, 7);
+  assert.equal(imported.version, 8);
   assert.deepEqual(imported.done, ["imported"]);
   assert.equal(imported.xp, 555);
   assert.equal(imported.plan.goal, "meta");
   assert.ok(isolated.storage.has("forge.study.v2.lastBackup"), "backup não criado");
-  assert.match(isolated.window.__toast, /v2 → v7/);
+  assert.match(isolated.window.__toast, /v2 → v8/);
 });
 
 /* ---------- FORGE 3.0 ---------- */
@@ -589,7 +615,7 @@ check("FORGE 3.0: 12 trilhas, 92 módulos, 515 aulas e questões suficientes", (
   }
 });
 
-check("FORGE 3.0: userId estável e logs de simuladores no schema v7", () => {
+check("FORGE 3.0: userId estável e logs de simuladores no schema v8", () => {
   const isolated = buildContext();
   vm.runInContext(read("js/storage.js"), isolated.context, { filename: "js/storage.js" });
   isolated.window.Storage.migrate();
@@ -598,7 +624,8 @@ check("FORGE 3.0: userId estável e logs de simuladores no schema v7", () => {
   assert.equal(first.forge3.pwaVersion, 6);
   assert.equal(first.forge4.pwaVersion, 7);
   assert.equal(first.forge7.pwaVersion, 8);
-  const before = JSON.parse(isolated.storage.get("forge.study.v7")).userId;
+  assert.equal(first.forge8.pwaVersion, 9);
+  const before = JSON.parse(isolated.storage.get("forge.study.v8")).userId;
   assert.equal(before, first.userId, "userId não foi persistido");
   isolated.window.Storage.logSimulator("logic", "tabela verdade");
   isolated.window.Storage.logSimulator("cpu", "ADD RAX, RBX");
@@ -752,9 +779,9 @@ check("FORGE 4.0: leitor escapa HTML e preserva notação Unicode", () => {
   assert.match(html, /<pre><code class="language-js">const a = 1 &lt; 2;<\/code><\/pre>/);
 });
 
-check("FORGE 7.0: service worker forge-v8 com cache-first, SWR e manifesto completo", () => {
+check("FORGE 8.0: service worker forge-v9 com cache-first, SWR e manifesto completo", () => {
   const sw = read("sw.js");
-  assert.match(sw, /const VERSION = "forge-v8"/);
+  assert.match(sw, /const VERSION = "forge-v9"/);
   assert.match(sw, /importScripts\("\.\/sw-summaries\.js"\)/);
   assert.match(sw, /caches\.match\(cacheKey \|\| req\)/);
   assert.match(sw, /function revalidate/);
@@ -763,7 +790,8 @@ check("FORGE 7.0: service worker forge-v8 com cache-first, SWR e manifesto compl
     "js/sim-crypto.js", "js/data-summaries-index.js", "js/books-summaries-index.js",
     "js/summaries-page.js", "vendor/katex/katex.min.css", "vendor/katex/katex.min.js",
     "vendor/katex/contrib/auto-render.min.js", "css/forge7.css", "js/data-porque.js",
-    "js/forge7-ui.js"];
+    "js/forge7-ui.js", "css/forge8.css", "js/forge8-glossary.js",
+    "js/data-forge8.js", "js/forge8-ui.js"];
   for (const file of assets) {
     assert.ok(sw.includes(`"./${file}"`), `asset ausente no service worker: ${file}`);
   }
